@@ -53,6 +53,10 @@
                         <i data-lucide="calendar" class="w-4 h-4"></i>
                         <span id="displayPeriod">Memuat...</span>
                     </div>
+                    <!-- Tombol Pengaturan -->
+                    <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-full border border-slate-600 transition-colors shadow-sm ml-2 outline-none" title="Pengaturan Sistem">
+                        <i data-lucide="settings" class="w-4 h-4 text-slate-200"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -66,7 +70,6 @@
             <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-4 items-end w-full md:w-auto">
                 <div class="col-span-1 w-full sm:w-auto">
                     <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Kode Port</label>
-                    <!-- Default dihilangkan, akan diisi otomatis dari Config GAS -->
                     <input type="text" id="portCode" placeholder="Mis: IDLPO" class="w-full sm:w-32 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase">
                 </div>
                 <div class="col-span-1 w-full sm:w-auto">
@@ -216,6 +219,54 @@
         </div>
     </div>
 
+    <!-- Modal Pengaturan (Config) -->
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex justify-center items-center p-4 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden modal-animate border border-slate-200">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <div class="bg-slate-200 p-1.5 rounded-lg text-slate-700"><i data-lucide="settings" class="w-5 h-5"></i></div>
+                    Pengaturan Sistem
+                </h3>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-rose-500 bg-white p-1.5 rounded-full transition-colors outline-none border border-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 bg-white space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Kode Port Default</label>
+                    <input type="text" id="cfgPortCode" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase" placeholder="IDLPO">
+                    <p class="text-xs text-slate-500 mt-1">Kode pelabuhan bawaan saat aplikasi pertama kali dimuat.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Metode Cetak Dokumen (LK3 & Crewlist)</label>
+                    <select id="cfgScraping" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
+                        <option value="TRUE">Gunakan Scraping (Direct PDF - Eksperimental)</option>
+                        <option value="FALSE">Pencarian Standar Inaportnet (Aman)</option>
+                    </select>
+                </div>
+                <div class="border-t border-slate-200 pt-4 mt-2">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Kredensial Login (Akan Datang)</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                            <input type="text" id="cfgUser" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg block p-2 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                            <input type="password" id="cfgPass" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg block p-2 outline-none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
+                <button onclick="closeSettingsModal()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors">Batal</button>
+                <button onclick="saveSettingsConfig()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg transition-colors shadow-md flex items-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i> Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-slate-800 text-slate-400 py-6 mt-auto text-xs sm:text-sm text-center z-10 px-4">
         <p>&copy; 2026 Inaportnet Dashboard Monitoring. Data Source: dephub.go.id via GAS Backend</p>
@@ -227,9 +278,12 @@
         // WAJIB DIISI: URL GAS WEB APP ANDA
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwAZV6iSElbw8XDTvR8IqalIwlhky-C1ozxK_NUIhWLGYf63U5fqOyhdGngl1KVey09rg/exec"; 
         
-        // Config State Frontend (Akan di-override oleh balasan GAS Backend)
+        // Config State Frontend (Akan di-override oleh balasan GAS Backend saat load awal)
         let APP_CONFIG = {
-            useScrapingForPrint: false
+            DEFAULT_PORT_CODE: 'IDLPO',
+            USE_SCRAPING: 'FALSE',
+            AUTH_USERNAME: '',
+            AUTH_PASSWORD: ''
         };
 
         let etaChartInst = null;
@@ -241,7 +295,6 @@
             if (!dateStr || dateStr === '-') return '-';
             try {
                 let parsedStr = dateStr;
-                // Mengubah spasi jadi 'T' jika formatnya SQL "YYYY-MM-DD HH:mm:ss" agar terbaca semua browser
                 if (typeof parsedStr === 'string' && parsedStr.includes(' ') && !parsedStr.includes('T')) {
                     parsedStr = parsedStr.replace(' ', 'T');
                 }
@@ -254,10 +307,7 @@
                 const hours = String(date.getHours()).padStart(2, '0');
                 const minutes = String(date.getMinutes()).padStart(2, '0');
                 
-                // Jika data aslinya hanya berisikan tanggal saja tanpa waktu
-                if (typeof dateStr === 'string' && dateStr.length <= 10) {
-                    return `${day}-${month}-${year}`;
-                }
+                if (typeof dateStr === 'string' && dateStr.length <= 10) return `${day}-${month}-${year}`;
                 return `${day}-${month}-${year} ${hours}:${minutes}`;
             } catch (e) {
                 return dateStr;
@@ -266,11 +316,11 @@
 
         // AUTO-FETCH SAAT HALAMAN DIBUKA
         document.addEventListener('DOMContentLoaded', () => {
+            // Biarkan port kosong dulu, tunggu loadData menarik konfigurasi asli dari server
             loadData();
         });
 
         async function loadData() {
-            // Ambil input form, biarkan kosong agar Backend menerapkan Default Port Code-nya sendiri
             const portCodeInput = document.getElementById('portCode').value.trim().toUpperCase();
             
             const year = document.getElementById('yearFilter').value;
@@ -290,6 +340,7 @@
                      throw new Error("URL Web App GAS belum dikonfigurasi.");
                 }
 
+                // Jika port form belum diisi, kita biarkan parameter kosong, GAS akan memberikan defaultnya.
                 let targetUrl = `${GAS_WEB_APP_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
                 if (portCodeInput) {
                      targetUrl += `&portCode=${encodeURIComponent(portCodeInput)}`;
@@ -300,20 +351,17 @@
                     redirect: 'follow'
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error dari GAS! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error dari GAS! status: ${response.status}`);
 
                 const result = await response.json();
                 
                 // --- PROSES KONFIGURASI DARI SERVER ---
                 if (result.config) {
-                    APP_CONFIG.useScrapingForPrint = (result.config.USE_SCRAPING === 'TRUE');
+                    APP_CONFIG = { ...APP_CONFIG, ...result.config }; // Update local config
                     
-                    // Jika input portCode user tadinya kosong, timpa dengan data default dari Backend
-                    if (!portCodeInput && result.config.DEFAULT_PORT_CODE) {
-                        document.getElementById('portCode').value = result.config.DEFAULT_PORT_CODE;
-                        document.getElementById('displayPort').textContent = result.config.DEFAULT_PORT_CODE;
+                    if (!portCodeInput && APP_CONFIG.DEFAULT_PORT_CODE) {
+                        document.getElementById('portCode').value = APP_CONFIG.DEFAULT_PORT_CODE;
+                        document.getElementById('displayPort').textContent = APP_CONFIG.DEFAULT_PORT_CODE;
                     } else if (portCodeInput) {
                         document.getElementById('displayPort').textContent = portCodeInput;
                     }
@@ -323,11 +371,7 @@
                 if (result.status === "success" || result.status === "cache") {
                      currentData = result.data.data || [];
                      if (result.status === "cache") {
-                         Swal.fire({
-                            toast: true, position: 'top-end', icon: 'info',
-                            title: 'Data dimuat dari Cache', text: 'Gagal menghubungi Inaportnet secara live.',
-                            showConfirmButton: false, timer: 4000
-                         });
+                         Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Data dimuat dari Cache', text: 'Gagal menghubungi Inaportnet secara live.', showConfirmButton: false, timer: 4000 });
                      }
                 } else {
                      throw new Error(result.message || "Gagal mengambil data.");
@@ -336,11 +380,7 @@
             } catch (error) {
                 console.error("Kesalahan Sistem:", error);
                 currentData = [];
-                Swal.fire({
-                    icon: 'error', title: 'Gagal Memuat Data Real',
-                    text: error.message,
-                    confirmButtonColor: '#1e3a8a', confirmButtonText: 'Tutup'
-                });
+                Swal.fire({ icon: 'error', title: 'Gagal Memuat Data Real', text: error.message, confirmButtonColor: '#1e3a8a', confirmButtonText: 'Tutup' });
             } finally {
                 refreshBtn.innerHTML = originalBtnText;
                 refreshBtn.disabled = false;
@@ -351,6 +391,71 @@
 
             processDataAndRender(currentData);
         }
+
+        // FUNGSI PENGATURAN
+        function openSettingsModal() {
+            document.getElementById('cfgPortCode').value = APP_CONFIG.DEFAULT_PORT_CODE || '';
+            document.getElementById('cfgScraping').value = APP_CONFIG.USE_SCRAPING === 'TRUE' ? 'TRUE' : 'FALSE';
+            document.getElementById('cfgUser').value = APP_CONFIG.AUTH_USERNAME || '';
+            document.getElementById('cfgPass').value = APP_CONFIG.AUTH_PASSWORD || '';
+            
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        async function saveSettingsConfig() {
+            const newConfig = {
+                DEFAULT_PORT_CODE: document.getElementById('cfgPortCode').value.trim().toUpperCase(),
+                USE_SCRAPING: document.getElementById('cfgScraping').value,
+                AUTH_USERNAME: document.getElementById('cfgUser').value.trim(),
+                AUTH_PASSWORD: document.getElementById('cfgPass').value
+            };
+
+            Swal.fire({
+                title: 'Menyimpan Pengaturan...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                // Mengirim data ke doPost() di GAS menggunakan body text/plain untuk menghindari CORS Preflight
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8', 
+                    },
+                    body: JSON.stringify({
+                        action: 'updateConfig',
+                        config: newConfig
+                    })
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    APP_CONFIG = { ...APP_CONFIG, ...newConfig }; // Update global local config
+                    closeSettingsModal();
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Pengaturan telah disimpan di Server.', timer: 2000, showConfirmButton: false });
+                    
+                    // Reload data jika default port code diubah
+                    if (document.getElementById('portCode').value !== APP_CONFIG.DEFAULT_PORT_CODE) {
+                        document.getElementById('portCode').value = APP_CONFIG.DEFAULT_PORT_CODE;
+                        setTimeout(loadData, 500);
+                    }
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error("Error saving config:", error);
+                Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: 'Gagal menyimpan pengaturan ke server GAS.' });
+            }
+        }
+
 
         function processDataAndRender(data) {
             let totalGt = 0, paxNaik = 0, paxTurun = 0, khususCount = 0;
@@ -432,7 +537,7 @@
                 if(item.is_minerba == 1) tags += `<span class="px-2 py-0.5 rounded bg-stone-100 text-stone-600 text-[10px] font-bold border border-stone-200 mr-1 mt-1 inline-block">MINERBA</span>`;
                 if(item.is_penyebrangan == 1 || item.jenis_kapal_xls?.includes("RO-RO")) tags += `<span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-700 text-[10px] font-bold border border-cyan-200 mt-1 inline-block">PENYEBERANGAN</span>`;
 
-                // Persiapan Link Cetak (SPB dan Manifest langsung, sisanya melalui scraping opsional)
+                // Persiapan Link Cetak
                 const noLayanan = item.nomor_layanan_berangkat || item.nomor_layanan_datang || '';
                 const noPkk = item.nomor_pkk || '';
                 
@@ -720,21 +825,13 @@
             lucide.createIcons();
         }
 
-        function closeModal() {
-            document.getElementById('detailModal').classList.add('hidden');
-        }
-        
-        document.getElementById('detailModal').addEventListener('click', function(e) {
-            if(e.target === this) closeModal();
-        });
-
         // FUNGSI SCRAPING FRONTEND (ON-DEMAND) UNTUK LK3 & CREWLIST
         async function cetakDokumenScrape(event, jenis, noPkk) {
             event.preventDefault();
             if (!noPkk) return;
 
             // Jika mode scraping dimatikan via APP_CONFIG, langsung arahkan ke laman search default
-            if (!APP_CONFIG.useScrapingForPrint) {
+            if (APP_CONFIG.USE_SCRAPING !== 'TRUE') {
                 if (jenis === 'LK3') {
                     window.open(`https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=${noPkk}`, '_blank');
                 } else {
