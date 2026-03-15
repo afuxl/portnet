@@ -237,7 +237,7 @@
         // Initialize Lucide Icons
         lucide.createIcons();
 
-        // Fallback mock data jika terjadi kendala akses CORS ke API
+        // Fallback mock data jika terjadi kendala akses API
         const mockFallbackData = [
             {"id":34958311,"nomor_pkk":"PKK.DN.IDWCI.2603.000100","nama_kapal":"PACIFIC JET STAR 1","bendera":"ID","nakhoda":"RUSMAN GAFARUDDIN","gt":220,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-15","eta":"2026-03-15 13:50:00","tgl_etd":"2026-03-16","etd":"2026-03-16 06:00:00","penumpang_turun":120,"penumpang_naik":10},
             {"id":34958127,"nomor_pkk":"PKK.DN.IDWCI.2603.000086","nama_kapal":"SIMBA I","bendera":"ID","nakhoda":"MUHAMMAD UMAR KAIMUDDIN","gt":801,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-14","eta":"2026-03-14 05:00:00","tgl_etd":"2026-03-15","etd":"2026-03-15 20:00:00","penumpang_turun":287,"penumpang_naik":50},
@@ -272,40 +272,25 @@
             let data = [];
 
             try {
-                // Request to real API using XMLHttpRequest wrapped in a Promise
-                const targetUrl = `https://monitoring-inaportnet.dephub.go.id/monitoring/byPort/list/${portCode}/dn/${year}/${month}?_=${timestamp}`;
-                
-                const result = await new Promise((resolve, reject) => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('GET', targetUrl, true);
-                    xhr.setRequestHeader('Accept', 'application/json');
+                // MENGGUNAKAN GOOGLE APPS SCRIPT (GAS) BACKEND
+                // Memanggil fungsi fetchInaportnetData() yang ada di file Code.gs
+                if (typeof google !== 'undefined' && google.script && google.script.run) {
+                    const result = await new Promise((resolve, reject) => {
+                        google.script.run
+                            .withSuccessHandler(resolve)
+                            .withFailureHandler(reject)
+                            .fetchInaportnetData(portCode, year, month);
+                    });
                     
-                    xhr.onload = function() {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            try {
-                                resolve(JSON.parse(xhr.responseText));
-                            } catch (e) {
-                                reject(new Error('Format JSON respons tidak valid'));
-                            }
-                        } else {
-                            reject(new Error(`HTTP error! status: ${xhr.status}`));
-                        }
-                    };
-                    
-                    xhr.onerror = function() {
-                        reject(new Error('Network request failed atau terblokir CORS'));
-                    };
-                    
-                    xhr.send();
-                });
-                
-                data = result.data || [];
+                    data = result.data || [];
+                } else {
+                    throw new Error("Lingkungan GAS tidak terdeteksi (google.script.run tidak tersedia).");
+                }
 
             } catch (error) {
                 console.error("Gagal memuat data dari API:", error);
-                // Menggunakan data mock/fallback jika terjadi kendala CORS pada browser/previewer
                 data = mockFallbackData; 
-                alert("Peringatan: Gagal mengambil data langsung dari Inaportnet (kemungkinan blokir CORS). Menampilkan data simulasi sebagai pengganti.");
+                alert("Peringatan: " + (error.message || "Gagal menghubungi backend GAS.") + " Menampilkan data simulasi sebagai pengganti.");
             } finally {
                 // Restore button
                 refreshBtn.innerHTML = originalBtnText;
