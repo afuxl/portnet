@@ -230,22 +230,18 @@
 
     <!-- Footer -->
     <footer class="bg-slate-800 text-slate-400 py-6 mt-auto text-sm text-center">
-        <p>&copy; 2026 Inaportnet Dashboard Monitoring. Data Source: dephub.go.id</p>
+        <p>&copy; 2026 Inaportnet Dashboard Monitoring. Data Source: dephub.go.id via GAS Backend</p>
     </footer>
 
     <script>
         // Initialize Lucide Icons
         lucide.createIcons();
 
-        // Fallback mock data jika terjadi kendala akses API
-        const mockFallbackData = [
-            {"id":34958311,"nomor_pkk":"PKK.DN.IDWCI.2603.000100","nama_kapal":"PACIFIC JET STAR 1","bendera":"ID","nakhoda":"RUSMAN GAFARUDDIN","gt":220,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-15","eta":"2026-03-15 13:50:00","tgl_etd":"2026-03-16","etd":"2026-03-16 06:00:00","penumpang_turun":120,"penumpang_naik":10},
-            {"id":34958127,"nomor_pkk":"PKK.DN.IDWCI.2603.000086","nama_kapal":"SIMBA I","bendera":"ID","nakhoda":"MUHAMMAD UMAR KAIMUDDIN","gt":801,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-14","eta":"2026-03-14 05:00:00","tgl_etd":"2026-03-15","etd":"2026-03-15 20:00:00","penumpang_turun":287,"penumpang_naik":50},
-            {"id":34954887,"nomor_pkk":"PKK.DN.IDWCI.2603.000099","nama_kapal":"SIANG PERKASA 01","bendera":"ID","nakhoda":"NASRUDIN","gt":125,"dwt":250,"trayek_datang":"DOMESTIK","tgl_eta":"2026-03-14","eta":"2026-03-14 10:00:00","tgl_etd":"2026-03-15","etd":"2026-03-15 18:00:00","penumpang_turun":0,"penumpang_naik":0},
-            {"id":34953555,"nomor_pkk":"PKK.DN.IDWCI.2603.000097","nama_kapal":"PACIFIC JET STAR 1","bendera":"ID","nakhoda":"RUSMAN GAFARUDDIN","gt":220,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-15","eta":"2026-03-15 10:45:00","tgl_etd":"2026-03-15","etd":"2026-03-15 12:55:00","penumpang_turun":187,"penumpang_naik":26},
-            {"id":34949647,"nomor_pkk":"PKK.DN.IDWCI.2603.000095","nama_kapal":"WISATA INDAH - 2","bendera":"ID","nakhoda":"MAKMUR KOLLE DG SITUJU","gt":70,"dwt":140,"trayek_datang":"PELRA","tgl_eta":"2026-03-12","eta":"2026-03-12 17:00:00","tgl_etd":"2026-03-15","etd":"2026-03-15 09:00:00","penumpang_turun":0,"penumpang_naik":0}
-        ];
-
+        // --- KONFIGURASI PENTING ---
+        // Ganti URL ini dengan URL Web App Google Apps Script Anda (Berakhir dengan /exec)
+        // Pastikan Anda men-deploy GAS Anda sebagai "Web App" dengan akses "Anyone" (Siapa Saja)
+        const GAS_WEB_APP_URL = "URL_WEB_APP_GAS_ANDA_DI_SINI"; 
+        
         // Chart instances
         let etaChartInst = null;
         let trayekChartInst = null;
@@ -255,7 +251,6 @@
             const portCode = document.getElementById('portCode').value.trim().toUpperCase() || 'IDWCI';
             const year = document.getElementById('yearFilter').value;
             const month = document.getElementById('monthFilter').value;
-            const timestamp = Date.now();
 
             // Update UI components showing active filter info
             const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -272,25 +267,33 @@
             let data = [];
 
             try {
-                // MENGGUNAKAN GOOGLE APPS SCRIPT (GAS) BACKEND
-                // Memanggil fungsi fetchInaportnetData() yang ada di file Code.gs
-                if (typeof google !== 'undefined' && google.script && google.script.run) {
-                    const result = await new Promise((resolve, reject) => {
-                        google.script.run
-                            .withSuccessHandler(resolve)
-                            .withFailureHandler(reject)
-                            .fetchInaportnetData(portCode, year, month);
-                    });
-                    
-                    data = result.data || [];
+                // Peringatan jika URL GAS belum diisi
+                if (GAS_WEB_APP_URL === "URL_WEB_APP_GAS_ANDA_DI_SINI") {
+                     throw new Error("URL Web App GAS belum dikonfigurasi.");
+                }
+
+                // Membangun URL untuk GET Request ke GAS Backend
+                // Kita mengirim parameter portCode, year, dan month melalui Query String (?key=value)
+                const targetUrl = `${GAS_WEB_APP_URL}?portCode=${encodeURIComponent(portCode)}&year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
+                
+                const response = await fetch(targetUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.status === "success") {
+                     data = result.data.data || [];
                 } else {
-                    throw new Error("Lingkungan GAS tidak terdeteksi (google.script.run tidak tersedia).");
+                     throw new Error(result.message || "Gagal mengambil data dari backend GAS.");
                 }
 
             } catch (error) {
-                console.error("Gagal memuat data dari API:", error);
-                data = mockFallbackData; 
-                alert("Peringatan: " + (error.message || "Gagal menghubungi backend GAS.") + " Menampilkan data simulasi sebagai pengganti.");
+                console.error("Gagal memuat data:", error);
+                data = []; 
+                alert("Peringatan: " + (error.message || "Gagal menghubungi backend GAS.") + "\n\nPastikan URL GAS Web App Anda sudah benar dan sudah di-deploy dengan akses 'Anyone'.");
             } finally {
                 // Restore button
                 refreshBtn.innerHTML = originalBtnText;
