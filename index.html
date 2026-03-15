@@ -53,7 +53,7 @@
                 <div class="flex items-center gap-4 text-sm font-medium">
                     <div class="bg-blue-800 px-3 py-1.5 rounded-full border border-blue-700 flex items-center gap-2">
                         <i data-lucide="map-pin" class="w-4 h-4"></i>
-                        <span id="displayPort">IDWCI (Wangi-Wangi)</span>
+                        <span id="displayPort">IDWCI</span>
                     </div>
                     <div class="bg-blue-800 px-3 py-1.5 rounded-full border border-blue-700 flex items-center gap-2">
                         <i data-lucide="calendar" class="w-4 h-4"></i>
@@ -72,11 +72,12 @@
             <div class="flex flex-wrap gap-4 items-end">
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Kode Port</label>
-                    <input type="text" id="portCode" value="IDWCI" class="w-32 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
+                    <input type="text" id="portCode" value="IDWCI" class="w-32 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium uppercase">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Tahun</label>
                     <select id="yearFilter" class="w-32 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
+                        <option value="2024">2024</option>
                         <option value="2025">2025</option>
                         <option value="2026" selected>2026</option>
                         <option value="2027">2027</option>
@@ -89,15 +90,23 @@
                         <option value="02">02 - Februari</option>
                         <option value="03" selected>03 - Maret</option>
                         <option value="04">04 - April</option>
+                        <option value="05">05 - Mei</option>
+                        <option value="06">06 - Juni</option>
+                        <option value="07">07 - Juli</option>
+                        <option value="08">08 - Agustus</option>
+                        <option value="09">09 - September</option>
+                        <option value="10">10 - Oktober</option>
+                        <option value="11">11 - November</option>
+                        <option value="12">12 - Desember</option>
                     </select>
                 </div>
-                <button onclick="loadData()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 py-2.5 transition-colors flex items-center gap-2 shadow-md shadow-blue-500/30">
+                <button id="refreshBtn" onclick="loadData()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 py-2.5 transition-colors flex items-center gap-2 shadow-md shadow-blue-500/30">
                     <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                     Refresh Data
                 </button>
             </div>
             <div class="text-sm text-slate-500 font-medium">
-                Last updated: <span id="lastUpdated" class="text-slate-800 font-semibold"></span>
+                Last updated: <span id="lastUpdated" class="text-slate-800 font-semibold">-</span>
             </div>
         </div>
 
@@ -228,53 +237,67 @@
         // Initialize Lucide Icons
         lucide.createIcons();
 
-        // The JSON data provided in the prompt
-        // Using this as our data source to populate the dashboard
-        const mockApiResponse = {
-            "draw": 0,
-            "recordsTotal": 30, // Sample length based on data provided
-            "recordsFiltered": 30,
-            "data": [
-                {"id":34958311,"nomor_pkk":"PKK.DN.IDWCI.2603.000100","nama_kapal":"PACIFIC JET STAR 1","bendera":"ID","nakhoda":"RUSMAN GAFARUDDIN","gt":220,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-15","eta":"2026-03-15 13:50:00","tgl_etd":"2026-03-16","etd":"2026-03-16 06:00:00","penumpang_turun":120,"penumpang_naik":10},
-                {"id":34958127,"nomor_pkk":"PKK.DN.IDWCI.2603.000086","nama_kapal":"SIMBA I","bendera":"ID","nakhoda":"MUHAMMAD UMAR KAIMUDDIN","gt":801,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-14","eta":"2026-03-14 05:00:00","tgl_etd":"2026-03-15","etd":"2026-03-15 20:00:00","penumpang_turun":287,"penumpang_naik":50},
-                {"id":34954887,"nomor_pkk":"PKK.DN.IDWCI.2603.000099","nama_kapal":"SIANG PERKASA 01","bendera":"ID","nakhoda":"NASRUDIN","gt":125,"dwt":250,"trayek_datang":"DOMESTIK","tgl_eta":"2026-03-14","eta":"2026-03-14 10:00:00","tgl_etd":"2026-03-15","etd":"2026-03-15 18:00:00","penumpang_turun":0,"penumpang_naik":0},
-                {"id":34953555,"nomor_pkk":"PKK.DN.IDWCI.2603.000097","nama_kapal":"PACIFIC JET STAR 1","bendera":"ID","nakhoda":"RUSMAN GAFARUDDIN","gt":220,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-15","eta":"2026-03-15 10:45:00","tgl_etd":"2026-03-15","etd":"2026-03-15 12:55:00","penumpang_turun":187,"penumpang_naik":26},
-                {"id":34949647,"nomor_pkk":"PKK.DN.IDWCI.2603.000095","nama_kapal":"WISATA INDAH - 2","bendera":"ID","nakhoda":"MAKMUR KOLLE DG SITUJU","gt":70,"dwt":140,"trayek_datang":"PELRA","tgl_eta":"2026-03-12","eta":"2026-03-12 17:00:00","tgl_etd":"2026-03-15","etd":"2026-03-15 09:00:00","penumpang_turun":0,"penumpang_naik":0},
-                {"id":34949631,"nomor_pkk":"PKK.DN.IDWCI.2603.000096","nama_kapal":"SINAR BAROKAH 2M","bendera":"ID","nakhoda":"KAMRIN TAHIR","gt":104,"dwt":208,"trayek_datang":"PELRA","tgl_eta":"2026-03-12","eta":"2026-03-12 04:00:00","tgl_etd":"2026-03-15","etd":"2026-03-15 09:00:00","penumpang_turun":0,"penumpang_naik":0},
-                {"id":34949459,"nomor_pkk":"PKK.DN.IDWCI.2603.000092","nama_kapal":"MULIA KENCANA 99","bendera":"ID","nakhoda":"AMRIN ODE","gt":142,"dwt":142,"trayek_datang":"LINER","tgl_eta":"2026-03-14","eta":"2026-03-14 11:30:00","tgl_etd":"2026-03-15","etd":"2026-03-15 08:00:00","penumpang_turun":50,"penumpang_naik":53},
-                {"id":34949435,"nomor_pkk":"PKK.DN.IDWCI.2603.000093","nama_kapal":"AL SUDAIS 22","bendera":"ID","nakhoda":"JASMAN","gt":712,"dwt":712,"trayek_datang":"LINER","tgl_eta":"2026-03-14","eta":"2026-03-14 17:02:00","tgl_etd":"2026-03-15","etd":"2026-03-15 08:00:00","penumpang_turun":119,"penumpang_naik":58},
-                {"id":34948563,"nomor_pkk":"PKK.DN.IDWCI.2603.000091","nama_kapal":"BATAM JET 5","bendera":"ID","nakhoda":"LA ODE JUHARISNO","gt":244,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-14","eta":"2026-03-14 10:30:00","tgl_etd":"2026-03-15","etd":"2026-03-15 09:00:00","penumpang_turun":107,"penumpang_naik":82},
-                {"id":34948555,"nomor_pkk":"PKK.DN.IDWCI.2603.000094","nama_kapal":"SABUK NUSANTARA 31","bendera":"ID","nakhoda":"SYAFRUDIN UMAR","gt":1202,"dwt":2200,"trayek_datang":"LINER","tgl_eta":"2026-03-15","eta":"2026-03-15 02:00:00","tgl_etd":"2026-03-15","etd":"2026-03-15 04:00:00","penumpang_turun":15,"penumpang_naik":0},
-                {"id":34940651,"nomor_pkk":"PKK.DN.IDWCI.2602.000103","nama_kapal":"LUTFI JAYA","bendera":"ID","nakhoda":"LA SUDI IDRIS","gt":27,"dwt":100,"trayek_datang":"PELRA","tgl_eta":"2026-02-15","eta":"2026-02-15 14:00:00","tgl_etd":"2026-03-14","etd":"2026-03-14 21:00:00","penumpang_turun":0,"penumpang_naik":0},
-                {"id":34940407,"nomor_pkk":"PKK.DN.IDWCI.2603.000072","nama_kapal":"PUTRI TIGA","bendera":"ID","nakhoda":"HASRUL","gt":155,"dwt":500,"trayek_datang":"PELRA","tgl_eta":"2026-03-11","eta":"2026-03-11 17:30:00","tgl_etd":"2026-03-14","etd":"2026-03-14 20:00:00","penumpang_turun":0,"penumpang_naik":0},
-                {"id":34933983,"nomor_pkk":"PKK.DN.IDWCI.2603.000088","nama_kapal":"SIANG PERKASA 01","bendera":"ID","nakhoda":"NASRUDIN","gt":125,"dwt":250,"trayek_datang":"DOMESTIK","tgl_eta":"2026-03-13","eta":"2026-03-13 13:00:00","tgl_etd":"2026-03-14","etd":"2026-03-14 09:00:00","penumpang_turun":0,"penumpang_naik":0},
-                {"id":34933931,"nomor_pkk":"PKK.DN.IDWCI.2603.000089","nama_kapal":"MUTIARA INDAH 6","bendera":"ID","nakhoda":"SULIS LAMANI","gt":102,"dwt":204,"trayek_datang":"PELRA","tgl_eta":"2026-03-07","eta":"2026-03-07 04:00:00","tgl_etd":"2026-03-14","etd":"2026-03-14 10:00:00","penumpang_turun":0,"penumpang_naik":0},
-                {"id":34933439,"nomor_pkk":"PKK.DN.IDWCI.2603.000087","nama_kapal":"PACIFIC JET STAR 1","bendera":"ID","nakhoda":"RUSMAN GAFARUDDIN","gt":220,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-14","eta":"2026-03-14 07:30:00","tgl_etd":"2026-03-14","etd":"2026-03-14 09:00:00","penumpang_turun":27,"penumpang_naik":42},
-                {"id":34932855,"nomor_pkk":"PKK.DN.IDWCI.2603.000079","nama_kapal":"NAPOLEON 777","bendera":"ID","nakhoda":"SUHARLI","gt":698,"dwt":1110,"trayek_datang":"LINER","tgl_eta":"2026-03-12","eta":"2026-03-12 17:00:00","tgl_etd":"2026-03-14","etd":"2026-03-14 08:00:00","penumpang_turun":207,"penumpang_naik":121},
-                {"id":34932755,"nomor_pkk":"PKK.DN.IDWCI.2603.000083","nama_kapal":"MULIA KENCANA 99","bendera":"ID","nakhoda":"AMRIN ODE","gt":142,"dwt":142,"trayek_datang":"LINER","tgl_eta":"2026-03-13","eta":"2026-03-13 11:30:00","tgl_etd":"2026-03-14","etd":"2026-03-14 08:00:00","penumpang_turun":73,"penumpang_naik":43},
-                {"id":34929667,"nomor_pkk":"PKK.DN.IDWCI.2603.000047","nama_kapal":"FARAH ASYIFA ADIOS 01","bendera":"ID","nakhoda":"ANDRIS AUWDY TUESANG","gt":197,"dwt":400,"trayek_datang":"TRAMPER","tgl_eta":"2026-03-07","eta":"2026-03-07 22:00:00","tgl_etd":"2026-03-13","etd":"2026-03-13 22:00:00","penumpang_turun":0,"penumpang_naik":0},
-                {"id":34927651,"nomor_pkk":"PKK.DN.IDWCI.2603.000075","nama_kapal":"MEKAR TERATAI","bendera":"ID","nakhoda":"LA ODE DURI","gt":488,"dwt":488,"trayek_datang":"LINER","tgl_eta":"2026-03-12","eta":"2026-03-12 06:00:00","tgl_etd":"2026-03-13","etd":"2026-03-13 20:00:00","penumpang_turun":193,"penumpang_naik":158},
-                {"id":34927223,"nomor_pkk":"PKK.DN.IDWCI.2603.000049","nama_kapal":"RANSANI INDAH1","bendera":"ID","nakhoda":"SABARUDDIN","gt":31,"dwt":62,"trayek_datang":"PELRA","tgl_eta":"2026-03-07","eta":"2026-03-07 21:00:00","tgl_etd":"2026-03-13","etd":"2026-03-13 21:00:00","penumpang_turun":0,"penumpang_naik":0},
-                {"id":34926139,"nomor_pkk":"PKK.DN.IDWCI.2603.000084","nama_kapal":"PACIFIC JET STAR 1","bendera":"ID","nakhoda":"RUSMAN GAFARUDDIN","gt":220,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-13","eta":"2026-03-13 14:30:00","tgl_etd":"2026-03-14","etd":"2026-03-14 06:00:00","penumpang_turun":77,"penumpang_naik":47},
-                {"id":34925627,"nomor_pkk":"PKK.DN.IDWCI.2603.000085","nama_kapal":"FAJAR MEKAR 01","bendera":"ID","nakhoda":"LAODE HARIMAO","gt":66,"dwt":120,"trayek_datang":"DOMESTIK","tgl_eta":"2026-03-13","eta":"2026-03-13 13:00:00","tgl_etd":"2026-03-13","etd":"2026-03-13 21:00:00","penumpang_turun":0,"penumpang_naik":0},
-                {"id":34921055,"nomor_pkk":"PKK.DN.IDWCI.2603.000082","nama_kapal":"PACIFIC JET STAR 1","bendera":"ID","nakhoda":"RUSMAN GAFARUDDIN","gt":220,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-13","eta":"2026-03-13 10:30:00","tgl_etd":"2026-03-13","etd":"2026-03-13 13:30:00","penumpang_turun":36,"penumpang_naik":11},
-                {"id":34916415,"nomor_pkk":"PKK.DN.IDWCI.2603.000077","nama_kapal":"BATAM JET 5","bendera":"ID","nakhoda":"LA ODE JUHARISNO","gt":244,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-12","eta":"2026-03-12 10:30:00","tgl_etd":"2026-03-13","etd":"2026-03-13 09:00:00","penumpang_turun":58,"penumpang_naik":36},
-                {"id":34916411,"nomor_pkk":"PKK.DN.IDWCI.2603.000078","nama_kapal":"MULIA KENCANA 99","bendera":"ID","nakhoda":"AMRIN ODE","gt":142,"dwt":142,"trayek_datang":"LINER","tgl_eta":"2026-03-12","eta":"2026-03-12 11:30:00","tgl_etd":"2026-03-13","etd":"2026-03-13 08:00:00","penumpang_turun":108,"penumpang_naik":27},
-                {"id":34915327,"nomor_pkk":"PKK.DN.IDWCI.2603.000081","nama_kapal":"RAHMAT ILAHI 3","bendera":"ID","nakhoda":"LA ODE MADI","gt":173,"dwt":300,"trayek_datang":"PELRA","tgl_eta":"2026-03-07","eta":"2026-03-07 19:00:00","tgl_etd":"2026-03-13","etd":"2026-03-13 09:00:00","penumpang_turun":0,"penumpang_naik":7}
-            ]
-        };
+        // Fallback mock data jika terjadi kendala akses CORS ke API
+        const mockFallbackData = [
+            {"id":34958311,"nomor_pkk":"PKK.DN.IDWCI.2603.000100","nama_kapal":"PACIFIC JET STAR 1","bendera":"ID","nakhoda":"RUSMAN GAFARUDDIN","gt":220,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-15","eta":"2026-03-15 13:50:00","tgl_etd":"2026-03-16","etd":"2026-03-16 06:00:00","penumpang_turun":120,"penumpang_naik":10},
+            {"id":34958127,"nomor_pkk":"PKK.DN.IDWCI.2603.000086","nama_kapal":"SIMBA I","bendera":"ID","nakhoda":"MUHAMMAD UMAR KAIMUDDIN","gt":801,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-14","eta":"2026-03-14 05:00:00","tgl_etd":"2026-03-15","etd":"2026-03-15 20:00:00","penumpang_turun":287,"penumpang_naik":50},
+            {"id":34954887,"nomor_pkk":"PKK.DN.IDWCI.2603.000099","nama_kapal":"SIANG PERKASA 01","bendera":"ID","nakhoda":"NASRUDIN","gt":125,"dwt":250,"trayek_datang":"DOMESTIK","tgl_eta":"2026-03-14","eta":"2026-03-14 10:00:00","tgl_etd":"2026-03-15","etd":"2026-03-15 18:00:00","penumpang_turun":0,"penumpang_naik":0},
+            {"id":34953555,"nomor_pkk":"PKK.DN.IDWCI.2603.000097","nama_kapal":"PACIFIC JET STAR 1","bendera":"ID","nakhoda":"RUSMAN GAFARUDDIN","gt":220,"dwt":500,"trayek_datang":"LINER","tgl_eta":"2026-03-15","eta":"2026-03-15 10:45:00","tgl_etd":"2026-03-15","etd":"2026-03-15 12:55:00","penumpang_turun":187,"penumpang_naik":26},
+            {"id":34949647,"nomor_pkk":"PKK.DN.IDWCI.2603.000095","nama_kapal":"WISATA INDAH - 2","bendera":"ID","nakhoda":"MAKMUR KOLLE DG SITUJU","gt":70,"dwt":140,"trayek_datang":"PELRA","tgl_eta":"2026-03-12","eta":"2026-03-12 17:00:00","tgl_etd":"2026-03-15","etd":"2026-03-15 09:00:00","penumpang_turun":0,"penumpang_naik":0}
+        ];
 
         // Chart instances
         let etaChartInst = null;
         let trayekChartInst = null;
 
-        // Render Dashboard
-        function loadData() {
-            // Update time
-            const now = new Date();
-            document.getElementById('lastUpdated').textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        // Fetch Data and Render Dashboard
+        async function loadData() {
+            const portCode = document.getElementById('portCode').value.trim().toUpperCase() || 'IDWCI';
+            const year = document.getElementById('yearFilter').value;
+            const month = document.getElementById('monthFilter').value;
+            const timestamp = Date.now();
 
-            const data = mockApiResponse.data;
+            // Update UI components showing active filter info
+            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            document.getElementById('displayPort').textContent = portCode;
+            document.getElementById('displayPeriod').textContent = `${monthNames[parseInt(month)-1]} ${year}`;
+
+            // Show loading state
+            const refreshBtn = document.getElementById('refreshBtn');
+            const originalBtnText = refreshBtn.innerHTML;
+            refreshBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Memuat...';
+            refreshBtn.disabled = true;
+            lucide.createIcons();
+
+            let data = [];
+
+            try {
+                // Request to real API using dynamic parameters
+                const targetUrl = `https://monitoring-inaportnet.dephub.go.id/monitoring/byPort/list/${portCode}/dn/${year}/${month}?_=${timestamp}`;
+                
+                const response = await fetch(targetUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                data = result.data || [];
+
+            } catch (error) {
+                console.error("Gagal memuat data dari API:", error);
+                // Menggunakan data mock/fallback jika terjadi kendala CORS pada browser/previewer
+                data = mockFallbackData; 
+                alert("Peringatan: Gagal mengambil data langsung dari Inaportnet (kemungkinan blokir CORS). Menampilkan data simulasi sebagai pengganti.");
+            } finally {
+                // Restore button
+                refreshBtn.innerHTML = originalBtnText;
+                refreshBtn.disabled = false;
+                lucide.createIcons();
+                
+                // Update time
+                const now = new Date();
+                document.getElementById('lastUpdated').textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
 
             // 1. Calculate Summaries
             let totalGt = 0;
@@ -293,7 +316,7 @@
                 trayekCounts[trayek] = (trayekCounts[trayek] || 0) + 1;
 
                 // Group by ETA date
-                const date = item.tgl_eta;
+                const date = item.tgl_eta || 'TBA';
                 etaCounts[date] = (etaCounts[date] || 0) + 1;
             });
 
@@ -387,6 +410,11 @@
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-slate-500">Tidak ada data untuk kriteria tersebut.</td></tr>';
+                return;
+            }
+
             data.forEach((item, index) => {
                 // Determine badge color based on trayek
                 let badgeClass = 'bg-slate-100 text-slate-800 border-slate-200';
@@ -405,7 +433,7 @@
                                 <i data-lucide="ship" class="w-4 h-4"></i>
                             </div>
                             <div>
-                                <p class="font-bold text-slate-800">${item.nama_kapal}</p>
+                                <p class="font-bold text-slate-800">${item.nama_kapal || '-'}</p>
                                 <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
                                     <span class="inline-block w-4 h-3 bg-slate-200 rounded-sm relative overflow-hidden">
                                         <!-- Simple flag representation -->
@@ -417,29 +445,29 @@
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <p class="font-mono text-sm text-slate-700">${item.nomor_pkk}</p>
+                        <p class="font-mono text-sm text-slate-700">${item.nomor_pkk || '-'}</p>
                         <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${badgeClass}">
-                            ${item.trayek_datang}
+                            ${item.trayek_datang || '-'}
                         </span>
                     </td>
                     <td class="px-6 py-4">
-                        <p class="text-sm"><span class="text-slate-500">GT:</span> <span class="font-semibold">${item.gt}</span></p>
-                        <p class="text-sm mt-0.5"><span class="text-slate-500">DWT:</span> <span class="font-semibold">${item.dwt}</span></p>
+                        <p class="text-sm"><span class="text-slate-500">GT:</span> <span class="font-semibold">${item.gt || 0}</span></p>
+                        <p class="text-sm mt-0.5"><span class="text-slate-500">DWT:</span> <span class="font-semibold">${item.dwt || 0}</span></p>
                     </td>
                     <td class="px-6 py-4">
-                        <p class="text-sm"><span class="text-emerald-600 font-medium">ETA:</span> ${item.eta}</p>
-                        <p class="text-sm mt-0.5"><span class="text-amber-600 font-medium">ETD:</span> ${item.etd}</p>
+                        <p class="text-sm"><span class="text-emerald-600 font-medium">ETA:</span> ${item.eta || '-'}</p>
+                        <p class="text-sm mt-0.5"><span class="text-amber-600 font-medium">ETD:</span> ${item.etd || '-'}</p>
                     </td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-3">
                             <div class="text-center" title="Penumpang Turun">
                                 <i data-lucide="arrow-down-to-line" class="w-4 h-4 text-rose-500 mx-auto mb-1"></i>
-                                <span class="font-semibold text-slate-700">${item.penumpang_turun}</span>
+                                <span class="font-semibold text-slate-700">${item.penumpang_turun || 0}</span>
                             </div>
                             <div class="w-px h-8 bg-slate-200"></div>
                             <div class="text-center" title="Penumpang Naik">
                                 <i data-lucide="arrow-up-from-line" class="w-4 h-4 text-emerald-500 mx-auto mb-1"></i>
-                                <span class="font-semibold text-slate-700">${item.penumpang_naik}</span>
+                                <span class="font-semibold text-slate-700">${item.penumpang_naik || 0}</span>
                             </div>
                         </div>
                     </td>
