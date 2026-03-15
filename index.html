@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -19,29 +20,22 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
-        /* Custom scrollbar for table */
-        .table-container::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .table-container::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-            border-radius: 4px;
-        }
-        .table-container::-webkit-scrollbar-thumb {
-            background: #cbd5e1; 
-            border-radius: 4px;
-        }
-        .table-container::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; 
-        }
+        .table-container { width: 100%; overflow-x: auto; position: relative;}
+        .table-container::-webkit-scrollbar { width: 6px; height: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Modal Animation */
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-animate { animation: fadeIn 0.2s ease-out forwards; }
     </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="text-slate-800 antialiased min-h-screen flex flex-col relative">
 
     <!-- Navbar -->
-    <nav class="bg-blue-900 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav class="bg-blue-900 text-white shadow-lg sticky top-0 z-40">
+        <div class="w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-3">
                     <i data-lucide="anchor" class="w-8 h-8 text-blue-300"></i>
@@ -50,14 +44,14 @@
                         <p class="text-xs text-blue-200">Monitoring Pelabuhan Real-time</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-4 text-sm font-medium">
+                <div class="hidden sm:flex items-center gap-4 text-sm font-medium">
                     <div class="bg-blue-800 px-3 py-1.5 rounded-full border border-blue-700 flex items-center gap-2">
                         <i data-lucide="map-pin" class="w-4 h-4"></i>
-                        <span id="displayPort">IDWCI</span>
+                        <span id="displayPort">Memuat...</span>
                     </div>
                     <div class="bg-blue-800 px-3 py-1.5 rounded-full border border-blue-700 flex items-center gap-2">
                         <i data-lucide="calendar" class="w-4 h-4"></i>
-                        <span id="displayPeriod">Maret 2026</span>
+                        <span id="displayPeriod">Memuat...</span>
                     </div>
                 </div>
             </div>
@@ -65,162 +59,133 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <main class="flex-grow w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10">
         
         <!-- Controls / Filters -->
-        <div class="glass-card rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-end justify-between">
-            <div class="flex flex-wrap gap-4 items-end">
-                <div>
+        <div class="glass-card rounded-xl p-4 sm:p-6 mb-6 flex flex-col md:flex-row md:flex-wrap gap-4 items-start md:items-end justify-between">
+            <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-4 items-end w-full md:w-auto">
+                <div class="col-span-1 w-full sm:w-auto">
                     <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Kode Port</label>
-                    <input type="text" id="portCode" value="IDWCI" class="w-32 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium uppercase">
+                    <!-- Default dihilangkan, akan diisi otomatis dari Config GAS -->
+                    <input type="text" id="portCode" placeholder="Mis: IDLPO" class="w-full sm:w-32 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase">
                 </div>
-                <div>
+                <div class="col-span-1 w-full sm:w-auto">
                     <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Tahun</label>
-                    <select id="yearFilter" class="w-32 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
-                        <option value="2024">2024</option>
+                    <select id="yearFilter" class="w-full sm:w-32 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
                         <option value="2025">2025</option>
                         <option value="2026" selected>2026</option>
                         <option value="2027">2027</option>
                     </select>
                 </div>
-                <div>
+                <div class="col-span-2 sm:col-span-1 w-full sm:w-auto">
                     <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Bulan</label>
-                    <select id="monthFilter" class="w-40 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
+                    <select id="monthFilter" class="w-full sm:w-40 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
                         <option value="01">01 - Januari</option>
                         <option value="02">02 - Februari</option>
                         <option value="03" selected>03 - Maret</option>
                         <option value="04">04 - April</option>
                         <option value="05">05 - Mei</option>
                         <option value="06">06 - Juni</option>
-                        <option value="07">07 - Juli</option>
-                        <option value="08">08 - Agustus</option>
-                        <option value="09">09 - September</option>
-                        <option value="10">10 - Oktober</option>
-                        <option value="11">11 - November</option>
-                        <option value="12">12 - Desember</option>
                     </select>
                 </div>
-                <button id="refreshBtn" onclick="loadData()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 py-2.5 transition-colors flex items-center gap-2 shadow-md shadow-blue-500/30">
-                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                    Refresh Data
-                </button>
+                <div class="col-span-2 sm:col-span-1 w-full sm:w-auto mt-2 sm:mt-0">
+                    <button id="refreshBtn" onclick="loadData()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 py-2.5 transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-500/30">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        Refresh Data
+                    </button>
+                </div>
             </div>
-            <div class="text-sm text-slate-500 font-medium">
-                Last updated: <span id="lastUpdated" class="text-slate-800 font-semibold">-</span>
+            <div class="text-sm text-slate-500 font-medium w-full md:w-auto mt-2 md:mt-0 text-left md:text-right border-t border-slate-100 md:border-0 pt-3 md:pt-0">
+                Diperbarui: <span id="lastUpdated" class="text-slate-800 font-semibold">-</span>
             </div>
         </div>
 
         <!-- Summary Widgets -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Widget 1 -->
-            <div class="glass-card rounded-xl p-5 flex items-center gap-4 relative overflow-hidden group">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <i data-lucide="ship" class="w-10 h-10 text-blue-200"></i>
-                </div>
-                <div class="p-3 rounded-lg bg-blue-100 text-blue-600 z-10">
-                    <i data-lucide="ship" class="w-6 h-6"></i>
-                </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-8">
+            <div class="glass-card rounded-xl p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
+                <div class="p-3 rounded-lg bg-blue-100 text-blue-600 z-10"><i data-lucide="ship" class="w-6 h-6"></i></div>
                 <div class="z-10">
-                    <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Kunjungan</p>
-                    <h3 class="text-3xl font-bold text-slate-800" id="totalShips">0</h3>
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Kapal</p>
+                    <h3 class="text-2xl font-bold text-slate-800" id="totalShips">0</h3>
                 </div>
             </div>
-
-            <!-- Widget 2 -->
-            <div class="glass-card rounded-xl p-5 flex items-center gap-4 relative overflow-hidden group">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <i data-lucide="weight" class="w-10 h-10 text-emerald-200"></i>
-                </div>
-                <div class="p-3 rounded-lg bg-emerald-100 text-emerald-600 z-10">
-                    <i data-lucide="weight" class="w-6 h-6"></i>
-                </div>
+            <div class="glass-card rounded-xl p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
+                <div class="p-3 rounded-lg bg-indigo-100 text-indigo-600 z-10"><i data-lucide="weight" class="w-6 h-6"></i></div>
                 <div class="z-10">
-                    <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Gross Tonnage</p>
-                    <h3 class="text-3xl font-bold text-slate-800" id="totalGT">0</h3>
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total GT</p>
+                    <h3 class="text-2xl font-bold text-slate-800" id="totalGT">0</h3>
                 </div>
             </div>
-
-            <!-- Widget 3 -->
-            <div class="glass-card rounded-xl p-5 flex items-center gap-4 relative overflow-hidden group">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <i data-lucide="users" class="w-10 h-10 text-amber-200"></i>
-                </div>
-                <div class="p-3 rounded-lg bg-amber-100 text-amber-600 z-10">
-                    <i data-lucide="users" class="w-6 h-6"></i>
-                </div>
+            <div class="glass-card rounded-xl p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
+                <div class="p-3 rounded-lg bg-amber-100 text-amber-600 z-10"><i data-lucide="ferris-wheel" class="w-6 h-6"></i></div>
                 <div class="z-10">
-                    <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Penumpang Turun</p>
-                    <h3 class="text-3xl font-bold text-slate-800" id="totalPaxTurun">0</h3>
+                    <p class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Penyeberangan/Minerba</p>
+                    <h3 class="text-2xl font-bold text-slate-800" id="totalKhusus">0</h3>
                 </div>
             </div>
-
-            <!-- Widget 4 -->
-            <div class="glass-card rounded-xl p-5 flex items-center gap-4 relative overflow-hidden group">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <i data-lucide="user-plus" class="w-10 h-10 text-indigo-200"></i>
-                </div>
-                <div class="p-3 rounded-lg bg-indigo-100 text-indigo-600 z-10">
-                    <i data-lucide="user-plus" class="w-6 h-6"></i>
-                </div>
+            <div class="glass-card rounded-xl p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
+                <div class="p-3 rounded-lg bg-emerald-100 text-emerald-600 z-10"><i data-lucide="user-plus" class="w-6 h-6"></i></div>
                 <div class="z-10">
-                    <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Penumpang Naik</p>
-                    <h3 class="text-3xl font-bold text-slate-800" id="totalPaxNaik">0</h3>
+                    <p class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Penumpang Naik</p>
+                    <h3 class="text-2xl font-bold text-slate-800" id="totalPaxNaik">0</h3>
+                </div>
+            </div>
+            <div class="glass-card rounded-xl p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
+                <div class="p-3 rounded-lg bg-rose-100 text-rose-600 z-10"><i data-lucide="user-minus" class="w-6 h-6"></i></div>
+                <div class="z-10">
+                    <p class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Penumpang Turun</p>
+                    <h3 class="text-2xl font-bold text-slate-800" id="totalPaxTurun">0</h3>
                 </div>
             </div>
         </div>
 
         <!-- Charts Section -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <!-- Line Chart -->
-            <div class="glass-card rounded-xl p-6 lg:col-span-2 shadow-sm">
+            <div class="glass-card rounded-xl p-4 sm:p-6 lg:col-span-2 shadow-sm">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold text-slate-800">Kedatangan Kapal (ETA) per Hari</h2>
-                    <div class="bg-slate-100 p-2 rounded-lg">
-                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-slate-500"></i>
-                    </div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-800">Kedatangan Kapal (ETA) per Hari</h2>
+                    <div class="bg-slate-100 p-2 rounded-lg hidden sm:block"><i data-lucide="bar-chart-2" class="w-5 h-5 text-slate-500"></i></div>
                 </div>
-                <div class="relative h-72 w-full">
-                    <canvas id="etaChart"></canvas>
-                </div>
+                <div class="relative h-64 sm:h-72 w-full"><canvas id="etaChart"></canvas></div>
             </div>
-
-            <!-- Doughnut Chart -->
-            <div class="glass-card rounded-xl p-6 shadow-sm">
+            <div class="glass-card rounded-xl p-4 sm:p-6 shadow-sm">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold text-slate-800">Distribusi Trayek</h2>
-                    <div class="bg-slate-100 p-2 rounded-lg">
-                        <i data-lucide="pie-chart" class="w-5 h-5 text-slate-500"></i>
-                    </div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-800">Distribusi Trayek</h2>
+                    <div class="bg-slate-100 p-2 rounded-lg hidden sm:block"><i data-lucide="pie-chart" class="w-5 h-5 text-slate-500"></i></div>
                 </div>
-                <div class="relative h-72 w-full flex justify-center">
-                    <canvas id="trayekChart"></canvas>
-                </div>
+                <div class="relative h-64 sm:h-72 w-full flex justify-center"><canvas id="trayekChart"></canvas></div>
             </div>
         </div>
 
         <!-- Data Table Section -->
         <div class="glass-card rounded-xl shadow-sm overflow-hidden flex flex-col">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <div class="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-white flex-wrap gap-2">
+                <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
                     <i data-lucide="list" class="w-5 h-5 text-blue-600"></i>
-                    Daftar Rencana Kedatangan/Keberangkatan Kapal
+                    Daftar Kedatangan/Keberangkatan
                 </h2>
-                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-200" id="tableRecordCount">0 Records</span>
+                <span class="bg-blue-100 text-blue-800 text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-1 rounded-full border border-blue-200 whitespace-nowrap" id="tableRecordCount">0 Records</span>
             </div>
-            <div class="table-container overflow-x-auto w-full">
-                <table class="w-full text-sm text-left text-slate-600 whitespace-nowrap">
+            <div class="table-container">
+                <table class="w-full min-w-max text-sm text-left text-slate-600 whitespace-nowrap">
                     <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                         <tr>
-                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Nama Kapal & Bendera</th>
-                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider">No. PKK / Trayek</th>
-                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Spesifikasi (GT/DWT)</th>
+                            <th scope="col" class="px-4 py-4 font-semibold tracking-wider text-center w-12">No</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Nama Kapal & Perusahaan</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Rute & Trayek</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Spesifikasi (GT/Dimensi)</th>
                             <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Jadwal (ETA / ETD)</th>
-                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-center">Penumpang (Trn/Nk)</th>
-                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-right">Aksi</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-center">Pax (Trn/Nk)</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody" class="divide-y divide-slate-100 bg-white">
-                        <!-- Table rows will be inserted here dynamically -->
+                        <tr><td colspan="7" class="px-6 py-8 text-center text-slate-500">Silakan klik Refresh Data.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -228,187 +193,222 @@
 
     </main>
 
+    <!-- Modal Detail Kapal -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex justify-center items-end sm:items-center p-0 sm:p-6 transition-opacity">
+        <div class="bg-white sm:rounded-2xl shadow-2xl w-full max-w-6xl max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden modal-animate border border-slate-200 rounded-t-2xl">
+            <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2 sm:gap-3">
+                    <div class="bg-blue-100 p-1.5 sm:p-2 rounded-lg text-blue-600"><i data-lucide="file-text" class="w-4 h-4 sm:w-5 sm:h-5"></i></div>
+                    Detail Lengkap & Muatan
+                </h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-rose-500 bg-white hover:bg-rose-50 p-2 rounded-full transition-colors outline-none border border-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="px-4 sm:px-6 py-4 sm:py-6 overflow-y-auto flex-grow bg-white" id="modalBody">
+                <!-- Content injected here via JS -->
+            </div>
+            <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 flex justify-end bg-slate-50">
+                <button onclick="closeModal()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-md">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
-    <footer class="bg-slate-800 text-slate-400 py-6 mt-auto text-sm text-center">
+    <footer class="bg-slate-800 text-slate-400 py-6 mt-auto text-xs sm:text-sm text-center z-10 px-4">
         <p>&copy; 2026 Inaportnet Dashboard Monitoring. Data Source: dephub.go.id via GAS Backend</p>
     </footer>
 
     <script>
-        // Initialize Lucide Icons
         lucide.createIcons();
 
-        // --- KONFIGURASI PENTING ---
-        // Ganti URL ini dengan URL Web App Google Apps Script Anda (Berakhir dengan /exec)
-        // Pastikan Anda men-deploy GAS Anda sebagai "Web App" dengan akses "Anyone" (Siapa Saja)
-        const GAS_WEB_APP_URL = "URL_WEB_APP_GAS_ANDA_DI_SINI"; 
+        // WAJIB DIISI: URL GAS WEB APP ANDA
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwAZV6iSElbw8XDTvR8IqalIwlhky-C1ozxK_NUIhWLGYf63U5fqOyhdGngl1KVey09rg/exec"; 
         
-        // Chart instances
+        // Config State Frontend (Akan di-override oleh balasan GAS Backend)
+        let APP_CONFIG = {
+            useScrapingForPrint: false
+        };
+
         let etaChartInst = null;
         let trayekChartInst = null;
+        let currentData = []; 
 
-        // Fetch Data and Render Dashboard
+        // FUNGSI FORMAT TANGGAL INDONESIA (DD-MM-YYYY HH:mm)
+        const formatTanggalIndo = (dateStr) => {
+            if (!dateStr || dateStr === '-') return '-';
+            try {
+                let parsedStr = dateStr;
+                // Mengubah spasi jadi 'T' jika formatnya SQL "YYYY-MM-DD HH:mm:ss" agar terbaca semua browser
+                if (typeof parsedStr === 'string' && parsedStr.includes(' ') && !parsedStr.includes('T')) {
+                    parsedStr = parsedStr.replace(' ', 'T');
+                }
+                const date = new Date(parsedStr);
+                if (isNaN(date.getTime())) return dateStr; 
+                
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                
+                // Jika data aslinya hanya berisikan tanggal saja tanpa waktu
+                if (typeof dateStr === 'string' && dateStr.length <= 10) {
+                    return `${day}-${month}-${year}`;
+                }
+                return `${day}-${month}-${year} ${hours}:${minutes}`;
+            } catch (e) {
+                return dateStr;
+            }
+        };
+
+        // AUTO-FETCH SAAT HALAMAN DIBUKA
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+        });
+
         async function loadData() {
-            const portCode = document.getElementById('portCode').value.trim().toUpperCase() || 'IDWCI';
+            // Ambil input form, biarkan kosong agar Backend menerapkan Default Port Code-nya sendiri
+            const portCodeInput = document.getElementById('portCode').value.trim().toUpperCase();
+            
             const year = document.getElementById('yearFilter').value;
             const month = document.getElementById('monthFilter').value;
 
-            // Update UI components showing active filter info
             const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            document.getElementById('displayPort').textContent = portCode;
             document.getElementById('displayPeriod').textContent = `${monthNames[parseInt(month)-1]} ${year}`;
 
-            // Show loading state
             const refreshBtn = document.getElementById('refreshBtn');
             const originalBtnText = refreshBtn.innerHTML;
             refreshBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Memuat...';
             refreshBtn.disabled = true;
             lucide.createIcons();
 
-            let data = [];
-
             try {
-                // Peringatan jika URL GAS belum diisi
-                if (GAS_WEB_APP_URL === "URL_WEB_APP_GAS_ANDA_DI_SINI") {
+                if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "URL_WEB_APP_GAS_ANDA_DI_SINI") {
                      throw new Error("URL Web App GAS belum dikonfigurasi.");
                 }
 
-                // Membangun URL untuk GET Request ke GAS Backend
-                // Kita mengirim parameter portCode, year, dan month melalui Query String (?key=value)
-                const targetUrl = `${GAS_WEB_APP_URL}?portCode=${encodeURIComponent(portCode)}&year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
-                
-                const response = await fetch(targetUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                let targetUrl = `${GAS_WEB_APP_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
+                if (portCodeInput) {
+                     targetUrl += `&portCode=${encodeURIComponent(portCodeInput)}`;
                 }
                 
+                const response = await fetch(targetUrl, {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error dari GAS! status: ${response.status}`);
+                }
+
                 const result = await response.json();
                 
-                if (result.status === "success") {
-                     data = result.data.data || [];
+                // --- PROSES KONFIGURASI DARI SERVER ---
+                if (result.config) {
+                    APP_CONFIG.useScrapingForPrint = (result.config.USE_SCRAPING === 'TRUE');
+                    
+                    // Jika input portCode user tadinya kosong, timpa dengan data default dari Backend
+                    if (!portCodeInput && result.config.DEFAULT_PORT_CODE) {
+                        document.getElementById('portCode').value = result.config.DEFAULT_PORT_CODE;
+                        document.getElementById('displayPort').textContent = result.config.DEFAULT_PORT_CODE;
+                    } else if (portCodeInput) {
+                        document.getElementById('displayPort').textContent = portCodeInput;
+                    }
+                }
+
+                // --- PROSES DATA ---
+                if (result.status === "success" || result.status === "cache") {
+                     currentData = result.data.data || [];
+                     if (result.status === "cache") {
+                         Swal.fire({
+                            toast: true, position: 'top-end', icon: 'info',
+                            title: 'Data dimuat dari Cache', text: 'Gagal menghubungi Inaportnet secara live.',
+                            showConfirmButton: false, timer: 4000
+                         });
+                     }
                 } else {
-                     throw new Error(result.message || "Gagal mengambil data dari backend GAS.");
+                     throw new Error(result.message || "Gagal mengambil data.");
                 }
 
             } catch (error) {
-                console.error("Gagal memuat data:", error);
-                data = []; 
-                alert("Peringatan: " + (error.message || "Gagal menghubungi backend GAS.") + "\n\nPastikan URL GAS Web App Anda sudah benar dan sudah di-deploy dengan akses 'Anyone'.");
+                console.error("Kesalahan Sistem:", error);
+                currentData = [];
+                Swal.fire({
+                    icon: 'error', title: 'Gagal Memuat Data Real',
+                    text: error.message,
+                    confirmButtonColor: '#1e3a8a', confirmButtonText: 'Tutup'
+                });
             } finally {
-                // Restore button
                 refreshBtn.innerHTML = originalBtnText;
                 refreshBtn.disabled = false;
                 lucide.createIcons();
-                
-                // Update time
                 const now = new Date();
                 document.getElementById('lastUpdated').textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             }
 
-            // 1. Calculate Summaries
-            let totalGt = 0;
-            let paxNaik = 0;
-            let paxTurun = 0;
-            const trayekCounts = {};
-            const etaCounts = {};
+            processDataAndRender(currentData);
+        }
+
+        function processDataAndRender(data) {
+            let totalGt = 0, paxNaik = 0, paxTurun = 0, khususCount = 0;
+            const trayekCounts = {}, etaCounts = {};
 
             data.forEach(item => {
-                totalGt += item.gt || 0;
-                paxNaik += item.penumpang_naik || 0;
-                paxTurun += item.penumpang_turun || 0;
+                totalGt += parseFloat(item.gt) || 0;
+                paxNaik += parseInt(item.penumpang_naik) || 0;
+                paxTurun += parseInt(item.penumpang_turun) || 0;
+                
+                if(item.is_penyebrangan == 1 || item.is_minerba == 1 || item.jenis_kapal_xls?.includes("RO-RO")) khususCount++;
 
-                // Group by trayek
                 const trayek = item.trayek_datang || 'UNKNOWN';
                 trayekCounts[trayek] = (trayekCounts[trayek] || 0) + 1;
 
-                // Group by ETA date
                 const date = item.tgl_eta || 'TBA';
                 etaCounts[date] = (etaCounts[date] || 0) + 1;
             });
 
-            // Update DOM Summary
             document.getElementById('totalShips').textContent = data.length;
             document.getElementById('totalGT').textContent = totalGt.toLocaleString('id-ID');
-            document.getElementById('totalPaxTurun').textContent = paxTurun.toLocaleString('id-ID');
+            document.getElementById('totalKhusus').textContent = khususCount.toLocaleString('id-ID');
             document.getElementById('totalPaxNaik').textContent = paxNaik.toLocaleString('id-ID');
-            document.getElementById('tableRecordCount').textContent = `${data.length} Records`;
+            document.getElementById('totalPaxTurun').textContent = paxTurun.toLocaleString('id-ID');
+            document.getElementById('tableRecordCount').textContent = `${data.length} Kapal`;
 
-            // 2. Render Charts
             renderCharts(etaCounts, trayekCounts);
-
-            // 3. Render Table
             renderTable(data);
         }
 
         function renderCharts(etaCounts, trayekCounts) {
-            // Sort ETA dates
             const sortedDates = Object.keys(etaCounts).sort();
             const etaData = sortedDates.map(date => etaCounts[date]);
 
-            // Chart Colors
-            const colors = {
-                blue: 'rgba(59, 130, 246, 0.8)',
-                blueLight: 'rgba(59, 130, 246, 0.2)',
-                emerald: 'rgba(16, 185, 129, 0.8)',
-                amber: 'rgba(245, 158, 11, 0.8)',
-                indigo: 'rgba(99, 102, 241, 0.8)',
-                rose: 'rgba(244, 63, 94, 0.8)'
-            };
+            const colors = { blue: '#3b82f6', emerald: '#10b981', amber: '#f59e0b', indigo: '#6366f1', rose: '#f43f5e' };
 
-            // Bar Chart (ETA)
             const ctxEta = document.getElementById('etaChart').getContext('2d');
             if (etaChartInst) etaChartInst.destroy();
             etaChartInst = new Chart(ctxEta, {
                 type: 'bar',
                 data: {
                     labels: sortedDates,
-                    datasets: [{
-                        label: 'Jumlah Kapal',
-                        data: etaData,
-                        backgroundColor: colors.blue,
-                        borderColor: colors.blue,
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }]
+                    datasets: [{ label: 'Jumlah Kapal', data: etaData, backgroundColor: colors.blue, borderRadius: 4 }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
-                        x: { grid: { display: false } }
-                    },
-                    plugins: { legend: { display: false } }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
-            // Doughnut Chart (Trayek)
             const ctxTrayek = document.getElementById('trayekChart').getContext('2d');
             if (trayekChartInst) trayekChartInst.destroy();
-            
             const trayekLabels = Object.keys(trayekCounts);
-            const trayekData = Object.values(trayekCounts);
             const bgColors = [colors.emerald, colors.blue, colors.amber, colors.indigo, colors.rose];
-
             trayekChartInst = new Chart(ctxTrayek, {
                 type: 'doughnut',
                 data: {
                     labels: trayekLabels,
-                    datasets: [{
-                        data: trayekData,
-                        backgroundColor: bgColors.slice(0, trayekLabels.length),
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
+                    datasets: [{ data: Object.values(trayekCounts), backgroundColor: bgColors.slice(0, trayekLabels.length), borderWidth: 0 }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '65%',
-                    plugins: {
-                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
             });
         }
 
@@ -417,81 +417,407 @@
             tbody.innerHTML = '';
 
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-slate-500">Tidak ada data untuk kriteria tersebut.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-slate-500 font-medium">Tidak ada data yang ditemukan.</td></tr>';
                 return;
             }
 
             data.forEach((item, index) => {
-                // Determine badge color based on trayek
                 let badgeClass = 'bg-slate-100 text-slate-800 border-slate-200';
                 if (item.trayek_datang === 'LINER') badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
                 else if (item.trayek_datang === 'PELRA') badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
                 else if (item.trayek_datang === 'TRAMPER') badgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
                 else if (item.trayek_datang === 'DOMESTIK') badgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
 
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition-colors group';
+                let tags = '';
+                if(item.is_minerba == 1) tags += `<span class="px-2 py-0.5 rounded bg-stone-100 text-stone-600 text-[10px] font-bold border border-stone-200 mr-1 mt-1 inline-block">MINERBA</span>`;
+                if(item.is_penyebrangan == 1 || item.jenis_kapal_xls?.includes("RO-RO")) tags += `<span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-700 text-[10px] font-bold border border-cyan-200 mt-1 inline-block">PENYEBERANGAN</span>`;
+
+                // Persiapan Link Cetak (SPB dan Manifest langsung, sisanya melalui scraping opsional)
+                const noLayanan = item.nomor_layanan_berangkat || item.nomor_layanan_datang || '';
+                const noPkk = item.nomor_pkk || '';
                 
+                const urlSPB = noLayanan ? `https://sps-inaportnet.dephub.go.id/index.php/builtin/manage/spb/cetak/${noLayanan}` : '#';
+                const urlManifest = noLayanan ? `https://sps-inaportnet.dephub.go.id/index.php/builtin/manage/spb/detail/${noLayanan}` : '#';
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors'; 
                 tr.innerHTML = `
+                    <td class="px-4 py-4 text-center font-bold text-slate-500">${index + 1}</td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-500 flex-shrink-0">
-                                <i data-lucide="ship" class="w-4 h-4"></i>
+                            <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0 border border-blue-100 hidden sm:flex">
+                                <i data-lucide="ship" class="w-5 h-5"></i>
                             </div>
-                            <div>
-                                <p class="font-bold text-slate-800">${item.nama_kapal || '-'}</p>
-                                <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                                    <span class="inline-block w-4 h-3 bg-slate-200 rounded-sm relative overflow-hidden">
-                                        <!-- Simple flag representation -->
-                                        ${item.bendera === 'ID' ? '<div class="h-1/2 bg-red-600"></div><div class="h-1/2 bg-white"></div>' : item.bendera}
-                                    </span>
-                                    Nakhoda: ${item.nakhoda || '-'}
+                            <div class="max-w-[220px] sm:max-w-[300px] whitespace-normal">
+                                <p class="font-bold text-slate-800 text-sm sm:text-base leading-tight">${item.nama_kapal || '-'}</p>
+                                <p class="text-[10px] sm:text-xs text-slate-500 mt-1 flex items-center gap-1">
+                                    <i data-lucide="building" class="w-3 h-3 flex-shrink-0"></i> <span class="truncate" title="${item.perusahaan || ''}">${item.perusahaan || 'PERUSAHAAN TIDAK DIKETAHUI'}</span>
+                                </p>
+                                <p class="text-[10px] sm:text-xs text-slate-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                    Bendera: <span class="font-bold text-slate-700">${item.bendera || '-'}</span>
+                                    ${item.callsign ? `&bull; <span class="font-mono text-[10px] bg-slate-100 px-1 rounded border border-slate-200">${item.callsign}</span>` : ''}
                                 </p>
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4">
-                        <p class="font-mono text-sm text-slate-700">${item.nomor_pkk || '-'}</p>
-                        <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${badgeClass}">
-                            ${item.trayek_datang || '-'}
-                        </span>
+                    <td class="px-6 py-4 whitespace-normal min-w-[200px]">
+                        <p class="text-xs sm:text-sm font-semibold text-slate-700 flex items-center gap-1 flex-wrap">
+                            ${item.pelabuhan_asal || '-'} <i data-lucide="arrow-right" class="w-3 h-3 text-slate-400"></i> ${item.pelabuhan_tujuan || '-'}
+                        </p>
+                        <div class="mt-1.5 flex items-center flex-wrap gap-1">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold border tracking-wider ${badgeClass}">${item.trayek_datang || '-'}</span>
+                            ${tags}
+                        </div>
                     </td>
                     <td class="px-6 py-4">
-                        <p class="text-sm"><span class="text-slate-500">GT:</span> <span class="font-semibold">${item.gt || 0}</span></p>
-                        <p class="text-sm mt-0.5"><span class="text-slate-500">DWT:</span> <span class="font-semibold">${item.dwt || 0}</span></p>
+                        <p class="text-xs sm:text-sm"><span class="text-slate-400 text-[10px] uppercase tracking-wider">GT:</span> <span class="font-bold text-slate-700">${item.gt || 0}</span></p>
+                        <p class="text-xs sm:text-sm mt-0.5"><span class="text-slate-400 text-[10px] uppercase tracking-wider">Dim.:</span> <span class="font-medium text-slate-600">${item.loa || '-'}m x ${item.lebar || '-'}m</span></p>
                     </td>
                     <td class="px-6 py-4">
-                        <p class="text-sm"><span class="text-emerald-600 font-medium">ETA:</span> ${item.eta || '-'}</p>
-                        <p class="text-sm mt-0.5"><span class="text-amber-600 font-medium">ETD:</span> ${item.etd || '-'}</p>
+                        <p class="text-xs sm:text-sm whitespace-nowrap"><span class="text-emerald-600 font-medium bg-emerald-50 px-1 rounded inline-block w-8 text-center">ETA</span> ${formatTanggalIndo(item.eta)}</p>
+                        <p class="text-xs sm:text-sm mt-1 whitespace-nowrap"><span class="text-amber-600 font-medium bg-amber-50 px-1 rounded inline-block w-8 text-center">ETD</span> ${formatTanggalIndo(item.etd)}</p>
                     </td>
                     <td class="px-6 py-4 text-center">
-                        <div class="flex items-center justify-center gap-3">
+                        <div class="flex items-center justify-center gap-2 sm:gap-4 bg-slate-50 p-1.5 rounded-lg border border-slate-100 w-max mx-auto">
                             <div class="text-center" title="Penumpang Turun">
-                                <i data-lucide="arrow-down-to-line" class="w-4 h-4 text-rose-500 mx-auto mb-1"></i>
-                                <span class="font-semibold text-slate-700">${item.penumpang_turun || 0}</span>
+                                <div class="flex items-center justify-center gap-1 text-rose-500 mb-0.5"><i data-lucide="arrow-down-circle" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i><span class="text-[9px] sm:text-[10px] font-bold">TRN</span></div>
+                                <span class="font-bold text-slate-800 text-xs sm:text-sm">${item.penumpang_turun || 0}</span>
                             </div>
-                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div class="w-px h-6 bg-slate-300"></div>
                             <div class="text-center" title="Penumpang Naik">
-                                <i data-lucide="arrow-up-from-line" class="w-4 h-4 text-emerald-500 mx-auto mb-1"></i>
-                                <span class="font-semibold text-slate-700">${item.penumpang_naik || 0}</span>
+                                <div class="flex items-center justify-center gap-1 text-emerald-500 mb-0.5"><i data-lucide="arrow-up-circle" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i><span class="text-[9px] sm:text-[10px] font-bold">NAIK</span></div>
+                                <span class="font-bold text-slate-800 text-xs sm:text-sm">${item.penumpang_naik || 0}</span>
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-right">
-                        <button class="text-slate-400 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-blue-50" title="Detail PKK">
-                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                        </button>
+                    <td class="px-4 sm:px-6 py-4 text-center align-middle min-w-[150px]">
+                        <div class="flex flex-col gap-1.5 w-full items-center mx-auto">
+                            <!-- Tombol Detail Utama -->
+                            <button onclick="openModal(${index})" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white transition-colors py-1.5 px-3 rounded-lg border border-blue-100 shadow-sm flex items-center justify-center gap-1.5 w-full">
+                                <i data-lucide="file-search" class="w-4 h-4"></i> 
+                                <span class="text-[11px] font-bold whitespace-nowrap">Detail Lengkap</span>
+                            </button>
+                            
+                            <!-- Grid Tombol Aksi Tambahan (Tepat Di Bawah Detail) -->
+                            <div class="grid grid-cols-2 gap-1 w-full">
+                                <a href="${urlSPB}" target="_blank" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-colors py-1 px-2 rounded-md border border-indigo-100 flex items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}" title="Cetak SPB">
+                                    <i data-lucide="printer" class="w-3 h-3"></i> SPB
+                                </a>
+                                <a href="#" onclick="cetakDokumenScrape(event, 'LK3', '${noPkk}')" class="text-emerald-600 bg-emerald-50 hover:bg-emerald-600 hover:text-white transition-colors py-1 px-2 rounded-md border border-emerald-100 flex items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${!noPkk ? 'opacity-50 pointer-events-none' : ''}" title="Cetak LK3">
+                                    <i data-lucide="file-spreadsheet" class="w-3 h-3"></i> LK3
+                                </a>
+                                <a href="#" onclick="cetakDokumenScrape(event, 'CREW', '${noPkk}')" class="text-amber-600 bg-amber-50 hover:bg-amber-600 hover:text-white transition-colors py-1 px-2 rounded-md border border-amber-100 flex items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${!noPkk ? 'opacity-50 pointer-events-none' : ''}" title="Cetak Crewlist">
+                                    <i data-lucide="users" class="w-3 h-3"></i> Crew
+                                </a>
+                                <a href="${urlManifest}" target="_blank" class="text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white transition-colors py-1 px-2 rounded-md border border-rose-100 flex items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}" title="Cetak Manifest">
+                                    <i data-lucide="package" class="w-3 h-3"></i> Mnfst
+                                </a>
+                            </div>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            // Re-initialize icons for newly added DOM elements
             lucide.createIcons();
         }
 
-        // Run on load
-        document.addEventListener('DOMContentLoaded', loadData);
+        function openModal(index) {
+            const item = currentData[index];
+            if (!item) return;
+
+            const formatUang = (nominal) => nominal ? 'Rp ' + parseInt(nominal).toLocaleString('id-ID') : '-';
+            const statusTag = (val, trueLabel, falseLabel) => val == 1 ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-bold">${trueLabel}</span>` : (falseLabel ? `<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-xs">${falseLabel}</span>` : '-');
+
+            // Link persiapan untuk aksi di dalam Modal
+            const noLayanan = item.nomor_layanan_berangkat || item.nomor_layanan_datang || '';
+            const noPkk = item.nomor_pkk || '';
+
+            const urlSPB = noLayanan ? `https://sps-inaportnet.dephub.go.id/index.php/builtin/manage/spb/cetak/${noLayanan}` : '#';
+            const urlManifest = noLayanan ? `https://sps-inaportnet.dephub.go.id/index.php/builtin/manage/spb/detail/${noLayanan}` : '#';
+
+            const contentHtml = `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    
+                    <!-- Panel Aksi Cepat Cetak Dokumen di Bagian Atas -->
+                    <div class="md:col-span-2 lg:col-span-3 bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between shadow-sm mb-2">
+                        <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                            <div class="bg-indigo-100 text-indigo-600 p-1.5 rounded-lg"><i data-lucide="printer" class="w-4 h-4"></i></div>
+                            Aksi Cepat Dokumen
+                        </h4>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <a href="${urlSPB}" target="_blank" class="flex-1 sm:flex-none justify-center bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white border border-indigo-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}">
+                                <i data-lucide="printer" class="w-3.5 h-3.5"></i> Cetak SPB
+                            </a>
+                            <a href="#" onclick="cetakDokumenScrape(event, 'LK3', '${noPkk}')" class="flex-1 sm:flex-none justify-center bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noPkk ? 'opacity-50 pointer-events-none' : ''}">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Cetak LK3
+                            </a>
+                            <a href="#" onclick="cetakDokumenScrape(event, 'CREW', '${noPkk}')" class="flex-1 sm:flex-none justify-center bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white border border-amber-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noPkk ? 'opacity-50 pointer-events-none' : ''}">
+                                <i data-lucide="users" class="w-3.5 h-3.5"></i> Crewlist
+                            </a>
+                            <a href="${urlManifest}" target="_blank" class="flex-1 sm:flex-none justify-center bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white border border-rose-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}">
+                                <i data-lucide="package" class="w-3.5 h-3.5"></i> Manifest
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 1. Identitas & Legal -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-blue-800 flex items-center gap-2 border-b border-slate-200 pb-2 mb-3 text-sm sm:text-base">
+                            <i data-lucide="fingerprint" class="w-4 h-4"></i> Identitas Kapal
+                        </h4>
+                        <dl class="space-y-2.5 text-xs sm:text-sm">
+                            <div class="flex justify-between"><dt class="text-slate-500">Nama Kapal</dt><dd class="font-bold text-slate-900 text-right ml-2">${item.nama_kapal || '-'}</dd></div>
+                            <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs mb-1">Perusahaan (Agent)</dt><dd class="font-medium text-blue-900 bg-blue-50 p-1.5 rounded border border-blue-100 break-words leading-tight">${item.perusahaan || item.keagenan || '-'}</dd></div>
+                            <div class="flex justify-between mt-2"><dt class="text-slate-500">Tipe / Bendera</dt><dd class="font-medium text-slate-900 text-right ml-2">${item.jenis_kapal_xls || item.tipe_kapal || '-'} / ${item.bendera || '-'}</dd></div>
+                            <div class="flex justify-between"><dt class="text-slate-500">Callsign / IMO</dt><dd class="font-mono text-slate-900 text-right ml-2">${item.callsign || '-'} / ${item.imo || '-'}</dd></div>
+                        </dl>
+                    </div>
+
+                    <!-- 2. Spesifikasi Fisik (Dimensi & Draft) -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-blue-800 flex items-center gap-2 border-b border-slate-200 pb-2 mb-3 text-sm sm:text-base">
+                            <i data-lucide="ruler" class="w-4 h-4"></i> Spesifikasi & Draft
+                        </h4>
+                        <dl class="space-y-2.5 text-xs sm:text-sm">
+                            <div class="flex justify-between"><dt class="text-slate-500">GT / DWT</dt><dd class="font-bold text-slate-900 text-right ml-2">${item.gt || 0} / ${item.dwt || 0}</dd></div>
+                            <div class="flex justify-between"><dt class="text-slate-500">LOA / Lebar</dt><dd class="font-medium text-slate-900 text-right ml-2">${item.loa || '-'} m / ${item.lebar || '-'} m</dd></div>
+                            <div class="grid grid-cols-4 gap-1 mt-3 text-center border-t border-slate-200 pt-3">
+                                <div class="bg-white rounded border p-1"><p class="text-[8px] sm:text-[9px] text-slate-400">MAX</p><p class="font-bold text-slate-700 text-xs sm:text-sm">${item.dr_max_xls || item.dr_max || '-'}</p></div>
+                                <div class="bg-white rounded border p-1"><p class="text-[8px] sm:text-[9px] text-slate-400">DEPAN</p><p class="font-bold text-slate-700 text-xs sm:text-sm">${item.dr_depan_xls || item.dr_depan || '-'}</p></div>
+                                <div class="bg-white rounded border p-1"><p class="text-[8px] sm:text-[9px] text-slate-400">TENGAH</p><p class="font-bold text-slate-700 text-xs sm:text-sm">${item.dr_tengah_xls || item.dr_tengah || '-'}</p></div>
+                                <div class="bg-white rounded border p-1"><p class="text-[8px] sm:text-[9px] text-slate-400">BLKNG</p><p class="font-bold text-slate-700 text-xs sm:text-sm">${item.dr_belakang_xls || item.dr_belakang || '-'}</p></div>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <!-- 3. Rute & Pelayaran -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-blue-800 flex items-center gap-2 border-b border-slate-200 pb-2 mb-3 text-sm sm:text-base">
+                            <i data-lucide="route" class="w-4 h-4"></i> Detail Pelayaran
+                        </h4>
+                        <dl class="space-y-2.5 text-xs sm:text-sm">
+                            <div class="flex flex-col"><dt class="text-slate-500 text-[10px] sm:text-xs">Asal ➔ Tujuan</dt><dd class="font-bold text-slate-900 mt-0.5 leading-tight">${item.pelabuhan_asal || '-'} ➔ ${item.pelabuhan_tujuan || '-'}</dd></div>
+                            <div class="flex justify-between mt-2"><dt class="text-slate-500">Trayek Datang</dt><dd class="font-medium text-slate-900 text-right ml-2">${item.trayek_datang || '-'}</dd></div>
+                            <div class="flex justify-between"><dt class="text-slate-500">Trayek Bkt.</dt><dd class="font-medium text-slate-900 text-right ml-2">${item.trayek_berangkat || '-'}</dd></div>
+                            <div class="flex justify-between"><dt class="text-slate-500">Voyage In/Out</dt><dd class="font-medium text-slate-900 text-right ml-2">${item.voy_in || '-'} / ${item.voy_out || '-'}</dd></div>
+                        </dl>
+                    </div>
+
+                    <!-- 4. Waktu & Lokasi -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-blue-800 flex items-center gap-2 border-b border-slate-200 pb-2 mb-3 text-sm sm:text-base">
+                            <i data-lucide="clock" class="w-4 h-4"></i> Waktu & Lokasi
+                        </h4>
+                        <dl class="space-y-2.5 text-xs sm:text-sm">
+                            <div class="flex flex-col"><dt class="text-slate-500 text-[10px] sm:text-xs">ETA (Kedatangan)</dt><dd class="font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded mt-1 border border-emerald-100">${formatTanggalIndo(item.eta || item.tgl_eta)}</dd></div>
+                            <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">ETD (Keberangkatan)</dt><dd class="font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded mt-1 border border-amber-100">${formatTanggalIndo(item.etd || item.tgl_etd)}</dd></div>
+                            <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">Lokasi Sandar (Tiba)</dt><dd class="font-medium text-slate-900 text-xs mt-0.5">${item.lokasi_sandar || '-'}</dd></div>
+                            <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">Lokasi Tolak (Berangkat)</dt><dd class="font-medium text-slate-900 text-xs mt-0.5">${item.lokasi_tolak || '-'}</dd></div>
+                        </dl>
+                    </div>
+
+                    <!-- 5. Dokumen, Petugas & Kru -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-blue-800 flex items-center gap-2 border-b border-slate-200 pb-2 mb-3 text-sm sm:text-base">
+                            <i data-lucide="file-check" class="w-4 h-4"></i> Dokumen & Petugas
+                        </h4>
+                        <dl class="space-y-2.5 text-xs sm:text-sm">
+                            <div class="flex flex-col"><dt class="text-slate-500 text-[10px] sm:text-xs">Nomor PKK</dt><dd class="font-mono text-slate-900 text-[10px] sm:text-xs bg-white border border-slate-200 p-1.5 mt-1 rounded break-all">${item.nomor_pkk || '-'}</dd></div>
+                            
+                            <!-- TAMBAHAN: Nomor LK3 -->
+                            <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">Nomor LK3</dt><dd class="font-mono text-slate-900 text-[10px] sm:text-xs bg-white border border-slate-200 p-1.5 mt-1 rounded break-all">${item.no_lk3 || '-'}</dd></div>
+                            
+                            <!-- TAMBAHAN: Nomor Layanan -->
+                            <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">No. Layanan (Masuk/Keluar)</dt><dd class="font-mono text-slate-900 text-[10px] sm:text-xs bg-white border border-slate-200 p-1.5 mt-1 rounded break-all leading-relaxed">${item.nomor_layanan_datang || '-'}<br><span class="text-slate-400">/</span><br>${item.nomor_layanan_berangkat || '-'}</dd></div>
+
+                            <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">Nomor SPB</dt><dd class="font-mono text-slate-900 text-[10px] sm:text-xs bg-white border border-slate-200 p-1.5 mt-1 rounded break-all">${item.no_spb || '-'}</dd></div>
+                            <div class="flex justify-between mt-3"><dt class="text-slate-500">Nakhoda</dt><dd class="font-medium text-slate-900 text-right ml-2">${item.nakhoda || '-'}</dd></div>
+                            <div class="flex justify-between"><dt class="text-slate-500">Jumlah Awak</dt><dd class="font-medium text-slate-900 text-right ml-2">${item.jumlah_awak || '0'} Orang</dd></div>
+                            
+                            <!-- TAMBAHAN: Informasi Petugas -->
+                            <div class="mt-3 pt-3 border-t border-slate-200">
+                                <dt class="text-slate-500 text-[10px] sm:text-xs mb-1">Petugas Persetujuan SPB</dt>
+                                <dd class="flex items-center gap-2 bg-blue-50 p-2 rounded border border-blue-100">
+                                    <div class="bg-blue-200 p-1 rounded-full text-blue-700"><i data-lucide="user-check" class="w-3 h-3"></i></div>
+                                    <div>
+                                        <p class="font-bold text-slate-800 text-xs">${item.spb_approve_fullname || 'Menunggu Approval'}</p>
+                                        <p class="text-[10px] text-slate-500 font-mono">${item.spb_approve_username ? '@' + item.spb_approve_username : '-'}</p>
+                                    </div>
+                                </dd>
+                            </div>
+
+                        </dl>
+                    </div>
+
+                    <!-- 6. Operasional & Keuangan -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-blue-800 flex items-center gap-2 border-b border-slate-200 pb-2 mb-3 text-sm sm:text-base">
+                            <i data-lucide="wallet" class="w-4 h-4"></i> Finansial & Status
+                        </h4>
+                        <dl class="space-y-2.5 text-xs sm:text-sm">
+                            <div class="flex justify-between"><dt class="text-slate-500">Nominal Billing</dt><dd class="font-bold text-slate-900 text-right ml-2">${formatUang(item.nominal_billing)}</dd></div>
+                            <div class="flex justify-between mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs pt-1">Waktu Respon (XLS)</dt><dd class="font-medium text-slate-900 text-right ml-2 leading-tight max-w-[120px]">${formatTanggalIndo(item.waktu_respon_xls || item.waktu_respon)}</dd></div>
+                            <div class="flex justify-between mt-3 items-center"><dt class="text-slate-500">Penyeberangan?</dt><dd>${statusTag(item.is_penyebrangan, 'YA', 'TIDAK')}</dd></div>
+                            <div class="flex justify-between items-center"><dt class="text-slate-500">Minerba?</dt><dd>${statusTag(item.is_minerba, 'YA', 'TIDAK')}</dd></div>
+                        </dl>
+                    </div>
+
+                    <!-- 7. Data Bongkar Muat Ekstra (Multi Item) -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 md:col-span-2 lg:col-span-3">
+                        <h4 class="font-bold text-blue-800 flex items-center gap-2 border-b border-slate-200 pb-2 mb-3 text-sm sm:text-base">
+                            <i data-lucide="package-open" class="w-4 h-4"></i> Rincian Komoditi (Bongkar & Muat)
+                        </h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- BONGKAR -->
+                            <div class="bg-white p-3 sm:p-4 rounded-lg border border-slate-100 shadow-sm">
+                                <h5 class="text-xs sm:text-sm font-bold text-rose-600 mb-2 uppercase border-b border-rose-100 pb-1.5 flex items-center gap-1.5"><i data-lucide="arrow-down-circle" class="w-4 h-4"></i> Rencana Bongkar</h5>
+                                <div class="max-h-40 overflow-y-auto pr-1 space-y-2">
+                                    ${(item.detail_bongkar && item.detail_bongkar.length > 0) 
+                                        ? item.detail_bongkar.map(b => `
+                                            <div class="bg-slate-50 p-2 sm:p-2.5 rounded border border-slate-100">
+                                                <p class="font-bold text-slate-800 text-[11px] sm:text-xs mb-1">${b.komoditi} <span class="font-normal text-slate-500 block sm:inline mt-0.5 sm:mt-0">(${b.jenis})</span></p>
+                                                <div class="grid grid-cols-4 gap-1 text-center divide-x divide-slate-200 mt-1.5 border-t border-slate-200 pt-1.5">
+                                                    <div><p class="text-[8px] sm:text-[9px] text-slate-400">TON</p><p class="text-[10px] sm:text-xs font-bold text-rose-600">${b.ton !== '-' ? b.ton : 0}</p></div>
+                                                    <div><p class="text-[8px] sm:text-[9px] text-slate-400">M3</p><p class="text-[10px] sm:text-xs font-bold text-rose-600">${b.m3 !== '-' ? b.m3 : 0}</p></div>
+                                                    <div><p class="text-[8px] sm:text-[9px] text-slate-400">UNIT</p><p class="text-[10px] sm:text-xs font-bold text-rose-600">${b.unit !== '-' ? b.unit : 0}</p></div>
+                                                    <div><p class="text-[8px] sm:text-[9px] text-slate-400">ORG</p><p class="text-[10px] sm:text-xs font-bold text-rose-600">${b.orang !== '-' ? b.orang : 0}</p></div>
+                                                </div>
+                                            </div>
+                                          `).join('')
+                                        : '<p class="text-[11px] sm:text-xs text-slate-400 italic py-2 text-center bg-slate-50 rounded border border-slate-100">Tidak ada rincian data bongkar</p>'
+                                    }
+                                </div>
+                            </div>
+                            <!-- MUAT -->
+                            <div class="bg-white p-3 sm:p-4 rounded-lg border border-slate-100 shadow-sm">
+                                <h5 class="text-xs sm:text-sm font-bold text-emerald-600 mb-2 uppercase border-b border-emerald-100 pb-1.5 flex items-center gap-1.5"><i data-lucide="arrow-up-circle" class="w-4 h-4"></i> Rencana Muat</h5>
+                                <div class="max-h-40 overflow-y-auto pr-1 space-y-2">
+                                    ${(item.detail_muat && item.detail_muat.length > 0) 
+                                        ? item.detail_muat.map(m => `
+                                            <div class="bg-slate-50 p-2 sm:p-2.5 rounded border border-slate-100">
+                                                <p class="font-bold text-slate-800 text-[11px] sm:text-xs mb-1">${m.komoditi} <span class="font-normal text-slate-500 block sm:inline mt-0.5 sm:mt-0">(${m.jenis})</span></p>
+                                                <div class="grid grid-cols-4 gap-1 text-center divide-x divide-slate-200 mt-1.5 border-t border-slate-200 pt-1.5">
+                                                    <div><p class="text-[8px] sm:text-[9px] text-slate-400">TON</p><p class="text-[10px] sm:text-xs font-bold text-emerald-600">${m.ton !== '-' ? m.ton : 0}</p></div>
+                                                    <div><p class="text-[8px] sm:text-[9px] text-slate-400">M3</p><p class="text-[10px] sm:text-xs font-bold text-emerald-600">${m.m3 !== '-' ? m.m3 : 0}</p></div>
+                                                    <div><p class="text-[8px] sm:text-[9px] text-slate-400">UNIT</p><p class="text-[10px] sm:text-xs font-bold text-emerald-600">${m.unit !== '-' ? m.unit : 0}</p></div>
+                                                    <div><p class="text-[8px] sm:text-[9px] text-slate-400">ORG</p><p class="text-[10px] sm:text-xs font-bold text-emerald-600">${m.orang !== '-' ? m.orang : 0}</p></div>
+                                                </div>
+                                            </div>
+                                          `).join('')
+                                        : '<p class="text-[11px] sm:text-xs text-slate-400 italic py-2 text-center bg-slate-50 rounded border border-slate-100">Tidak ada rincian data muat</p>'
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            `;
+
+            document.getElementById('modalBody').innerHTML = contentHtml;
+            document.getElementById('detailModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+        
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if(e.target === this) closeModal();
+        });
+
+        // FUNGSI SCRAPING FRONTEND (ON-DEMAND) UNTUK LK3 & CREWLIST
+        async function cetakDokumenScrape(event, jenis, noPkk) {
+            event.preventDefault();
+            if (!noPkk) return;
+
+            // Jika mode scraping dimatikan via APP_CONFIG, langsung arahkan ke laman search default
+            if (!APP_CONFIG.useScrapingForPrint) {
+                if (jenis === 'LK3') {
+                    window.open(`https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=${noPkk}`, '_blank');
+                } else {
+                    window.open(`https://sps-inaportnet.dephub.go.id/index.php/document/pelaut/loadDocument/2?by=sps.nomor_pkk&keyword=${noPkk}`, '_blank');
+                }
+                return;
+            }
+
+            // BUKA TAB BARU SECARA LANGSUNG UNTUK MENCEGAH POPUP BLOCKER BROWSER
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Memuat Dokumen ${jenis}...</title>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f1f5f9; margin: 0; }
+                        .loader { text-align: center; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+                        .spinner { border: 4px solid #e2e8f0; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 16px auto; }
+                        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                        h2 { color: #1e293b; margin: 0 0 8px 0; font-size: 20px;}
+                        p { color: #64748b; font-size: 14px; margin: 0;}
+                    </style>
+                </head>
+                <body>
+                    <div class="loader">
+                        <div class="spinner"></div>
+                        <h2>Mengekstrak ${jenis}...</h2>
+                        <p>Sedang memproses tautan langsung dari Inaportnet.</p>
+                    </div>
+                </body>
+                </html>
+            `);
+
+            try {
+                // Fetch halaman detail secara langsung (Direct) tanpa proxy
+                const detailUrl = `https://monitoring-inaportnet.dephub.go.id/monitoring/detail?nomor_pkk=${noPkk}`;
+                
+                const response = await fetch(detailUrl);
+                if(!response.ok) throw new Error('Server Inaportnet gagal merespon');
+                
+                const html = await response.text();
+
+                if (jenis === 'LK3') {
+                    // Cari pola SL003. (misal: SL003.IDLPO.0326.000351) dari HTML
+                    const match = html.match(/(SL003\.[A-Z0-9\.]+)/i);
+                    if (match) {
+                        const realLk3 = match[1];
+                        newWindow.location.href = `https://simpadu-inaportnet.dephub.go.id/document/pdfs/lk3_nakhoda/${realLk3}`;
+                    } else {
+                        throw new Error('Kode LK3 (SL003) tidak ditemukan.');
+                    }
+                } else if (jenis === 'CREW') {
+                    // Cari pola SL019. (misal: SL019.IDLPO.0326.000427) dari HTML
+                    const match = html.match(/(SL019\.[A-Z0-9\.]+)/i);
+                    if (match) {
+                        const realCrew = match[1];
+                        // Enkripsi Base64 dan sesuaikan karakter untuk URI Codeigniter Inaportnet
+                        const base64Crew = btoa(realCrew).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '-');
+                        newWindow.location.href = `https://sps-inaportnet.dephub.go.id/index.php/printdokumen/pelaut/${base64Crew}`;
+                    } else {
+                        throw new Error('Kode Crewlist (SL019) tidak ditemukan.');
+                    }
+                }
+            } catch (e) {
+                console.error('Error saat scraping:', e);
+                // Mekanisme Fallback jika proxy error / timeout / pola tidak ketemu
+                newWindow.document.querySelector('.loader').innerHTML = `
+                    <div class="spinner" style="border-top-color: #f59e0b;"></div>
+                    <h2>Beralih ke Pencarian...</h2>
+                    <p>Gagal mengekstrak ID Direct. Membuka melalui sistem bawaan Inaportnet.</p>
+                `;
+                
+                setTimeout(() => {
+                    if (jenis === 'LK3') {
+                        newWindow.location.href = `https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=${noPkk}`;
+                    } else {
+                        newWindow.location.href = `https://sps-inaportnet.dephub.go.id/index.php/document/pelaut/loadDocument/2?by=sps.nomor_pkk&keyword=${noPkk}`;
+                    }
+                }, 1500);
+            }
+        }
 
     </script>
 </body>
