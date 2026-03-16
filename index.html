@@ -53,6 +53,16 @@
         /* Modal Animation */
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .modal-animate { animation: fadeIn 0.2s ease-out forwards; }
+
+        /* Mengembalikan tombol Clear (X) bawaan browser untuk input type search pada Tailwind */
+        input[type="search"]::-webkit-search-cancel-button {
+            -webkit-appearance: searchfield-cancel-button;
+            cursor: pointer;
+            opacity: 0.6;
+        }
+        input[type="search"]::-webkit-search-cancel-button:hover {
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen relative bg-slate-50">
@@ -104,7 +114,7 @@
                     <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-4 items-end w-full md:w-auto">
                         <div class="col-span-1 w-full sm:w-auto">
                             <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Cari & Pilih Port</label>
-                            <input type="text" id="portCode" list="portDatalist" oninput="this.value = this.value.toUpperCase()" placeholder="Cari pelabuhan..." class="w-full sm:w-48 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase">
+                            <input type="search" id="portCode" list="portDatalist" oninput="this.value = this.value.toUpperCase()" placeholder="Cari pelabuhan..." class="w-full sm:w-48 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase">
                             <datalist id="portDatalist"></datalist>
                         </div>
                         <div class="col-span-1 w-full sm:w-auto">
@@ -153,7 +163,7 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i data-lucide="ship" class="w-4 h-4 text-slate-400"></i>
                             </div>
-                            <input type="text" id="filterKapal" list="listKapal" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Kapal...">
+                            <input type="search" id="filterKapal" list="listKapal" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Kapal...">
                             <datalist id="listKapal"></datalist>
                         </div>
                         <!-- Filter Perusahaan -->
@@ -161,7 +171,7 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i data-lucide="building" class="w-4 h-4 text-slate-400"></i>
                             </div>
-                            <input type="text" id="filterPerusahaan" list="listPerusahaan" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Perusahaan/Agen...">
+                            <input type="search" id="filterPerusahaan" list="listPerusahaan" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Perusahaan/Agen...">
                             <datalist id="listPerusahaan"></datalist>
                         </div>
                         <!-- Filter Petugas -->
@@ -169,7 +179,7 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i data-lucide="user-check" class="w-4 h-4 text-slate-400"></i>
                             </div>
-                            <input type="text" id="filterPetugas" list="listPetugas" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Petugas SPB...">
+                            <input type="search" id="filterPetugas" list="listPetugas" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Petugas SPB...">
                             <datalist id="listPetugas"></datalist>
                         </div>
                         <!-- Filter Lokasi -->
@@ -177,7 +187,7 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i>
                             </div>
-                            <input type="text" id="filterLokasi" list="listLokasi" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Lokasi Sandar/Tolak...">
+                            <input type="search" id="filterLokasi" list="listLokasi" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Lokasi Sandar/Tolak...">
                             <datalist id="listLokasi"></datalist>
                         </div>
                     </div>
@@ -318,7 +328,7 @@
                 <div class="p-6 bg-white space-y-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Kode Port Default</label>
-                        <input type="text" id="cfgPortCode" list="portDatalistSettings" oninput="this.value = this.value.toUpperCase()" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase" placeholder="Mis: IDLPO">
+                        <input type="search" id="cfgPortCode" list="portDatalistSettings" oninput="this.value = this.value.toUpperCase()" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase" placeholder="Mis: IDLPO">
                         <datalist id="portDatalistSettings"></datalist>
                         <p class="text-xs text-slate-500 mt-1">Kode pelabuhan bawaan saat aplikasi pertama kali dimuat.</p>
                     </div>
