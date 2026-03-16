@@ -276,17 +276,16 @@
                     <table class="w-full min-w-max text-sm text-left text-slate-600 whitespace-nowrap">
                         <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th scope="col" class="px-4 py-4 font-semibold tracking-wider text-center w-12">No</th>
-                                <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Data Kapal & Agen</th>
-                                <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Dimensi & Teknis</th>
-                                <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Rute & Trayek</th>
-                                <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Jadwal (ETA / ETD)</th>
-                                <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-center">Penumpang (Turun/Naik)</th>
-                                <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-center">Tindakan / Aksi</th>
+                                <th scope="col" class="px-3 py-3 font-semibold tracking-wider text-center w-10">No</th>
+                                <th scope="col" class="px-4 py-3 font-semibold tracking-wider">Kapal & Spesifikasi</th>
+                                <th scope="col" class="px-4 py-3 font-semibold tracking-wider">Rute & Trayek</th>
+                                <th scope="col" class="px-4 py-3 font-semibold tracking-wider">Jadwal</th>
+                                <th scope="col" class="px-4 py-3 font-semibold tracking-wider text-center">Penumpang</th>
+                                <th scope="col" class="px-4 py-3 font-semibold tracking-wider text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="divide-y divide-slate-100 bg-white">
-                            <tr><td colspan="7" class="px-6 py-8 text-center text-slate-500 font-medium">Silakan klik Memuat Data.</td></tr>
+                            <tr><td colspan="6" class="px-6 py-8 text-center text-slate-500 font-medium">Silakan klik Memuat Data.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -490,7 +489,7 @@ window.loadData = async function() {
     lucide.createIcons({ nodes: [btn] });
 
     document.getElementById('tableBody').innerHTML = `
-        <tr><td colspan="7" class="px-6 py-12 text-center">
+        <tr><td colspan="6" class="px-6 py-12 text-center">
             <div class="flex flex-col items-center gap-3 text-slate-400">
                 <svg class="animate-spin w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -643,7 +642,7 @@ function renderTable(data) {
     document.getElementById('tableRecordCount').textContent = `${data.length} Kapal`;
 
     if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-10 text-center text-slate-400 font-medium">Tidak ada data yang cocok dengan filter.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-slate-400 font-medium">Tidak ada data yang cocok dengan filter.</td></tr>';
         return;
     }
 
@@ -657,178 +656,151 @@ function renderTable(data) {
         'CAYMAN ISLANDS':'🇰🇾','ANTIGUA AND BARBUDA':'🇦🇬'
     };
 
-    const btnBase = 'inline-flex items-center gap-1 text-[10px] font-bold py-1 px-2 rounded-md border transition-all whitespace-nowrap';
-    const btnDisabled = 'opacity-40 pointer-events-none cursor-not-allowed';
+    const dis = 'opacity-40 pointer-events-none';
 
     tbody.innerHTML = data.map((item, idx) => {
-        // --- Data Kapal ---
         const namaKapal  = escHTML(item.nama_kapal);
         const perusahaan = escHTML(item.perusahaan || item.keagenan);
         const callsign   = escHTML(item.callsign || '');
         const imo        = escHTML(item.imo || '');
         const nakhoda    = escHTML(item.nakhoda || '');
-
-        // --- Dimensi & Teknis ---
-        const gt        = parseInt(item.gt) || 0;
-        const dwt       = parseInt(item.dwt) || 0;
-        const loa       = escHTML(item.loa || '');
-        const lebar     = escHTML(item.lebar || '');
-        const drMax     = escHTML(item.dr_max_xls || item.dr_max || '');
-        const drDepan   = escHTML(item.dr_depan_xls || item.dr_depan || '');
-        const drTengah  = escHTML(item.dr_tengah_xls || item.dr_tengah || '');
-        const drBlkg    = escHTML(item.dr_belakang_xls || item.dr_belakang || '');
-        const jenisKapal = escHTML(item.jenis_kapal_xls || item.tipe_kapal || '-');
+        const gt         = parseInt(item.gt)  || 0;
+        const dwt        = parseInt(item.dwt) || 0;
+        const loa        = escHTML(item.loa   || '');
+        const lebar      = escHTML(item.lebar || '');
+        const drMax      = escHTML(item.dr_max_xls    || item.dr_max    || '');
+        const drDepan    = escHTML(item.dr_depan_xls  || item.dr_depan  || '');
+        const drTengah   = escHTML(item.dr_tengah_xls || item.dr_tengah || '');
+        const drBlkg     = escHTML(item.dr_belakang_xls || item.dr_belakang || '');
+        const jenisKapal = escHTML(item.jenis_kapal_xls || item.tipe_kapal || '');
         const benderaRaw = (item.bendera || '').trim();
-        const bendera   = escHTML(benderaRaw);
-        const flagEmoji = flagMap[benderaRaw.toUpperCase()] || '🏳';
+        const bendera    = escHTML(benderaRaw);
+        const flagEmoji  = flagMap[benderaRaw.toUpperCase()] || '🏳';
+        const hasDraft   = drMax || drDepan;
 
-        // --- Rute & Trayek ---
-        const asalTujuan = `${escHTML(item.pelabuhan_asal || '-')} → ${escHTML(item.pelabuhan_tujuan || '-')}`;
-        const trayek     = escHTML(item.trayek_datang || item.trayek_berangkat || '-');
-        const voyIn      = escHTML(item.voy_in || '');
-        const voyOut     = escHTML(item.voy_out || '');
+        const asalTujuan   = `${escHTML(item.pelabuhan_asal || '-')} \u2192 ${escHTML(item.pelabuhan_tujuan || '-')}`;
+        const trayek       = escHTML(item.trayek_datang || item.trayek_berangkat || '-');
+        const voyIn        = escHTML(item.voy_in  || '');
+        const voyOut       = escHTML(item.voy_out || '');
         const lokasiSandar = escHTML(item.lokasi_sandar || '');
-        const lokasiTolak  = escHTML(item.lokasi_tolak || '');
+        const lokasiTolak  = escHTML(item.lokasi_tolak  || '');
 
-        // Badge warna trayek — bedakan tramper vs tetap vs LN
         const trayekLower = (item.trayek_datang || item.trayek_berangkat || '').toLowerCase();
-        let trayekColor = 'bg-slate-100 text-slate-600 border-slate-200';
-        if (trayekLower.includes('tidak tetap') || trayekLower.includes('tramper'))
-            trayekColor = 'bg-amber-100 text-amber-700 border-amber-200';
-        else if (trayekLower.includes('tetap') && !trayekLower.includes('tidak'))
-            trayekColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
-        else if (trayekLower.includes('luar negeri') || trayekLower.includes(' ln'))
-            trayekColor = 'bg-purple-100 text-purple-700 border-purple-200';
-        else if (trayekLower.includes('dalam negeri') || trayekLower.includes(' dn'))
-            trayekColor = 'bg-blue-100 text-blue-700 border-blue-200';
+        let trayekColor = 'bg-slate-100 text-slate-600';
+        if      (trayekLower.includes('tidak tetap') || trayekLower.includes('tramper')) trayekColor = 'bg-amber-100 text-amber-700';
+        else if (trayekLower.includes('tetap') && !trayekLower.includes('tidak'))        trayekColor = 'bg-emerald-100 text-emerald-700';
+        else if (trayekLower.includes('luar negeri') || trayekLower.includes(' ln'))     trayekColor = 'bg-purple-100 text-purple-700';
+        else if (trayekLower.includes('dalam negeri') || trayekLower.includes(' dn'))    trayekColor = 'bg-blue-100 text-blue-700';
 
-        // --- Jadwal ---
         const eta = window.formatTanggalIndo(getETA(item));
         const etd = window.formatTanggalIndo(getETD(item));
-
-        // --- Penumpang ---
         const paxTurun = getPaxTurun(item);
         const paxNaik  = getPaxNaik(item);
 
-        // --- Dokumen ---
-        const uid        = escHTML(item._uid);
-        const noPkkRaw   = item.nomor_pkk || '';
+        const uid          = escHTML(item._uid);
+        const noPkkRaw     = item.nomor_pkk || '';
+        const noPkkEsc     = escHTML(noPkkRaw);
+        const hasPkk       = !!noPkkRaw;
         const noLayananRaw = item.nomor_layanan_berangkat || item.nomor_layanan_datang || '';
-        const hasPkk     = !!noPkkRaw;
-        const hasLayanan = !!noLayananRaw;
+        const hasLayanan   = !!noLayananRaw;
         const noLayananEnc = encodeURIComponent(noLayananRaw);
         const urlSPB      = hasLayanan ? `https://sps-inaportnet.dephub.go.id/index.php/builtin/manage/spb/cetak/${noLayananEnc}` : '#';
         const urlManifest = hasLayanan ? `https://sps-inaportnet.dephub.go.id/index.php/builtin/manage/spb/detail/${noLayananEnc}` : '#';
-        const noPkkEsc   = escHTML(noPkkRaw);
+        const urlLK3 = hasPkk
+            ? `https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=${encodeURIComponent(noPkkRaw)}`
+            : '#';
+        const urlKru = hasPkk
+            ? `https://sps-inaportnet.dephub.go.id/index.php/document/pelaut/loadDocument/2?by=sps.nomor_pkk&keyword=${encodeURIComponent(noPkkRaw)}`
+            : '#';
 
-        return `<tr class="hover:bg-blue-50/30 transition-colors group border-b border-slate-100">
-            <!-- No -->
-            <td class="px-4 py-4 text-center text-slate-400 font-medium text-xs align-top pt-5">${idx + 1}</td>
+        return `<tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
 
-            <!-- Kapal & Agen -->
-            <td class="px-5 py-4 align-top min-w-[180px]">
-                <p class="font-bold text-slate-900 text-sm leading-tight">${namaKapal}</p>
-                <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">${perusahaan}</p>
-                <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                    ${gt > 0 ? `<span class="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] font-semibold px-1.5 py-0.5 rounded">${gt.toLocaleString('id-ID')} GT</span>` : ''}
-                    ${callsign ? `<span class="bg-slate-100 text-slate-500 text-[10px] font-mono px-1.5 py-0.5 rounded">${callsign}</span>` : ''}
-                </div>
-                ${nakhoda ? `<p class="text-[10px] text-slate-400 mt-1">⚓ Nakhoda: <span class="font-medium text-slate-600">${nakhoda}</span></p>` : ''}
-            </td>
+            <td class="px-3 py-3 text-center text-slate-400 text-xs align-top pt-4">${idx + 1}</td>
 
-            <!-- Dimensi & Teknis -->
-            <td class="px-5 py-4 align-top min-w-[170px]">
-                <div class="flex items-center gap-1.5 mb-1">
-                    <span class="text-base leading-none" title="${bendera}">${flagEmoji}</span>
-                    <span class="text-[11px] font-semibold text-slate-700">${bendera || '-'}</span>
+            <td class="px-4 py-3 align-top" style="min-width:200px;max-width:260px">
+                <div class="flex items-start gap-1.5">
+                    <span class="text-sm leading-none mt-0.5 flex-shrink-0">${flagEmoji}</span>
+                    <p class="font-bold text-slate-900 text-sm leading-snug">${namaKapal}</p>
                 </div>
-                <p class="text-[11px] text-slate-500 mb-1.5">${jenisKapal}</p>
-                <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px]">
-                    ${loa ? `<span class="text-slate-500">LOA <span class="font-semibold text-slate-700">${loa}m</span></span>` : ''}
-                    ${lebar ? `<span class="text-slate-500">Lebar <span class="font-semibold text-slate-700">${lebar}m</span></span>` : ''}
-                    ${gt > 0 ? `<span class="text-slate-500">GT <span class="font-semibold text-slate-700">${gt.toLocaleString('id-ID')}</span></span>` : ''}
-                    ${dwt > 0 ? `<span class="text-slate-500">DWT <span class="font-semibold text-slate-700">${dwt.toLocaleString('id-ID')}</span></span>` : ''}
-                    ${imo ? `<span class="text-slate-500 col-span-2">IMO <span class="font-mono font-semibold text-slate-700">${imo}</span></span>` : ''}
+                <div class="flex flex-wrap gap-1 mt-1.5">
+                    ${gt > 0 ? `<span class="inline-flex items-center bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">${gt.toLocaleString('id-ID')} GT</span>` : ''}
+                    ${dwt > 0 ? `<span class="inline-flex items-center bg-slate-100 text-slate-600 text-[10px] font-medium px-1.5 py-0.5 rounded-full">${dwt.toLocaleString('id-ID')} DWT</span>` : ''}
+                    ${jenisKapal ? `<span class="inline-flex items-center bg-slate-100 text-slate-600 text-[10px] font-medium px-1.5 py-0.5 rounded-full">${jenisKapal}</span>` : ''}
+                    ${bendera ? `<span class="inline-flex items-center bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full">${bendera}</span>` : ''}
                 </div>
-                ${drMax || drDepan ? `
-                <div class="mt-1.5 bg-slate-50 rounded border border-slate-100 px-1.5 py-1 grid grid-cols-4 gap-0.5 text-center text-[9px]">
-                    <div><p class="text-slate-400">MAX</p><p class="font-bold text-slate-700">${drMax || '-'}</p></div>
-                    <div><p class="text-slate-400">DP</p><p class="font-bold text-slate-700">${drDepan || '-'}</p></div>
-                    <div><p class="text-slate-400">TG</p><p class="font-bold text-slate-700">${drTengah || '-'}</p></div>
-                    <div><p class="text-slate-400">BK</p><p class="font-bold text-slate-700">${drBlkg || '-'}</p></div>
+                ${(loa || lebar || hasDraft) ? `
+                <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-0 text-[10px] text-slate-500 leading-tight">
+                    ${loa ? `<span>LOA <b class="text-slate-700">${loa}m</b></span>` : ''}
+                    ${lebar ? `<span>L <b class="text-slate-700">${lebar}m</b></span>` : ''}
+                    ${hasDraft ? `<span>Draft <b class="text-slate-700">${drDepan||'-'}/${drTengah||'-'}/${drMax||'-'}</b></span>` : ''}
                 </div>` : ''}
+                ${(callsign || imo) ? `<p class="mt-1 text-[10px] text-slate-400 font-mono leading-tight">${callsign}${callsign && imo ? ' \u00B7 ' : ''}${imo ? `IMO ${imo}` : ''}</p>` : ''}
+                ${nakhoda ? `<p class="mt-1 text-[10px] text-slate-400 leading-tight">\u2693 <span class="text-slate-600">${nakhoda}</span></p>` : ''}
+                <p class="mt-2 text-[10px] text-slate-400 leading-snug border-t border-slate-100 pt-1.5 whitespace-normal">${perusahaan || '-'}</p>
             </td>
 
-            <!-- Rute & Trayek -->
-            <td class="px-5 py-4 align-top min-w-[200px]">
-                <p class="text-[11px] font-semibold text-slate-800 leading-tight">${asalTujuan}</p>
-                <span class="inline-block mt-1.5 text-[10px] font-semibold px-2 py-0.5 rounded border ${trayekColor}">${trayek}</span>
-                ${(voyIn || voyOut) ? `
-                <p class="text-[10px] text-slate-400 mt-1.5">
-                    ${voyIn ? `Voy in: <span class="text-slate-600 font-medium">${voyIn}</span>` : ''}
-                    ${voyOut ? ` / out: <span class="text-slate-600 font-medium">${voyOut}</span>` : ''}
-                </p>` : ''}
-                ${lokasiSandar ? `<p class="text-[10px] text-slate-500 mt-1">⚓ ${lokasiSandar}</p>` : ''}
-                ${lokasiTolak ? `<p class="text-[10px] text-slate-500">⛵ ${lokasiTolak}</p>` : ''}
+            <td class="px-4 py-3 align-top" style="min-width:180px">
+                <p class="text-[11px] font-semibold text-slate-800 leading-snug">${asalTujuan}</p>
+                <span class="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${trayekColor}">${trayek}</span>
+                ${(voyIn || voyOut) ? `<p class="text-[10px] text-slate-400 mt-1">${voyIn ? `In: <span class="text-slate-600">${voyIn}</span>` : ''}${voyIn && voyOut ? ' / ' : ''}${voyOut ? `Out: <span class="text-slate-600">${voyOut}</span>` : ''}</p>` : ''}
+                ${lokasiSandar ? `<p class="text-[10px] text-slate-500 mt-1 leading-tight">\u2693 ${lokasiSandar}</p>` : ''}
+                ${lokasiTolak  ? `<p class="text-[10px] text-slate-500 leading-tight">\u26F5 ${lokasiTolak}</p>` : ''}
             </td>
 
-            <!-- Jadwal ETA / ETD -->
-            <td class="px-5 py-4 align-top min-w-[150px]">
-                <div class="flex flex-col gap-2">
+            <td class="px-4 py-3 align-top" style="min-width:140px">
+                <div class="space-y-1.5">
                     <div>
-                        <p class="text-[9px] text-slate-400 uppercase font-semibold mb-0.5">Tiba (ETA)</p>
-                        <span class="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 inline-block">${eta}</span>
+                        <span class="text-[9px] text-slate-400 uppercase font-semibold block mb-0.5">ETA</span>
+                        <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 inline-block whitespace-nowrap">${eta}</span>
                     </div>
                     <div>
-                        <p class="text-[9px] text-slate-400 uppercase font-semibold mb-0.5">Berangkat (ETD)</p>
-                        <span class="text-[11px] text-amber-700 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 inline-block">${etd}</span>
+                        <span class="text-[9px] text-slate-400 uppercase font-semibold block mb-0.5">ETD</span>
+                        <span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 inline-block whitespace-nowrap">${etd}</span>
                     </div>
                 </div>
             </td>
 
-            <!-- Penumpang -->
-            <td class="px-5 py-4 text-center align-top min-w-[100px]">
-                <div class="flex items-stretch justify-center gap-2 mt-1">
-                    <div class="text-center">
-                        <p class="text-[9px] text-rose-400 uppercase font-semibold">Turun</p>
-                        <p class="text-sm font-bold text-rose-600 mt-0.5">${paxTurun.toLocaleString('id-ID')}</p>
+            <td class="px-4 py-3 text-center align-top" style="min-width:90px">
+                <div class="flex gap-2 justify-center mt-0.5">
+                    <div>
+                        <p class="text-[9px] text-rose-400 font-semibold uppercase">Turun</p>
+                        <p class="text-sm font-bold text-rose-600">${paxTurun.toLocaleString('id-ID')}</p>
                     </div>
                     <div class="w-px bg-slate-200 self-stretch"></div>
-                    <div class="text-center">
-                        <p class="text-[9px] text-emerald-400 uppercase font-semibold">Naik</p>
-                        <p class="text-sm font-bold text-emerald-600 mt-0.5">${paxNaik.toLocaleString('id-ID')}</p>
+                    <div>
+                        <p class="text-[9px] text-emerald-400 font-semibold uppercase">Naik</p>
+                        <p class="text-sm font-bold text-emerald-600">${paxNaik.toLocaleString('id-ID')}</p>
                     </div>
                 </div>
             </td>
 
-            <!-- Aksi -->
-            <td class="px-4 py-4 align-top min-w-[190px]">
+            <td class="px-3 py-3 align-top" style="min-width:170px">
                 <div class="flex flex-col gap-1.5">
                     <div class="flex gap-1 flex-wrap">
                         <button onclick="window.openDetailModal('${uid}')"
-                            class="${btnBase} bg-blue-600 text-white border-blue-700 hover:bg-blue-700 shadow-sm">
-                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                            class="inline-flex items-center gap-1 text-[10px] font-bold py-1 px-2 rounded-md bg-blue-600 text-white border border-blue-700 hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap">
+                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                             Detail
                         </button>
                         <a href="${urlSPB}" target="_blank" rel="noopener noreferrer"
-                            class="${btnBase} bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 ${!hasLayanan ? btnDisabled : ''}">
+                            class="inline-flex items-center gap-1 text-[10px] font-bold py-1 px-2 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-colors whitespace-nowrap ${!hasLayanan ? dis : ''}">
                             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                             SPB
                         </a>
                     </div>
                     <div class="flex gap-1 flex-wrap">
-                        <button onclick="window.cetakDokumenScrape(event,'LK3','${noPkkEsc}')"
-                            class="${btnBase} bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 ${!hasPkk ? btnDisabled : ''}">
+                        <a href="${urlLK3}" target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center gap-1 text-[10px] font-bold py-1 px-2 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-colors whitespace-nowrap ${!hasPkk ? dis : ''}">
                             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
                             LK3
-                        </button>
-                        <button onclick="window.cetakDokumenScrape(event,'CREW','${noPkkEsc}')"
-                            class="${btnBase} bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-600 hover:text-white hover:border-amber-600 ${!hasPkk ? btnDisabled : ''}">
+                        </a>
+                        <a href="${urlKru}" target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center gap-1 text-[10px] font-bold py-1 px-2 rounded-md bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-600 hover:text-white hover:border-amber-600 transition-colors whitespace-nowrap ${!hasPkk ? dis : ''}">
                             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                             Kru
-                        </button>
+                        </a>
                         <a href="${urlManifest}" target="_blank" rel="noopener noreferrer"
-                            class="${btnBase} bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 ${!hasLayanan ? btnDisabled : ''}">
+                            class="inline-flex items-center gap-1 text-[10px] font-bold py-1 px-2 rounded-md bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-colors whitespace-nowrap ${!hasLayanan ? dis : ''}">
                             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                             Manifest
                         </a>
@@ -838,6 +810,7 @@ function renderTable(data) {
         </tr>`;
     }).join('');
 }
+
 
 function renderCharts(data) {
     // ---- Bar chart: ETA per hari ----
@@ -1028,12 +1001,12 @@ window.openDetailModal = function(uid) {
                     <a href="${urlSPB}" target="_blank" rel="noopener noreferrer" class="flex-1 sm:flex-none justify-center bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white border border-indigo-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}">
                         Cetak SPB
                     </a>
-                    <button onclick="window.cetakDokumenScrape(event, 'LK3', '${noPkk}')" class="flex-1 sm:flex-none justify-center bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noPkk ? 'opacity-50 pointer-events-none' : ''}">
+                    <a href="${noPkk ? 'https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=' + encodeURIComponent(item.nomor_pkk || '') : '#'}" target="_blank" rel="noopener noreferrer" class="flex-1 sm:flex-none justify-center bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noPkk ? 'opacity-50 pointer-events-none' : ''}">
                         Cetak LK3
-                    </button>
-                    <button onclick="window.cetakDokumenScrape(event, 'CREW', '${noPkk}')" class="flex-1 sm:flex-none justify-center bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white border border-amber-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noPkk ? 'opacity-50 pointer-events-none' : ''}">
+                    </a>
+                    <a href="${noPkk ? 'https://sps-inaportnet.dephub.go.id/index.php/document/pelaut/loadDocument/2?by=sps.nomor_pkk&keyword=' + encodeURIComponent(item.nomor_pkk || '') : '#'}" target="_blank" rel="noopener noreferrer" class="flex-1 sm:flex-none justify-center bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white border border-amber-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noPkk ? 'opacity-50 pointer-events-none' : ''}">
                         Daftar Kru
-                    </button>
+                    </a>
                     <a href="${urlManifest}" target="_blank" rel="noopener noreferrer" class="flex-1 sm:flex-none justify-center bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white border border-rose-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}">
                         Manifest
                     </a>
@@ -1197,52 +1170,13 @@ window.handleLogout = function() {
 };
 
 // ==========================================
-// CETAK DOKUMEN
-//
-// ── DUA FORMAT KODE LK3 YANG BERBEDA ──
-//
-//   Format A — dari JSON/XLS GAS (field no_lk3):
-//     SL003.IDLPO.0326.000360
-//     └─ 4 segmen: PREFIX.PORT.MMYY.NO
-//        MMYY = bulan dulu, tahun kemudian (0326 = Maret 2026)
-//
-//   Format B — URL PDF Inaportnet (yang benar untuk direct link):
-//     SL003.DN.IDLPO.2603.000378
-//     └─ 5 segmen: PREFIX.TRAYEK.PORT.YYMM.NO
-//        YYMM = tahun dulu, bulan kemudian (2603 = 2026 Maret)
-//
-//   Format A ≠ Format B:
-//   - Jumlah segmen beda (4 vs 5)
-//   - Urutan MMYY vs YYMM dibalik
-//   - Nomor urut terakhir BERBEDA dan tidak bisa diprediksi
-//     (contoh: PKK 000377 → LK3 URL 000378, beda +1; kasus lain beda +4)
-//
-//   KESIMPULAN PENTING:
-//   → field no_lk3 dari GAS TIDAK BISA dipakai untuk konstruksi URL PDF
-//   → Satu-satunya cara mendapat URL yang benar: scrape halaman detail
-//      https://monitoring-inaportnet.dephub.go.id/monitoring/detail?nomor_pkk=...
-//      lalu cari teks di dalam <td> yang mengandung Format B (5 segmen)
-//
-//   RELASI LK3 ↔ KRU (dikonfirmasi konsisten):
-//   → Kru (SL019) selalu nomor yang sama dengan LK3 (SL003), ganti prefix saja
-//      SL003.DN.IDLPO.2603.000378 → SL019.DN.IDLPO.2603.000378
-//   → Encode btoa → replace +→- /→_ =→-  → URL printdokumen/pelaut/
-//
-// MODE AMAN    : buka loadDocument?by=sps.nomor_pkk&keyword={PKK}
-// MODE SCRAPING: relay tab → scrape detail → ekstrak Format B → redirect
+// CETAK DOKUMEN — MODE STANDAR
+// LK3 dan Kru dibuka via loadDocument berbasis nomor PKK
+// (nomor LK3 di data berbeda format/urut dengan URL PDF, tidak bisa diprediksi)
 // ==========================================
-
-function b64InaportNet(str) {
-    return btoa(str)
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '-');
-}
-
-window.cetakDokumenScrape = async function(event, jenis, noPkk) {
+window.cetakDokumenScrape = function(event, jenis, noPkk) {
     if (event && event.preventDefault) event.preventDefault();
 
-    // Bersihkan HTML entities dari escHTML()
     const pkk = String(noPkk || '')
         .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
         .replace(/&quot;/g,'"').replace(/&#039;/g,"'").trim();
@@ -1253,174 +1187,19 @@ window.cetakDokumenScrape = async function(event, jenis, noPkk) {
         return;
     }
 
-    // URL pencarian standar berbasis PKK — fallback universal, selalu valid
-    const searchUrl = jenis === 'LK3'
-        ? 'https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=' + encodeURIComponent(pkk)
-        : 'https://sps-inaportnet.dephub.go.id/index.php/document/pelaut/loadDocument/2?by=sps.nomor_pkk&keyword=' + encodeURIComponent(pkk);
-
-    // ── MODE AMAN ──────────────────────────────────────────────────────────
-    // Tidak bisa konstruksi URL PDF langsung dari PKK → gunakan pencarian
-    if (APP_CONFIG.USE_SCRAPING !== 'TRUE') {
-        window.open(searchUrl, '_blank');
-        return;
-    }
-
-    // ── MODE SCRAPING ──────────────────────────────────────────────────────
-    // Fast path: gunakan hasil scraping SEBELUMNYA yang sudah di-cache
-    // Cache key: _lk3_url dan _kru_url — Format B hasil dari halaman detail
-    const dataItem = currentData.find(x => (x.nomor_pkk || '').trim() === pkk);
-    if (dataItem && dataItem._lk3_url) {
-        if (jenis === 'LK3') {
-            window.open('https://simpadu-inaportnet.dephub.go.id/document/pdfs/lk3_nakhoda/' + dataItem._lk3_url, '_blank');
-        } else if (dataItem._kru_url) {
-            window.open('https://sps-inaportnet.dephub.go.id/index.php/printdokumen/pelaut/' + b64InaportNet(dataItem._kru_url), '_blank');
-        }
-        return;
-    }
-
-    // Buka relay tab — scrape halaman detail untuk mendapat Format B
-    const relayTab = window.open('about:blank', '_blank');
-    if (!relayTab) {
-        window.open(searchUrl, '_blank');
-        Swal.fire({ toast:true, icon:'warning',
-            title:'Pop-up diblokir — membuka pencarian standar',
-            showConfirmButton:false, timer:3000, position:'top-end' });
-        return;
-    }
-
-    const lid       = 'scrape_' + Date.now();
-    const origin    = window.location.origin;
-    const detailUrl = 'https://monitoring-inaportnet.dephub.go.id/monitoring/detail?nomor_pkk=' + encodeURIComponent(pkk);
-
-    const msgPromise = new Promise((resolve, reject) => {
-        const t = setTimeout(() => { window.removeEventListener('message', h); reject(new Error('Timeout 20 detik')); }, 20000);
-        function h(evt) {
-            if (!evt.data || evt.data.lid !== lid) return;
-            clearTimeout(t); window.removeEventListener('message', h);
-            evt.data.err ? reject(new Error(evt.data.err)) : resolve(evt.data);
-        }
-        window.addEventListener('message', h);
-    });
-
-    const relayHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>Mengambil ${jenis}...</title>
-<style>
-*{box-sizing:border-box}
-body{font-family:'Segoe UI',sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f1f5f9;margin:0}
-.card{background:#fff;padding:36px 44px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.12);text-align:center;max-width:400px;width:100%}
-.spin{border:4px solid #e2e8f0;border-top:4px solid #3b82f6;border-radius:50%;width:48px;height:48px;animation:sp 1s linear infinite;margin:0 auto 22px}
-@keyframes sp{to{transform:rotate(360deg)}}
-h2{color:#1e293b;margin:0 0 6px;font-size:18px;font-weight:700}
-p{color:#64748b;font-size:13px;margin:0 0 4px;line-height:1.6}
-#st{font-size:12px;font-weight:600;color:#3b82f6;margin-top:14px;min-height:18px}
-.ok{color:#10b981!important} .err{color:#ef4444!important}
-</style></head>
-<body><div class="card">
-  <div class="spin" id="sp"></div>
-  <h2>Mengambil ${jenis}...</h2>
-  <p>Memuat halaman detail Inaportnet.</p>
-  <p id="st">Menghubungi server...</p>
-</div>
-<script>
-const LID=      ${JSON.stringify(lid)};
-const ORIGIN=   ${JSON.stringify(origin)};
-const PKK=      ${JSON.stringify(pkk)};
-const JENIS=    ${JSON.stringify(jenis)};
-const DETAIL=   ${JSON.stringify(detailUrl)};
-const FALLBACK= ${JSON.stringify(fallbackUrl)};
-
-const st=document.getElementById('st');
-const sp=document.getElementById('sp');
-
-function post(d){ try{ if(window.opener&&!window.opener.closed) window.opener.postMessage({lid:LID,...d},ORIGIN); }catch(e){} }
-function setStatus(msg,cls){ st.textContent=msg; st.className=cls||''; if(cls==='err') sp.style.borderTopColor='#f59e0b'; if(cls==='ok') sp.style.borderTopColor='#10b981'; }
-function goFallback(r){ setStatus('Gagal: '+r, 'err'); post({err:r}); setTimeout(()=>window.location.href=FALLBACK, 2200); }
-
-function extractCode(html, prefix){
-  // TARGET: Format B (5 segmen) = PREFIX.TRAYEK.PORT.YYMM.NNNNN
-  // Contoh: SL003.DN.IDLPO.2603.000378
-  //   TRAYEK: 2-3 huruf kapital (DN, LN, dll)
-  //   PORT  : 3-6 huruf kapital (IDLPO, IDBTM, dll)
-  //   YYMM  : 4 digit (tahun 2 digit + bulan 2 digit, contoh: 2603)
-  //   NO    : 4-8 digit
-  //
-  // JANGAN cocok Format A (4 segmen) dari JSON — nomor urutnya berbeda!
-
-  // Strategi 1: cari di dalam <td> (kolom "Nomor Produk" di tabel layanan)
-  const reCell = new RegExp(
-    '<td[^>]*>\\s*('+prefix+'\\.[A-Z]{2,4}\\.[A-Z]{2,6}\\.[0-9]{4}\\.[0-9]{4,8})\\s*<\\/td>',
-    'gi'
-  );
-  let m = reCell.exec(html);
-  if(m) return m[1].trim();
-
-  // Strategi 2: cari di atribut data-url pada tombol "Data Integrasi"
-  const reAttr = new RegExp(
-    'data-url=["\'][^"\']*\\/(' + prefix + '\\.[A-Z]{2,4}\\.[A-Z]{2,6}\\.[0-9]{4}\\.[0-9]{4,8})["\']',
-    'gi'
-  );
-  m = reAttr.exec(html);
-  if(m) return m[1].trim();
-
-  // Strategi 3: greedy — 5 segmen di mana saja dalam HTML
-  const re5 = new RegExp(
-    '('+prefix+'\\.[A-Z]{2,4}\\.[A-Z]{2,6}\\.[0-9]{4}\\.[0-9]{4,8})',
-    'gi'
-  );
-  m = re5.exec(html);
-  if(m) return m[1].trim();
-
-  return null;
-}
-
-async function run(){
-  try {
-    setStatus('Mengambil halaman detail...');
-    const res = await fetch(DETAIL, {credentials:'include', headers:{'Accept':'text/html','Cache-Control':'no-cache'}});
-    if(!res.ok) throw new Error('HTTP '+res.status+' dari server Inaportnet');
-    const html = await res.text();
-    setStatus('Mengekstrak kode Format B (5 segmen)...');
-
-    // Cari SL003 Format B: SL003.TRAYEK.PORT.YYMM.NO
-    const lk3 = extractCode(html,'SL003');
-    if(!lk3) throw new Error('Kode SL003 (Format B) tidak ditemukan. Pastikan sudah login ke Inaportnet.');
-
-    // SL019 = SL003 ganti prefix, nomor identik
-    const kru = lk3.replace(/^SL003\./i,'SL019.');
-
-    // Kirim ke parent untuk di-cache sebagai _lk3_url dan _kru_url
-    post({ok:true, lk3:lk3, kru:kru});
-
-    if(JENIS==='LK3'){
-      setStatus('Berhasil! Membuka PDF LK3...','ok');
-      setTimeout(()=>window.location.href='https://simpadu-inaportnet.dephub.go.id/document/pdfs/lk3_nakhoda/'+lk3, 700);
+    if (jenis === 'LK3') {
+        window.open(
+            'https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword='
+            + encodeURIComponent(pkk), '_blank'
+        );
     } else {
-      const enc = btoa(kru).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'-');
-      setStatus('Berhasil! Membuka daftar kru...','ok');
-      setTimeout(()=>window.location.href='https://sps-inaportnet.dephub.go.id/index.php/printdokumen/pelaut/'+enc, 700);
-    }
-  } catch(e){ goFallback(e.message); }
-}
-run();
-<\/script></body></html>`;
-
-    relayTab.document.open();
-    relayTab.document.write(relayHtml);
-    relayTab.document.close();
-
-    try {
-        const result = await msgPromise;
-        if (result.ok && dataItem) {
-            // Cache Format B ke _lk3_url dan _kru_url
-            // BUKAN no_lk3 (Format A dari JSON — format dan nomor berbeda)
-            dataItem._lk3_url = result.lk3;
-            dataItem._kru_url = result.kru;
-            console.log('[Dokumen] Cache Format B — LK3:', result.lk3, '/ Kru:', result.kru);
-        }
-    } catch(e) {
-        console.warn('[Dokumen] Relay:', e.message);
+        window.open(
+            'https://sps-inaportnet.dephub.go.id/index.php/document/pelaut/loadDocument/2?by=sps.nomor_pkk&keyword='
+            + encodeURIComponent(pkk), '_blank'
+        );
     }
 };
+
 
 // ==========================================
 // SESSION EXPIRY WARNING (FIX: peringatan sebelum logout)
