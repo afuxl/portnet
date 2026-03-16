@@ -89,11 +89,11 @@
                             <span id="displayPeriod">Memuat...</span>
                         </div>
                         <!-- Tombol Pengaturan -->
-                        <button type="button" onclick="window.openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-full border border-slate-600 transition-colors shadow-sm ml-2 outline-none" title="Pengaturan Sistem">
+                        <button type="button" onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-full border border-slate-600 transition-colors shadow-sm ml-2 outline-none" title="Pengaturan Sistem">
                             <i data-lucide="settings" class="w-4 h-4 text-slate-200"></i>
                         </button>
                         <!-- Tombol Logout -->
-                        <button type="button" onclick="window.handleLogout()" class="bg-rose-700 hover:bg-rose-600 p-2 rounded-full border border-rose-600 transition-colors shadow-sm ml-1 outline-none" title="Keluar">
+                        <button type="button" onclick="handleLogout()" class="bg-rose-700 hover:bg-rose-600 p-2 rounded-full border border-rose-600 transition-colors shadow-sm ml-1 outline-none" title="Keluar">
                             <i data-lucide="log-out" class="w-4 h-4 text-white"></i>
                         </button>
                     </div>
@@ -139,7 +139,7 @@
                             </select>
                         </div>
                         <div class="col-span-2 sm:col-span-1 w-full sm:w-auto mt-2 sm:mt-0">
-                            <button type="button" id="refreshBtn" onclick="window.loadData()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-6 py-2.5 transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-500/30">
+                            <button type="button" id="refreshBtn" onclick="loadData()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-6 py-2.5 transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-500/30">
                                 <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                                 Memuat Data
                             </button>
@@ -158,28 +158,28 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i data-lucide="ship" class="w-4 h-4 text-slate-400"></i>
                             </div>
-                            <input type="search" id="filterKapal" list="listKapal" oninput="window.filterDashboardData()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Kapal...">
+                            <input type="search" id="filterKapal" list="listKapal" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Kapal...">
                             <datalist id="listKapal"></datalist>
                         </div>
                         <div class="relative w-full">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i data-lucide="building" class="w-4 h-4 text-slate-400"></i>
                             </div>
-                            <input type="search" id="filterPerusahaan" list="listPerusahaan" oninput="window.filterDashboardData()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Perusahaan/Agen...">
+                            <input type="search" id="filterPerusahaan" list="listPerusahaan" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Perusahaan/Agen...">
                             <datalist id="listPerusahaan"></datalist>
                         </div>
                         <div class="relative w-full">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i data-lucide="user-check" class="w-4 h-4 text-slate-400"></i>
                             </div>
-                            <input type="search" id="filterPetugas" list="listPetugas" oninput="window.filterDashboardData()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Petugas SPB...">
+                            <input type="search" id="filterPetugas" list="listPetugas" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Petugas SPB...">
                             <datalist id="listPetugas"></datalist>
                         </div>
                         <div class="relative w-full">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i>
                             </div>
-                            <input type="search" id="filterLokasi" list="listLokasi" oninput="window.filterDashboardData()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Lokasi Sandar/Tolak...">
+                            <input type="search" id="filterLokasi" list="listLokasi" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Lokasi Sandar/Tolak...">
                             <datalist id="listLokasi"></datalist>
                         </div>
                     </div>
@@ -289,7 +289,7 @@
                         <div class="bg-blue-100 p-1.5 sm:p-2 rounded-lg text-blue-600"><i data-lucide="file-text" class="w-4 h-4 sm:w-5 sm:h-5"></i></div>
                         Detail Lengkap & Muatan
                     </h3>
-                    <button type="button" onclick="window.closeDetailModal()" class="text-slate-400 hover:text-rose-500 bg-white hover:bg-rose-50 p-2 rounded-full transition-colors outline-none border border-slate-200">
+                    <button type="button" onclick="closeDetailModal()" class="text-slate-400 hover:text-rose-500 bg-white hover:bg-rose-50 p-2 rounded-full transition-colors outline-none border border-slate-200">
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
@@ -297,7 +297,7 @@
                     <!-- Content injected here via JS -->
                 </div>
                 <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 flex justify-end bg-slate-50">
-                    <button type="button" onclick="window.closeDetailModal()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-md">
+                    <button type="button" onclick="closeDetailModal()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-md">
                         Tutup Panel
                     </button>
                 </div>
@@ -312,7 +312,7 @@
                         <div class="bg-slate-200 p-1.5 rounded-lg text-slate-700"><i data-lucide="settings" class="w-5 h-5"></i></div>
                         Pengaturan Sistem
                     </h3>
-                    <button type="button" onclick="window.closeSettingsModal()" class="text-slate-400 hover:text-rose-500 bg-white p-1.5 rounded-full transition-colors outline-none border border-slate-200">
+                    <button type="button" onclick="closeSettingsModal()" class="text-slate-400 hover:text-rose-500 bg-white p-1.5 rounded-full transition-colors outline-none border border-slate-200">
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
@@ -332,8 +332,8 @@
                     </div>
                 </div>
                 <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
-                    <button type="button" onclick="window.closeSettingsModal()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors">Batal</button>
-                    <button type="button" onclick="window.saveSettingsConfig()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg transition-colors shadow-md flex items-center gap-2">
+                    <button type="button" onclick="closeSettingsModal()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors">Batal</button>
+                    <button type="button" onclick="saveSettingsConfig()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg transition-colors shadow-md flex items-center gap-2">
                         <i data-lucide="save" class="w-4 h-4"></i> Simpan Setelan
                     </button>
                 </div>
@@ -350,13 +350,12 @@
         lucide.createIcons();
 
         // ==========================================
-        // FUNGSI HELPER GLOBAL TERDAFTAR KE WINDOW (MENGHINDARI REFERENCE ERROR)
+        // FUNGSI HELPER GLOBAL
         // ==========================================
-        window.formatTanggalIndo = function(dateStr) {
+        function formatTanggalIndo(dateStr) {
             if (!dateStr || dateStr === '-' || String(dateStr).trim() === '') return '-';
             try {
                 let parsedStr = String(dateStr).trim();
-                // Konversi standar datetime ke ISO agar dibaca benar oleh JS
                 if (parsedStr.includes(' ') && !parsedStr.includes('T')) {
                     parsedStr = parsedStr.replace(' ', 'T');
                 }
@@ -374,19 +373,19 @@
             } catch (e) {
                 return dateStr;
             }
-        };
+        }
 
-        window.formatUang = function(nominal) {
+        function formatUang(nominal) {
             if (nominal === null || nominal === undefined || nominal === '') return '-';
             const num = parseInt(nominal);
             return isNaN(num) ? '-' : 'Rp ' + num.toLocaleString('id-ID');
-        };
+        }
 
-        window.statusTag = function(val, trueLabel, falseLabel) {
+        function statusTag(val, trueLabel, falseLabel) {
             return (val == 1 || val == '1' || val === true) 
                 ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-bold">${trueLabel}</span>` 
                 : (falseLabel ? `<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-xs">${falseLabel}</span>` : '-');
-        };
+        }
 
         // WAJIB DIISI: URL GAS WEB APP ANDA
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwAZV6iSElbw8XDTvR8IqalIwlhky-C1ozxK_NUIhWLGYf63U5fqOyhdGngl1KVey09rg/exec"; 
@@ -424,13 +423,13 @@
             if (datalistSettings) datalistSettings.innerHTML = optionsHtml;
         }
 
-        window.getSelectedPortCode = function() {
+        function getSelectedPortCode() {
             const nameInput = document.getElementById('portNameInput').value.trim().toUpperCase();
             if (!nameInput) return APP_CONFIG.DEFAULT_PORT_CODE;
             
             const port = PORT_LIST.find(p => p.nama_pelabuhan.toUpperCase() === nameInput || p.kode_pelabuhan.toUpperCase() === nameInput);
             return port ? port.kode_pelabuhan : APP_CONFIG.DEFAULT_PORT_CODE;
-        };
+        }
 
         // Config State Frontend
         let APP_CONFIG = {
@@ -443,7 +442,7 @@
         let trayekChartInst = null;
         let currentData = []; 
 
-        window.openDetailModal = function(uid) {
+        function openDetailModal(uid) {
             const item = currentData.find(x => x._uid === uid);
             if (!item) return;
 
@@ -465,10 +464,10 @@
                             <a href="${urlSPB}" target="_blank" class="flex-1 sm:flex-none justify-center bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white border border-indigo-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}">
                                 <i data-lucide="printer" class="w-3.5 h-3.5"></i> Cetak SPB
                             </a>
-                            <a href="#" onclick="window.cetakDokumenScrape(event, 'LK3', '${noPkk}')" class="flex-1 sm:flex-none justify-center bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noPkk ? 'opacity-50 pointer-events-none' : ''}">
+                            <a href="#" onclick="cetakDokumenScrape(event, 'LK3', '${noPkk}')" class="flex-1 sm:flex-none justify-center bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noPkk ? 'opacity-50 pointer-events-none' : ''}">
                                 <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Cetak LK3
                             </a>
-                            <a href="#" onclick="window.cetakDokumenScrape(event, 'CREW', '${noPkk}')" class="flex-1 sm:flex-none justify-center bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white border border-amber-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noPkk ? 'opacity-50 pointer-events-none' : ''}">
+                            <a href="#" onclick="cetakDokumenScrape(event, 'CREW', '${noPkk}')" class="flex-1 sm:flex-none justify-center bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white border border-amber-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noPkk ? 'opacity-50 pointer-events-none' : ''}">
                                 <i data-lucide="users" class="w-3.5 h-3.5"></i> Daftar Kru
                             </a>
                             <a href="${urlManifest}" target="_blank" class="flex-1 sm:flex-none justify-center bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white border border-rose-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}">
@@ -526,8 +525,8 @@
                             <i data-lucide="clock" class="w-4 h-4"></i> Waktu & Lokasi
                         </h4>
                         <dl class="space-y-2.5 text-xs sm:text-sm">
-                            <div class="flex flex-col"><dt class="text-slate-500 text-[10px] sm:text-xs">ETA (Kedatangan)</dt><dd class="font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded mt-1 border border-emerald-100">${window.formatTanggalIndo(item.eta || item.tgl_eta)}</dd></div>
-                            <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">ETD (Keberangkatan)</dt><dd class="font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded mt-1 border border-amber-100">${window.formatTanggalIndo(item.etd || item.tgl_etd)}</dd></div>
+                            <div class="flex flex-col"><dt class="text-slate-500 text-[10px] sm:text-xs">ETA (Kedatangan)</dt><dd class="font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded mt-1 border border-emerald-100">${formatTanggalIndo(item.eta || item.tgl_eta)}</dd></div>
+                            <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">ETD (Keberangkatan)</dt><dd class="font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded mt-1 border border-amber-100">${formatTanggalIndo(item.etd || item.tgl_etd)}</dd></div>
                             <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">Lokasi Sandar (Tiba)</dt><dd class="font-medium text-slate-900 text-xs mt-0.5">${item.lokasi_sandar || '-'}</dd></div>
                             <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">Lokasi Tolak (Berangkat)</dt><dd class="font-medium text-slate-900 text-xs mt-0.5">${item.lokasi_tolak || '-'}</dd></div>
                         </dl>
@@ -569,10 +568,10 @@
                             <i data-lucide="wallet" class="w-4 h-4"></i> Finansial & Status
                         </h4>
                         <dl class="space-y-2.5 text-xs sm:text-sm">
-                            <div class="flex justify-between"><dt class="text-slate-500">Nominal Billing</dt><dd class="font-bold text-slate-900 text-right ml-2">${window.formatUang(item.nominal_billing)}</dd></div>
-                            <div class="flex justify-between mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs pt-1">Waktu Respon (XLS)</dt><dd class="font-medium text-slate-900 text-right ml-2 leading-tight max-w-[120px]">${window.formatTanggalIndo(item.waktu_respon_xls || item.waktu_respon)}</dd></div>
-                            <div class="flex justify-between mt-3 items-center"><dt class="text-slate-500">Penyeberangan?</dt><dd>${window.statusTag(item.is_penyebrangan, 'YA', 'TIDAK')}</dd></div>
-                            <div class="flex justify-between items-center"><dt class="text-slate-500">Minerba?</dt><dd>${window.statusTag(item.is_minerba, 'YA', 'TIDAK')}</dd></div>
+                            <div class="flex justify-between"><dt class="text-slate-500">Nominal Billing</dt><dd class="font-bold text-slate-900 text-right ml-2">${formatUang(item.nominal_billing)}</dd></div>
+                            <div class="flex justify-between mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs pt-1">Waktu Respon (XLS)</dt><dd class="font-medium text-slate-900 text-right ml-2 leading-tight max-w-[120px]">${formatTanggalIndo(item.waktu_respon_xls || item.waktu_respon)}</dd></div>
+                            <div class="flex justify-between mt-3 items-center"><dt class="text-slate-500">Penyeberangan?</dt><dd>${statusTag(item.is_penyebrangan, 'YA', 'TIDAK')}</dd></div>
+                            <div class="flex justify-between items-center"><dt class="text-slate-500">Minerba?</dt><dd>${statusTag(item.is_minerba, 'YA', 'TIDAK')}</dd></div>
                         </dl>
                     </div>
 
@@ -631,23 +630,23 @@
             document.getElementById('modalBody').innerHTML = contentHtml;
             document.getElementById('detailModal').classList.remove('hidden');
             lucide.createIcons();
-        };
+        }
 
-        window.closeDetailModal = function() {
+        function closeDetailModal() {
             document.getElementById('detailModal').classList.add('hidden');
-        };
+        }
 
-        window.openSettingsModal = function() {
+        function openSettingsModal() {
             document.getElementById('cfgPortCode').value = APP_CONFIG.DEFAULT_PORT_CODE || '';
             document.getElementById('cfgScraping').value = APP_CONFIG.USE_SCRAPING === 'TRUE' ? 'TRUE' : 'FALSE';
             document.getElementById('settingsModal').classList.remove('hidden');
-        };
+        }
 
-        window.closeSettingsModal = function() {
+        function closeSettingsModal() {
             document.getElementById('settingsModal').classList.add('hidden');
-        };
+        }
 
-        window.saveSettingsConfig = async function() {
+        async function saveSettingsConfig() {
             const newConfig = {
                 DEFAULT_PORT_CODE: document.getElementById('cfgPortCode').value.trim().toUpperCase(),
                 USE_SCRAPING: document.getElementById('cfgScraping').value
@@ -672,7 +671,7 @@
                 if (result.status === 'success') {
                     APP_CONFIG = { ...APP_CONFIG, ...newConfig }; 
                     localStorage.setItem('inaportnet_config', JSON.stringify(APP_CONFIG)); 
-                    window.closeSettingsModal();
+                    closeSettingsModal();
                     Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Pengaturan telah disimpan di Server.', timer: 2000, showConfirmButton: false });
                     
                 } else {
@@ -682,14 +681,14 @@
                 console.error("Error saving config:", error);
                 Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: 'Gagal menyimpan pengaturan ke server GAS.' });
             }
-        };
+        }
 
-        window.handleLogout = function() {
+        function handleLogout() {
             localStorage.removeItem(SESSION_KEY);
             window.location.href = 'login.html';
-        };
+        }
 
-        window.filterDashboardData = function() {
+        function filterDashboardData() {
             const keywordKapal = document.getElementById('filterKapal').value.toLowerCase();
             const keywordPerusahaan = document.getElementById('filterPerusahaan').value.toLowerCase();
             const keywordPetugas = document.getElementById('filterPetugas').value.toLowerCase();
@@ -722,14 +721,12 @@
             });
 
             processDataAndRender(filteredData);
-        };
+        }
 
-        // FUNGSI SCRAPING FRONTEND (ON-DEMAND) UNTUK LK3 & CREWLIST
-        window.cetakDokumenScrape = async function(event, jenis, noPkk) {
+        async function cetakDokumenScrape(event, jenis, noPkk) {
             event.preventDefault();
             if (!noPkk) return;
 
-            // Jika mode scraping dimatikan via APP_CONFIG, langsung arahkan ke laman search default
             if (APP_CONFIG.USE_SCRAPING !== 'TRUE') {
                 if (jenis === 'LK3') {
                     window.open(`https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=${noPkk}`, '_blank');
@@ -739,7 +736,6 @@
                 return;
             }
 
-            // BUKA TAB BARU SECARA LANGSUNG UNTUK MENCEGAH POPUP BLOCKER BROWSER
             const newWindow = window.open('', '_blank');
             newWindow.document.write(`
                 <!DOCTYPE html>
@@ -767,16 +763,13 @@
             `);
 
             try {
-                // Fetch halaman detail secara langsung (Direct) tanpa proxy
                 const detailUrl = `https://monitoring-inaportnet.dephub.go.id/monitoring/detail?nomor_pkk=${noPkk}`;
-                
                 const response = await fetch(detailUrl);
                 if(!response.ok) throw new Error('Server Inaportnet gagal merespon');
                 
                 const html = await response.text();
 
                 if (jenis === 'LK3') {
-                    // Cari pola SL003. (misal: SL003.IDLPO.0326.000351) dari HTML
                     const match = html.match(/(SL003\.[A-Z0-9\.]+)/i);
                     if (match) {
                         const realLk3 = match[1];
@@ -785,11 +778,9 @@
                         throw new Error('Kode LK3 (SL003) tidak ditemukan.');
                     }
                 } else if (jenis === 'CREW') {
-                    // Cari pola SL019. (misal: SL019.IDLPO.0326.000427) dari HTML
                     const match = html.match(/(SL019\.[A-Z0-9\.]+)/i);
                     if (match) {
                         const realCrew = match[1];
-                        // Enkripsi Base64 dan sesuaikan karakter untuk URI Codeigniter Inaportnet
                         const base64Crew = btoa(realCrew).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '-');
                         newWindow.location.href = `https://sps-inaportnet.dephub.go.id/index.php/printdokumen/pelaut/${base64Crew}`;
                     } else {
@@ -798,13 +789,11 @@
                 }
             } catch (e) {
                 console.error('Error saat scraping:', e);
-                // Mekanisme Fallback jika proxy error / timeout / pola tidak ketemu
                 newWindow.document.querySelector('.loader').innerHTML = `
                     <div class="spinner" style="border-top-color: #f59e0b;"></div>
                     <h2>Beralih ke Pencarian...</h2>
                     <p>Gagal mengekstrak ID Direct. Membuka melalui sistem bawaan Inaportnet.</p>
                 `;
-                
                 setTimeout(() => {
                     if (jenis === 'LK3') {
                         newWindow.location.href = `https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=${noPkk}`;
@@ -813,7 +802,21 @@
                     }
                 }, 1500);
             }
-        };
+        }
+
+        // ==========================================
+        // MENGHUBUNGKAN FUNGSI KE WINDOW UTK ONCLICK HTML
+        // ==========================================
+        window.loadData = loadData;
+        window.openDetailModal = openDetailModal;
+        window.closeDetailModal = closeDetailModal;
+        window.openSettingsModal = openSettingsModal;
+        window.closeSettingsModal = closeSettingsModal;
+        window.saveSettingsConfig = saveSettingsConfig;
+        window.handleLogout = handleLogout;
+        window.filterDashboardData = filterDashboardData;
+        window.cetakDokumenScrape = cetakDokumenScrape;
+        window.getSelectedPortCode = getSelectedPortCode;
 
         // LISTENER SAAT HALAMAN DIBUKA
         document.addEventListener('DOMContentLoaded', async () => {
@@ -822,10 +825,10 @@
 
             // Listener Area Kosong Modal
             document.getElementById('detailModal').addEventListener('click', function(e) {
-                if (e.target.id === 'detailModal') window.closeDetailModal();
+                if (e.target.id === 'detailModal') closeDetailModal();
             });
             document.getElementById('settingsModal').addEventListener('click', function(e) {
-                if (e.target.id === 'settingsModal') window.closeSettingsModal();
+                if (e.target.id === 'settingsModal') closeSettingsModal();
             });
 
             // Tampilkan Username dari Session
@@ -849,7 +852,7 @@
             initPortDatalist();
             
             // Muat data utama
-            window.loadData();
+            loadData();
         });
 
     </script>
