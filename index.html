@@ -1199,21 +1199,38 @@ window.handleLogout = function() {
 // ==========================================
 // CETAK DOKUMEN
 //
-// MODE AMAN (USE_SCRAPING !== 'TRUE'):
-//   LK3  → simpadu .../loadDocument/2?by=sps.nomor_pkk&keyword={PKK}
-//   Kru  → sps    .../loadDocument/2?by=sps.nomor_pkk&keyword={PKK}
+// FAKTA KONFIRMASI (dari 2 sampel nyata):
 //
-// MODE SCRAPING (USE_SCRAPING === 'TRUE'):
-//   1. Buka tab relay ke monitoring.../detail?nomor_pkk={PKK}
-//   2. Tab relay fetch halaman itu (same-process, tidak kena CORS blokir dashboard)
-//   3. Ekstrak SL003.xxx / SL019.xxx dari HTML
-//   4. Redirect tab ke URL PDF/Crewlist langsung
-//   5. Jika gagal → fallback ke mode aman otomatis
+//   Sampel 1:
+//     PKK : PKK.DN.IDLPO.2603.000366  → LK3: SL003.DN.IDLPO.2603.000366 (selisih 0)
+//   Sampel 2:
+//     PKK : PKK.DN.IDLPO.2603.000377  → LK3: SL003.DN.IDLPO.2603.000381 (selisih +4)
+//
+//   KESIMPULAN:
+//   - Nomor urut LK3/Kru ≠ nomor urut PKK, selisih tidak tetap/tidak bisa diprediksi
+//   - Kru SELALU sama nomornya dengan LK3, hanya ganti prefix SL003→SL019
+//   - Untuk mendapat nomor LK3 yang benar HARUS scrape halaman detail
+//
+//   ENCODING KRU (dikonfirmasi):
+//     btoa("SL019.DN.IDLPO.2603.000381")
+//       .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'-')
+//     = "U0wwMTkuRE4uSURMUE8uMjYwMy4wMDAzODE-"  ✓
+//
+// MODE AMAN    : buka halaman pencarian berbasis nomor PKK (loadDocument)
+// MODE SCRAPING: buka relay tab → scrape detail → ekstrak SL003 → redirect
 // ==========================================
+
+function b64InaportNet(str) {
+    return btoa(str)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '-');
+}
+
 window.cetakDokumenScrape = async function(event, jenis, noPkk) {
     if (event && event.preventDefault) event.preventDefault();
 
-    // Bersihkan noPkk dari escaping HTML (mungkin datang dari escHTML())
+    // Bersihkan HTML entities dari escHTML()
     const pkk = String(noPkk || '')
         .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
         .replace(/&quot;/g,'"').replace(/&#039;/g,"'").trim();
@@ -1224,137 +1241,137 @@ window.cetakDokumenScrape = async function(event, jenis, noPkk) {
         return;
     }
 
-    // ── MODE AMAN ──────────────────────────────────────────────────
+    // URL pencarian standar berbasis PKK — selalu bisa dipakai sebagai fallback
+    const searchUrl = jenis === 'LK3'
+        ? 'https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=' + encodeURIComponent(pkk)
+        : 'https://sps-inaportnet.dephub.go.id/index.php/document/pelaut/loadDocument/2?by=sps.nomor_pkk&keyword=' + encodeURIComponent(pkk);
+
+    // ── MODE AMAN ──────────────────────────────────────────────────────────
+    // Nomor LK3 tidak bisa diprediksi dari PKK → gunakan halaman pencarian
     if (APP_CONFIG.USE_SCRAPING !== 'TRUE') {
+        window.open(searchUrl, '_blank');
+        return;
+    }
+
+    // ── MODE SCRAPING ──────────────────────────────────────────────────────
+    // Cek apakah no_lk3 sudah tersedia di cache currentData (dari scraping sebelumnya)
+    const dataItem = currentData.find(x => (x.nomor_pkk || '').trim() === pkk);
+    if (dataItem && dataItem.no_lk3 && dataItem.no_lk3.toUpperCase().startsWith('SL003.')) {
+        const lk3 = dataItem.no_lk3.trim();
+        const kru = dataItem._no_kru || lk3.replace(/^SL003\./i, 'SL019.');
         if (jenis === 'LK3') {
-            window.open(
-                'https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2'
-                + '?by=sps.nomor_pkk&keyword=' + encodeURIComponent(pkk),
-                '_blank'
-            );
+            window.open('https://simpadu-inaportnet.dephub.go.id/document/pdfs/lk3_nakhoda/' + lk3, '_blank');
         } else {
-            window.open(
-                'https://sps-inaportnet.dephub.go.id/index.php/document/pelaut/loadDocument/2'
-                + '?by=sps.nomor_pkk&keyword=' + encodeURIComponent(pkk),
-                '_blank'
-            );
+            window.open('https://sps-inaportnet.dephub.go.id/index.php/printdokumen/pelaut/' + b64InaportNet(kru), '_blank');
         }
         return;
     }
 
-    // ── MODE SCRAPING ──────────────────────────────────────────────
-    // URL fallback jika scraping gagal
-    const fallbackUrl = jenis === 'LK3'
-        ? 'https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=' + encodeURIComponent(pkk)
-        : 'https://sps-inaportnet.dephub.go.id/index.php/document/pelaut/loadDocument/2?by=sps.nomor_pkk&keyword=' + encodeURIComponent(pkk);
-
-    // Buka tab relay SEBELUM await agar browser tidak blokir (gesture user masih aktif)
+    // Buka relay tab — scrape halaman detail untuk mendapat nomor LK3
     const relayTab = window.open('about:blank', '_blank');
     if (!relayTab) {
-        Swal.fire({ icon:'warning', title:'Pop-up diblokir',
-            html:'Izinkan pop-up untuk situs ini, lalu coba lagi.',
-            confirmButtonText:'OK' });
+        window.open(searchUrl, '_blank');
+        Swal.fire({ toast:true, icon:'warning',
+            title:'Pop-up diblokir — membuka pencarian standar',
+            showConfirmButton:false, timer:3000, position:'top-end' });
         return;
     }
 
-    // Siapkan listener postMessage dari tab relay
-    const listenerId = 'scrape_' + Date.now();
+    const lid       = 'scrape_' + Date.now();
+    const origin    = window.location.origin;
+    const detailUrl = 'https://monitoring-inaportnet.dephub.go.id/monitoring/detail?nomor_pkk=' + encodeURIComponent(pkk);
+
     const msgPromise = new Promise((resolve, reject) => {
-        const t = setTimeout(() => {
-            window.removeEventListener('message', h);
-            reject(new Error('Timeout 20 detik'));
-        }, 20000);
+        const t = setTimeout(() => { window.removeEventListener('message', h); reject(new Error('Timeout 20 detik')); }, 20000);
         function h(evt) {
-            if (!evt.data || evt.data.lid !== listenerId) return;
-            clearTimeout(t);
-            window.removeEventListener('message', h);
+            if (!evt.data || evt.data.lid !== lid) return;
+            clearTimeout(t); window.removeEventListener('message', h);
             evt.data.err ? reject(new Error(evt.data.err)) : resolve(evt.data);
         }
         window.addEventListener('message', h);
     });
 
-    // Halaman relay — berjalan di tab baru milik browser user.
-    // Tab ini yang melakukan fetch ke monitoring-inaportnet.dephub.go.id,
-    // sehingga tidak ada cross-origin dari sudut pandang Inaportnet.
-    const origin   = window.location.origin;
-    const detailUrl = 'https://monitoring-inaportnet.dephub.go.id/monitoring/detail?nomor_pkk=' + encodeURIComponent(pkk);
-
     const relayHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>Mengambil ${jenis}...</title>
 <style>
 *{box-sizing:border-box}
-body{font-family:'Segoe UI',sans-serif;display:flex;justify-content:center;align-items:center;
-     min-height:100vh;background:#f1f5f9;margin:0}
-.card{background:#fff;padding:36px 44px;border-radius:16px;
-      box-shadow:0 8px 32px rgba(0,0,0,.12);text-align:center;max-width:380px;width:100%}
-.spin{border:4px solid #e2e8f0;border-top:4px solid #3b82f6;border-radius:50%;
-      width:48px;height:48px;animation:sp 1s linear infinite;margin:0 auto 22px}
+body{font-family:'Segoe UI',sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f1f5f9;margin:0}
+.card{background:#fff;padding:36px 44px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.12);text-align:center;max-width:400px;width:100%}
+.spin{border:4px solid #e2e8f0;border-top:4px solid #3b82f6;border-radius:50%;width:48px;height:48px;animation:sp 1s linear infinite;margin:0 auto 22px}
 @keyframes sp{to{transform:rotate(360deg)}}
 h2{color:#1e293b;margin:0 0 6px;font-size:18px;font-weight:700}
 p{color:#64748b;font-size:13px;margin:0 0 4px;line-height:1.6}
 #st{font-size:12px;font-weight:600;color:#3b82f6;margin-top:14px;min-height:18px}
-.err{color:#ef4444!important}
+.ok{color:#10b981!important} .err{color:#ef4444!important}
 </style></head>
 <body><div class="card">
   <div class="spin" id="sp"></div>
   <h2>Mengambil ${jenis}...</h2>
-  <p>Membuka halaman detail Inaportnet.</p>
+  <p>Memuat halaman detail Inaportnet.</p>
   <p id="st">Menghubungi server...</p>
 </div>
 <script>
-const LID      = ${JSON.stringify(listenerId)};
-const ORIGIN   = ${JSON.stringify(origin)};
-const PKK      = ${JSON.stringify(pkk)};
-const JENIS    = ${JSON.stringify(jenis)};
-const DETAIL   = ${JSON.stringify(detailUrl)};
-const FALLBACK = ${JSON.stringify(fallbackUrl)};
+const LID=      ${JSON.stringify(lid)};
+const ORIGIN=   ${JSON.stringify(origin)};
+const PKK=      ${JSON.stringify(pkk)};
+const JENIS=    ${JSON.stringify(jenis)};
+const DETAIL=   ${JSON.stringify(detailUrl)};
+const FALLBACK= ${JSON.stringify(fallbackUrl)};
 
-const st = document.getElementById('st');
-const sp = document.getElementById('sp');
+const st=document.getElementById('st');
+const sp=document.getElementById('sp');
 
-function post(data){ if(window.opener&&!window.opener.closed) window.opener.postMessage({lid:LID,...data},ORIGIN); }
-function status(msg,err){ st.textContent=msg; if(err){st.className='err';sp.style.borderTopColor='#f59e0b';} }
-function goFallback(reason){
-  status('Gagal: '+reason+'. Membuka pencarian standar...', true);
-  post({err:reason});
-  setTimeout(()=>{ window.location.href=FALLBACK; }, 2000);
+function post(d){ try{ if(window.opener&&!window.opener.closed) window.opener.postMessage({lid:LID,...d},ORIGIN); }catch(e){} }
+function setStatus(msg,cls){ st.textContent=msg; st.className=cls||''; if(cls==='err') sp.style.borderTopColor='#f59e0b'; if(cls==='ok') sp.style.borderTopColor='#10b981'; }
+function goFallback(r){ setStatus('Gagal: '+r, 'err'); post({err:r}); setTimeout(()=>window.location.href=FALLBACK, 2200); }
+
+function extractCode(html, prefix){
+  // Strategi 1: cari teks di dalam <td>...</td> (paling presisi)
+  // Contoh dari HTML nyata: <td>SL003.IDLPO.0326.000369</td>
+  const reCell = new RegExp('<td[^>]*>\\s*('+prefix+'\\.[^\\s<"\']{6,40})\\s*<\\/td>','gi');
+  let m = reCell.exec(html);
+  if(m) return m[1].trim();
+
+  // Strategi 2: cari di atribut data-url (muncul di tombol "Data Integrasi")
+  // Contoh: data-url=".../entryPindahKeluar/SL003.IDLPO.0326.000369"
+  const reAttr = new RegExp('data-url=["\'][^"\']*\\/(' + prefix + '\\.[^"\'\\s]{6,40})["\']','gi');
+  m = reAttr.exec(html);
+  if(m) return m[1].trim();
+
+  // Strategi 3: fallback greedy — cari pola di mana saja dalam HTML
+  const reAny = new RegExp('('+prefix+'\\.[A-Z0-9]{2,8}\\.[A-Z0-9]{4}\\.[0-9]{4,10})','gi');
+  m = reAny.exec(html);
+  if(m) return m[1].trim();
+
+  return null;
 }
 
 async function run(){
   try {
-    status('Mengambil halaman detail...');
-
-    // fetch dengan credentials agar cookie sesi Inaportnet ikut (jika sudah login)
-    const res = await fetch(DETAIL, { credentials:'include',
-      headers:{'Accept':'text/html','Cache-Control':'no-cache'} });
-
-    if(!res.ok) throw new Error('HTTP '+res.status+' dari server Inaportnet');
+    setStatus('Mengambil halaman detail...');
+    const res = await fetch(DETAIL, {credentials:'include', headers:{'Accept':'text/html','Cache-Control':'no-cache'}});
+    if(!res.ok) throw new Error('HTTP '+res.status);
     const html = await res.text();
+    setStatus('Mengekstrak nomor dokumen...');
 
-    status('Mengekstrak nomor dokumen...');
+    // Selalu ekstrak SL003 terlebih dahulu
+    const lk3 = extractCode(html,'SL003');
+    if(!lk3) throw new Error('Kode SL003 tidak ditemukan di halaman detail Inaportnet');
+
+    // SL019 (Crewlist) selalu nomor yang sama dengan SL003, ganti prefix saja
+    const kru = lk3.replace(/^SL003\./i,'SL019.');
+
+    // Kirim keduanya ke parent untuk di-cache
+    post({ok:true, lk3:lk3, kru:kru});
 
     if(JENIS==='LK3'){
-      // Cari pola SL003.XXXX.MMYY.NNNNNN
-      const m = html.match(/SL003\\.[A-Z0-9]{2,6}\\.[A-Z0-9]{4}\\.[0-9]{4,8}/i)
-             || html.match(/SL003\\.[A-Z0-9.]{6,30}/i);
-      if(!m) throw new Error('Kode LK3 (SL003) tidak ditemukan di halaman');
-      const kode = m[0].trim();
-      post({ok:true, type:'LK3', code:kode});
-      status('Berhasil! Membuka PDF LK3...');
-      setTimeout(()=>{ window.location.href='https://simpadu-inaportnet.dephub.go.id/document/pdfs/lk3_nakhoda/'+kode; }, 600);
-
+      setStatus('Berhasil! Membuka PDF LK3...','ok');
+      setTimeout(()=>window.location.href='https://simpadu-inaportnet.dephub.go.id/document/pdfs/lk3_nakhoda/'+lk3, 700);
     } else {
-      // Cari pola SL019.XXXX.MMYY.NNNNNN
-      const m = html.match(/SL019\\.[A-Z0-9]{2,6}\\.[A-Z0-9]{4}\\.[0-9]{4,8}/i)
-             || html.match(/SL019\\.[A-Z0-9.]{6,30}/i);
-      if(!m) throw new Error('Kode Crewlist (SL019) tidak ditemukan di halaman');
-      const kode = m[0].trim();
-      const b64  = btoa(kode).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=/g,'-');
-      post({ok:true, type:'CREW', code:kode});
-      status('Berhasil! Membuka daftar kru...');
-      setTimeout(()=>{ window.location.href='https://sps-inaportnet.dephub.go.id/index.php/printdokumen/pelaut/'+b64; }, 600);
+      const enc = btoa(kru).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'-');
+      setStatus('Berhasil! Membuka daftar kru...','ok');
+      setTimeout(()=>window.location.href='https://sps-inaportnet.dephub.go.id/index.php/printdokumen/pelaut/'+enc, 700);
     }
-
   } catch(e){ goFallback(e.message); }
 }
 run();
@@ -1364,18 +1381,16 @@ run();
     relayTab.document.write(relayHtml);
     relayTab.document.close();
 
-    // Tunggu hasil — jika berhasil, cache kode ke currentData
     try {
         const result = await msgPromise;
-        if (result.ok) {
-            // Simpan ke cache agar klik berikutnya tidak perlu relay lagi
-            const dataItem = currentData.find(x => (x.nomor_pkk||'').trim() === pkk);
-            if (dataItem && result.type === 'LK3') dataItem.no_lk3 = result.code;
-            console.log('[Scraping] OK:', result.type, result.code);
+        if (result.ok && dataItem) {
+            // Cache LK3 dan Kru ke currentData agar klik berikutnya tidak perlu relay lagi
+            dataItem.no_lk3 = result.lk3;
+            dataItem._no_kru = result.kru;
+            console.log('[Dokumen] Cache:', result.lk3, '/', result.kru);
         }
     } catch(e) {
-        // Tab relay sudah tampilkan error + fallback sendiri
-        console.warn('[Scraping] Relay gagal:', e.message);
+        console.warn('[Dokumen] Relay:', e.message);
     }
 };
 
