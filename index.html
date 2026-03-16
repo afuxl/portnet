@@ -276,6 +276,7 @@
                             <tr>
                                 <th scope="col" class="px-4 py-4 font-semibold tracking-wider text-center w-12">No</th>
                                 <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Data Kapal & Agen</th>
+                                <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Dimensi & Teknis</th>
                                 <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Rute & Trayek</th>
                                 <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Jadwal (ETA / ETD)</th>
                                 <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-center">Penumpang (Turun/Naik)</th>
@@ -283,7 +284,7 @@
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="divide-y divide-slate-100 bg-white">
-                            <tr><td colspan="6" class="px-6 py-8 text-center text-slate-500 font-medium">Silakan klik Memuat Data.</td></tr>
+                            <tr><td colspan="7" class="px-6 py-8 text-center text-slate-500 font-medium">Silakan klik Memuat Data.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -487,7 +488,7 @@ window.loadData = async function() {
     lucide.createIcons({ nodes: [btn] });
 
     document.getElementById('tableBody').innerHTML = `
-        <tr><td colspan="6" class="px-6 py-12 text-center">
+        <tr><td colspan="7" class="px-6 py-12 text-center">
             <div class="flex flex-col items-center gap-3 text-slate-400">
                 <svg class="animate-spin w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -601,51 +602,197 @@ function renderTable(data) {
     document.getElementById('tableRecordCount').textContent = `${data.length} Kapal`;
 
     if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-slate-400 font-medium">Tidak ada data yang cocok dengan filter.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-10 text-center text-slate-400 font-medium">Tidak ada data yang cocok dengan filter.</td></tr>';
         return;
     }
 
+    const flagMap = {
+        'INDONESIA':'🇮🇩','SINGAPORE':'🇸🇬','MALAYSIA':'🇲🇾','PANAMA':'🇵🇦',
+        'LIBERIA':'🇱🇷','MARSHALL ISLANDS':'🇲🇭','BAHAMAS':'🇧🇸',
+        'HONG KONG':'🇭🇰','CHINA':'🇨🇳','JAPAN':'🇯🇵','PHILIPPINES':'🇵🇭',
+        'THAILAND':'🇹🇭','VIETNAM':'🇻🇳','MYANMAR':'🇲🇲','CAMBODIA':'🇰🇭',
+        'AUSTRALIA':'🇦🇺','INDIA':'🇮🇳','UNITED KINGDOM':'🇬🇧','USA':'🇺🇸',
+        'GERMANY':'🇩🇪','NORWAY':'🇳🇴','NETHERLANDS':'🇳🇱','CYPRUS':'🇨🇾',
+        'CAYMAN ISLANDS':'🇰🇾','ANTIGUA AND BARBUDA':'🇦🇬'
+    };
+
+    const btnBase = 'inline-flex items-center gap-1 text-[10px] font-bold py-1 px-2 rounded-md border transition-all whitespace-nowrap';
+    const btnDisabled = 'opacity-40 pointer-events-none cursor-not-allowed';
+
     tbody.innerHTML = data.map((item, idx) => {
+        // --- Data Kapal ---
+        const namaKapal  = escHTML(item.nama_kapal);
+        const perusahaan = escHTML(item.perusahaan || item.keagenan);
+        const callsign   = escHTML(item.callsign || '');
+        const imo        = escHTML(item.imo || '');
+        const nakhoda    = escHTML(item.nakhoda || '');
+
+        // --- Dimensi & Teknis ---
+        const gt        = parseInt(item.gt) || 0;
+        const dwt       = parseInt(item.dwt) || 0;
+        const loa       = escHTML(item.loa || '');
+        const lebar     = escHTML(item.lebar || '');
+        const drMax     = escHTML(item.dr_max_xls || item.dr_max || '');
+        const drDepan   = escHTML(item.dr_depan_xls || item.dr_depan || '');
+        const drTengah  = escHTML(item.dr_tengah_xls || item.dr_tengah || '');
+        const drBlkg    = escHTML(item.dr_belakang_xls || item.dr_belakang || '');
+        const jenisKapal = escHTML(item.jenis_kapal_xls || item.tipe_kapal || '-');
+        const benderaRaw = (item.bendera || '').trim();
+        const bendera   = escHTML(benderaRaw);
+        const flagEmoji = flagMap[benderaRaw.toUpperCase()] || '🏳';
+
+        // --- Rute & Trayek ---
+        const asalTujuan = `${escHTML(item.pelabuhan_asal || '-')} → ${escHTML(item.pelabuhan_tujuan || '-')}`;
+        const trayek     = escHTML(item.trayek_datang || item.trayek_berangkat || '-');
+        const voyIn      = escHTML(item.voy_in || '');
+        const voyOut     = escHTML(item.voy_out || '');
+        const lokasiSandar = escHTML(item.lokasi_sandar || '');
+        const lokasiTolak  = escHTML(item.lokasi_tolak || '');
+
+        // Badge warna trayek — bedakan tramper vs tetap vs LN
+        const trayekLower = (item.trayek_datang || item.trayek_berangkat || '').toLowerCase();
+        let trayekColor = 'bg-slate-100 text-slate-600 border-slate-200';
+        if (trayekLower.includes('tidak tetap') || trayekLower.includes('tramper'))
+            trayekColor = 'bg-amber-100 text-amber-700 border-amber-200';
+        else if (trayekLower.includes('tetap') && !trayekLower.includes('tidak'))
+            trayekColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+        else if (trayekLower.includes('luar negeri') || trayekLower.includes(' ln'))
+            trayekColor = 'bg-purple-100 text-purple-700 border-purple-200';
+        else if (trayekLower.includes('dalam negeri') || trayekLower.includes(' dn'))
+            trayekColor = 'bg-blue-100 text-blue-700 border-blue-200';
+
+        // --- Jadwal ---
         const eta = window.formatTanggalIndo(item.eta || item.tgl_eta);
         const etd = window.formatTanggalIndo(item.etd || item.tgl_etd);
-        const namaKapal = escHTML(item.nama_kapal);
-        const perusahaan = escHTML(item.perusahaan || item.keagenan);
-        const trayek = escHTML(item.trayek_datang || item.trayek_berangkat || '-');
-        const rute = `${escHTML(item.pelabuhan_asal || '-')} → ${escHTML(item.pelabuhan_tujuan || '-')}`;
-        const paxTurun = parseInt(item.pax_turun) || 0;
-        const paxNaik = parseInt(item.pax_naik) || 0;
-        const gt = parseInt(item.gt) || 0;
-        const uid = escHTML(item._uid);
 
-        return `<tr class="hover:bg-slate-50 transition-colors">
-            <td class="px-4 py-4 text-center text-slate-400 font-medium text-xs">${idx + 1}</td>
-            <td class="px-6 py-4">
-                <p class="font-bold text-slate-900">${namaKapal}</p>
-                <p class="text-xs text-slate-500 mt-0.5">${perusahaan}</p>
-                <p class="text-xs text-indigo-600 mt-0.5 font-medium">${gt > 0 ? gt.toLocaleString('id-ID') + ' GT' : ''}</p>
+        // --- Penumpang ---
+        const paxTurun = parseInt(item.pax_turun) || 0;
+        const paxNaik  = parseInt(item.pax_naik)  || 0;
+
+        // --- Dokumen ---
+        const uid        = escHTML(item._uid);
+        const noPkkRaw   = item.nomor_pkk || '';
+        const noLayananRaw = item.nomor_layanan_berangkat || item.nomor_layanan_datang || '';
+        const hasPkk     = !!noPkkRaw;
+        const hasLayanan = !!noLayananRaw;
+        const noLayananEnc = encodeURIComponent(noLayananRaw);
+        const urlSPB      = hasLayanan ? `https://sps-inaportnet.dephub.go.id/index.php/builtin/manage/spb/cetak/${noLayananEnc}` : '#';
+        const urlManifest = hasLayanan ? `https://sps-inaportnet.dephub.go.id/index.php/builtin/manage/spb/detail/${noLayananEnc}` : '#';
+        const noPkkEsc   = escHTML(noPkkRaw);
+
+        return `<tr class="hover:bg-blue-50/30 transition-colors group border-b border-slate-100">
+            <!-- No -->
+            <td class="px-4 py-4 text-center text-slate-400 font-medium text-xs align-top pt-5">${idx + 1}</td>
+
+            <!-- Kapal & Agen -->
+            <td class="px-5 py-4 align-top min-w-[180px]">
+                <p class="font-bold text-slate-900 text-sm leading-tight">${namaKapal}</p>
+                <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">${perusahaan}</p>
+                <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                    ${gt > 0 ? `<span class="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] font-semibold px-1.5 py-0.5 rounded">${gt.toLocaleString('id-ID')} GT</span>` : ''}
+                    ${callsign ? `<span class="bg-slate-100 text-slate-500 text-[10px] font-mono px-1.5 py-0.5 rounded">${callsign}</span>` : ''}
+                </div>
+                ${nakhoda ? `<p class="text-[10px] text-slate-400 mt-1">⚓ Nakhoda: <span class="font-medium text-slate-600">${nakhoda}</span></p>` : ''}
             </td>
-            <td class="px-6 py-4">
-                <p class="text-slate-800 font-medium">${rute}</p>
-                <span class="inline-block mt-1 bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded font-medium">${trayek}</span>
+
+            <!-- Dimensi & Teknis -->
+            <td class="px-5 py-4 align-top min-w-[170px]">
+                <div class="flex items-center gap-1.5 mb-1">
+                    <span class="text-base leading-none" title="${bendera}">${flagEmoji}</span>
+                    <span class="text-[11px] font-semibold text-slate-700">${bendera || '-'}</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mb-1.5">${jenisKapal}</p>
+                <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px]">
+                    ${loa ? `<span class="text-slate-500">LOA <span class="font-semibold text-slate-700">${loa}m</span></span>` : ''}
+                    ${lebar ? `<span class="text-slate-500">Lebar <span class="font-semibold text-slate-700">${lebar}m</span></span>` : ''}
+                    ${gt > 0 ? `<span class="text-slate-500">GT <span class="font-semibold text-slate-700">${gt.toLocaleString('id-ID')}</span></span>` : ''}
+                    ${dwt > 0 ? `<span class="text-slate-500">DWT <span class="font-semibold text-slate-700">${dwt.toLocaleString('id-ID')}</span></span>` : ''}
+                    ${imo ? `<span class="text-slate-500 col-span-2">IMO <span class="font-mono font-semibold text-slate-700">${imo}</span></span>` : ''}
+                </div>
+                ${drMax || drDepan ? `
+                <div class="mt-1.5 bg-slate-50 rounded border border-slate-100 px-1.5 py-1 grid grid-cols-4 gap-0.5 text-center text-[9px]">
+                    <div><p class="text-slate-400">MAX</p><p class="font-bold text-slate-700">${drMax || '-'}</p></div>
+                    <div><p class="text-slate-400">DP</p><p class="font-bold text-slate-700">${drDepan || '-'}</p></div>
+                    <div><p class="text-slate-400">TG</p><p class="font-bold text-slate-700">${drTengah || '-'}</p></div>
+                    <div><p class="text-slate-400">BK</p><p class="font-bold text-slate-700">${drBlkg || '-'}</p></div>
+                </div>` : ''}
             </td>
-            <td class="px-6 py-4">
-                <div class="flex flex-col gap-1">
-                    <span class="text-emerald-700 text-xs font-semibold">▼ ${eta}</span>
-                    <span class="text-amber-700 text-xs font-semibold">▲ ${etd}</span>
+
+            <!-- Rute & Trayek -->
+            <td class="px-5 py-4 align-top min-w-[200px]">
+                <p class="text-[11px] font-semibold text-slate-800 leading-tight">${asalTujuan}</p>
+                <span class="inline-block mt-1.5 text-[10px] font-semibold px-2 py-0.5 rounded border ${trayekColor}">${trayek}</span>
+                ${(voyIn || voyOut) ? `
+                <p class="text-[10px] text-slate-400 mt-1.5">
+                    ${voyIn ? `Voy in: <span class="text-slate-600 font-medium">${voyIn}</span>` : ''}
+                    ${voyOut ? ` / out: <span class="text-slate-600 font-medium">${voyOut}</span>` : ''}
+                </p>` : ''}
+                ${lokasiSandar ? `<p class="text-[10px] text-slate-500 mt-1">⚓ ${lokasiSandar}</p>` : ''}
+                ${lokasiTolak ? `<p class="text-[10px] text-slate-500">⛵ ${lokasiTolak}</p>` : ''}
+            </td>
+
+            <!-- Jadwal ETA / ETD -->
+            <td class="px-5 py-4 align-top min-w-[150px]">
+                <div class="flex flex-col gap-2">
+                    <div>
+                        <p class="text-[9px] text-slate-400 uppercase font-semibold mb-0.5">Tiba (ETA)</p>
+                        <span class="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 inline-block">${eta}</span>
+                    </div>
+                    <div>
+                        <p class="text-[9px] text-slate-400 uppercase font-semibold mb-0.5">Berangkat (ETD)</p>
+                        <span class="text-[11px] text-amber-700 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 inline-block">${etd}</span>
+                    </div>
                 </div>
             </td>
-            <td class="px-6 py-4 text-center">
-                <div class="flex items-center justify-center gap-3">
-                    <span class="text-rose-600 font-bold">${paxTurun.toLocaleString('id-ID')}</span>
-                    <span class="text-slate-300">/</span>
-                    <span class="text-emerald-600 font-bold">${paxNaik.toLocaleString('id-ID')}</span>
+
+            <!-- Penumpang -->
+            <td class="px-5 py-4 text-center align-top min-w-[100px]">
+                <div class="flex items-stretch justify-center gap-2 mt-1">
+                    <div class="text-center">
+                        <p class="text-[9px] text-rose-400 uppercase font-semibold">Turun</p>
+                        <p class="text-sm font-bold text-rose-600 mt-0.5">${paxTurun.toLocaleString('id-ID')}</p>
+                    </div>
+                    <div class="w-px bg-slate-200 self-stretch"></div>
+                    <div class="text-center">
+                        <p class="text-[9px] text-emerald-400 uppercase font-semibold">Naik</p>
+                        <p class="text-sm font-bold text-emerald-600 mt-0.5">${paxNaik.toLocaleString('id-ID')}</p>
+                    </div>
                 </div>
             </td>
-            <td class="px-6 py-4 text-center">
-                <button onclick="window.openDetailModal('${uid}')" class="bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 text-xs font-bold py-1.5 px-3 rounded-lg transition-all flex items-center gap-1.5 mx-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                    Detail
-                </button>
+
+            <!-- Aksi -->
+            <td class="px-4 py-4 align-top min-w-[190px]">
+                <div class="flex flex-col gap-1.5">
+                    <div class="flex gap-1 flex-wrap">
+                        <button onclick="window.openDetailModal('${uid}')"
+                            class="${btnBase} bg-blue-600 text-white border-blue-700 hover:bg-blue-700 shadow-sm">
+                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                            Detail
+                        </button>
+                        <a href="${urlSPB}" target="_blank" rel="noopener noreferrer"
+                            class="${btnBase} bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 ${!hasLayanan ? btnDisabled : ''}">
+                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                            SPB
+                        </a>
+                    </div>
+                    <div class="flex gap-1 flex-wrap">
+                        <button onclick="window.cetakDokumenScrape(event,'LK3','${noPkkEsc}')"
+                            class="${btnBase} bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 ${!hasPkk ? btnDisabled : ''}">
+                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                            LK3
+                        </button>
+                        <button onclick="window.cetakDokumenScrape(event,'CREW','${noPkkEsc}')"
+                            class="${btnBase} bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-600 hover:text-white hover:border-amber-600 ${!hasPkk ? btnDisabled : ''}">
+                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            Kru
+                        </button>
+                        <a href="${urlManifest}" target="_blank" rel="noopener noreferrer"
+                            class="${btnBase} bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 ${!hasLayanan ? btnDisabled : ''}">
+                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            Manifest
+                        </a>
+                    </div>
+                </div>
             </td>
         </tr>`;
     }).join('');
