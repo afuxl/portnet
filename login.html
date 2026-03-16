@@ -656,7 +656,9 @@
         let trayekChartInst = null;
         let currentData = []; 
 
+        // ==========================================
         // FUNGSI HELPER GLOBAL
+        // ==========================================
         function formatTanggalIndo(dateStr) {
             if (!dateStr || dateStr === '-') return '-';
             try {
@@ -703,6 +705,7 @@
 
         // LISTENER SAAT HALAMAN DIBUKA
         document.addEventListener('DOMContentLoaded', () => {
+            // Listener Area Kosong Modal
             document.getElementById('detailModal').addEventListener('click', function(e) {
                 if (e.target.id === 'detailModal') closeDetailModal();
             });
