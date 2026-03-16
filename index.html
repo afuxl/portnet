@@ -1010,7 +1010,7 @@
             const ctxTrayek = document.getElementById('trayekChart').getContext('2d');
             if (trayekChartInst) trayekChartInst.destroy();
             const trayekLabels = Object.keys(trayekCounts);
-            const bgColors = [colors.emerald, blue, colors.amber, colors.indigo, colors.rose];
+            const bgColors = [colors.emerald, colors.blue, colors.amber, colors.indigo, colors.rose];
             trayekChartInst = new Chart(ctxTrayek, {
                 type: 'doughnut',
                 data: {
