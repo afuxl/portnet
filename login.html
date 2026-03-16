@@ -349,6 +349,40 @@
     <script>
         lucide.createIcons();
 
+        // ==========================================
+        // FUNGSI HELPER GLOBAL (DIDEKLARASIKAN DI AWAL)
+        // ==========================================
+        function formatTanggalIndo(dateStr) {
+            if (!dateStr || dateStr === '-') return '-';
+            try {
+                let parsedStr = dateStr;
+                if (typeof parsedStr === 'string' && parsedStr.includes(' ') && !parsedStr.includes('T')) {
+                    parsedStr = parsedStr.replace(' ', 'T');
+                }
+                const date = new Date(parsedStr);
+                if (isNaN(date.getTime())) return dateStr; 
+                
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                
+                if (typeof dateStr === 'string' && dateStr.length <= 10) return `${day}-${month}-${year}`;
+                return `${day}-${month}-${year} ${hours}:${minutes}`;
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        function formatUang(nominal) {
+            return nominal ? 'Rp ' + parseInt(nominal).toLocaleString('id-ID') : '-';
+        }
+
+        function statusTag(val, trueLabel, falseLabel) {
+            return val == 1 ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-bold">${trueLabel}</span>` : (falseLabel ? `<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-xs">${falseLabel}</span>` : '-');
+        }
+
         // WAJIB DIISI: URL GAS WEB APP ANDA
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwAZV6iSElbw8XDTvR8IqalIwlhky-C1ozxK_NUIhWLGYf63U5fqOyhdGngl1KVey09rg/exec"; 
         
@@ -655,53 +689,6 @@
         let etaChartInst = null;
         let trayekChartInst = null;
         let currentData = []; 
-
-        // ==========================================
-        // FUNGSI HELPER GLOBAL
-        // ==========================================
-        function formatTanggalIndo(dateStr) {
-            if (!dateStr || dateStr === '-') return '-';
-            try {
-                let parsedStr = dateStr;
-                if (typeof parsedStr === 'string' && parsedStr.includes(' ') && !parsedStr.includes('T')) {
-                    parsedStr = parsedStr.replace(' ', 'T');
-                }
-                const date = new Date(parsedStr);
-                if (isNaN(date.getTime())) return dateStr; 
-                
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const year = date.getFullYear();
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                
-                if (typeof dateStr === 'string' && dateStr.length <= 10) return `${day}-${month}-${year}`;
-                return `${day}-${month}-${year} ${hours}:${minutes}`;
-            } catch (e) {
-                return dateStr;
-            }
-        }
-
-        function formatUang(nominal) {
-            return nominal ? 'Rp ' + parseInt(nominal).toLocaleString('id-ID') : '-';
-        }
-
-        function statusTag(val, trueLabel, falseLabel) {
-            return val == 1 ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-bold">${trueLabel}</span>` : (falseLabel ? `<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-xs">${falseLabel}</span>` : '-');
-        }
-
-        // PENDAFTARAN FUNGSI KE WINDOW
-        window.openDetailModal = openDetailModal;
-        window.closeDetailModal = closeDetailModal;
-        window.openSettingsModal = openSettingsModal;
-        window.closeSettingsModal = closeSettingsModal;
-        window.saveSettingsConfig = saveSettingsConfig;
-        window.cetakDokumenScrape = cetakDokumenScrape;
-        window.handleLogout = handleLogout;
-        window.filterDashboardData = filterDashboardData;
-        window.formatTanggalIndo = formatTanggalIndo;
-        window.formatUang = formatUang;
-        window.statusTag = statusTag;
 
         // LISTENER SAAT HALAMAN DIBUKA
         document.addEventListener('DOMContentLoaded', () => {
@@ -1066,8 +1053,8 @@
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <p class="text-xs sm:text-sm whitespace-nowrap"><span class="text-emerald-600 font-medium bg-emerald-50 px-1 rounded inline-block w-8 text-center">ETA</span> ${window.formatTanggalIndo(item.eta)}</p>
-                        <p class="text-xs sm:text-sm mt-1 whitespace-nowrap"><span class="text-amber-600 font-medium bg-amber-50 px-1 rounded inline-block w-8 text-center">ETD</span> ${window.formatTanggalIndo(item.etd)}</p>
+                        <p class="text-xs sm:text-sm whitespace-nowrap"><span class="text-emerald-600 font-medium bg-emerald-50 px-1 rounded inline-block w-8 text-center">ETA</span> ${formatTanggalIndo(item.eta)}</p>
+                        <p class="text-xs sm:text-sm mt-1 whitespace-nowrap"><span class="text-amber-600 font-medium bg-amber-50 px-1 rounded inline-block w-8 text-center">ETD</span> ${formatTanggalIndo(item.etd)}</p>
                     </td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-2 sm:gap-4 bg-slate-50 p-1.5 rounded-lg border border-slate-100 w-max mx-auto">
@@ -1197,8 +1184,8 @@
                             <i data-lucide="clock" class="w-4 h-4"></i> Waktu & Lokasi
                         </h4>
                         <dl class="space-y-2.5 text-xs sm:text-sm">
-                            <div class="flex flex-col"><dt class="text-slate-500 text-[10px] sm:text-xs">ETA (Kedatangan)</dt><dd class="font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded mt-1 border border-emerald-100">${window.formatTanggalIndo(item.eta || item.tgl_eta)}</dd></div>
-                            <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">ETD (Keberangkatan)</dt><dd class="font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded mt-1 border border-amber-100">${window.formatTanggalIndo(item.etd || item.tgl_etd)}</dd></div>
+                            <div class="flex flex-col"><dt class="text-slate-500 text-[10px] sm:text-xs">ETA (Kedatangan)</dt><dd class="font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded mt-1 border border-emerald-100">${formatTanggalIndo(item.eta || item.tgl_eta)}</dd></div>
+                            <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">ETD (Keberangkatan)</dt><dd class="font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded mt-1 border border-amber-100">${formatTanggalIndo(item.etd || item.tgl_etd)}</dd></div>
                             <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">Lokasi Sandar (Tiba)</dt><dd class="font-medium text-slate-900 text-xs mt-0.5">${item.lokasi_sandar || '-'}</dd></div>
                             <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">Lokasi Tolak (Berangkat)</dt><dd class="font-medium text-slate-900 text-xs mt-0.5">${item.lokasi_tolak || '-'}</dd></div>
                         </dl>
@@ -1241,10 +1228,10 @@
                             <i data-lucide="wallet" class="w-4 h-4"></i> Finansial & Status
                         </h4>
                         <dl class="space-y-2.5 text-xs sm:text-sm">
-                            <div class="flex justify-between"><dt class="text-slate-500">Nominal Billing</dt><dd class="font-bold text-slate-900 text-right ml-2">${window.formatUang(item.nominal_billing)}</dd></div>
-                            <div class="flex justify-between mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs pt-1">Waktu Respon (XLS)</dt><dd class="font-medium text-slate-900 text-right ml-2 leading-tight max-w-[120px]">${window.formatTanggalIndo(item.waktu_respon_xls || item.waktu_respon)}</dd></div>
-                            <div class="flex justify-between mt-3 items-center"><dt class="text-slate-500">Penyeberangan?</dt><dd>${window.statusTag(item.is_penyebrangan, 'YA', 'TIDAK')}</dd></div>
-                            <div class="flex justify-between items-center"><dt class="text-slate-500">Minerba?</dt><dd>${window.statusTag(item.is_minerba, 'YA', 'TIDAK')}</dd></div>
+                            <div class="flex justify-between"><dt class="text-slate-500">Nominal Billing</dt><dd class="font-bold text-slate-900 text-right ml-2">${formatUang(item.nominal_billing)}</dd></div>
+                            <div class="flex justify-between mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs pt-1">Waktu Respon (XLS)</dt><dd class="font-medium text-slate-900 text-right ml-2 leading-tight max-w-[120px]">${formatTanggalIndo(item.waktu_respon_xls || item.waktu_respon)}</dd></div>
+                            <div class="flex justify-between mt-3 items-center"><dt class="text-slate-500">Penyeberangan?</dt><dd>${statusTag(item.is_penyebrangan, 'YA', 'TIDAK')}</dd></div>
+                            <div class="flex justify-between items-center"><dt class="text-slate-500">Minerba?</dt><dd>${statusTag(item.is_minerba, 'YA', 'TIDAK')}</dd></div>
                         </dl>
                     </div>
 
