@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Dashboard Monitoring Inaportnet</title>
+    <title>Login - Dashboard Inaportnet</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -17,57 +17,49 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
     </style>
-    <script>
-        // CEK SESI: Jika sudah login, langsung arahkan ke Dashboard (index.html)
-        if (localStorage.getItem("inaportnet_auth") === "true") {
-            window.location.replace("index.html");
-        }
-    </script>
 </head>
-<body class="text-slate-800 antialiased min-h-screen relative bg-slate-50">
-
-    <div class="min-h-screen flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1551280857-2b9abe524879?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')] bg-cover bg-center bg-no-repeat relative">
-        <!-- Overlay Gelap -->
-        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-0"></div>
+<body class="text-slate-800 antialiased min-h-screen flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1551280857-2b9abe524879?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')] bg-cover bg-center bg-no-repeat relative">
+    
+    <!-- Overlay Gelap -->
+    <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-0"></div>
+    
+    <div class="glass-card w-full max-w-md p-8 sm:p-10 rounded-2xl z-10 mx-4 shadow-2xl relative overflow-hidden border border-white/20">
+        <div class="text-center mb-8">
+            <div class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/40">
+                <i data-lucide="anchor" class="w-8 h-8 text-white"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-800">Inaportnet Dashboard</h1>
+            <p class="text-slate-500 text-sm mt-1">Sistem Monitoring Pelabuhan Real-time</p>
+        </div>
         
-        <div class="glass-card w-full max-w-md p-8 sm:p-10 rounded-2xl z-10 mx-4 shadow-2xl relative overflow-hidden border border-white/20">
-            <div class="text-center mb-8">
-                <div class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/40">
-                    <i data-lucide="anchor" class="w-8 h-8 text-white"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-slate-800">Inaportnet Dashboard</h1>
-                <p class="text-slate-500 text-sm mt-1">Sistem Monitoring Pelabuhan Real-time</p>
-            </div>
-            
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="space-y-5">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Username</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
-                            </div>
-                            <input type="text" id="loginUser" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-800 font-medium placeholder-slate-400" placeholder="Masukkan username">
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Username</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
                         </div>
+                        <input type="text" id="loginUser" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-800 font-medium placeholder-slate-400" placeholder="Masukkan username">
                     </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                <i data-lucide="lock" class="w-4 h-4 text-slate-400"></i>
-                            </div>
-                            <input type="password" id="loginPass" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-800 font-medium placeholder-slate-400" placeholder="••••••••">
-                        </div>
-                    </div>
-                    <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg mt-8 transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
-                        Masuk Sistem <i data-lucide="log-in" class="w-4 h-4"></i>
-                    </button>
                 </div>
-            </form>
-            
-            <div class="mt-8 text-center text-xs text-slate-400">
-                <p>Dilindungi oleh Keamanan Google Apps Script</p>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <i data-lucide="lock" class="w-4 h-4 text-slate-400"></i>
+                        </div>
+                        <input type="password" id="loginPass" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-800 font-medium placeholder-slate-400" placeholder="••••••••">
+                    </div>
+                </div>
+                <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg mt-8 transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
+                    Masuk Sistem <i data-lucide="log-in" class="w-4 h-4"></i>
+                </button>
             </div>
+        </form>
+        
+        <div class="mt-8 text-center text-xs text-slate-400">
+            <p>Dilindungi oleh Keamanan Google Apps Script</p>
         </div>
     </div>
 
@@ -76,6 +68,26 @@
 
         // WAJIB DIISI: URL GAS WEB APP ANDA
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwAZV6iSElbw8XDTvR8IqalIwlhky-C1ozxK_NUIhWLGYf63U5fqOyhdGngl1KVey09rg/exec"; 
+        
+        const SESSION_KEY = 'inaportnet_session';
+        const SESSION_DURATION = 60 * 60 * 1000; // 1 Jam
+
+        // Cek apakah sudah login, jika iya, langsung lempar ke index.html
+        document.addEventListener('DOMContentLoaded', () => {
+            const sessionString = localStorage.getItem(SESSION_KEY);
+            if (sessionString) {
+                try {
+                    const sessionData = JSON.parse(sessionString);
+                    if (Date.now() < sessionData.expiry) {
+                        window.location.href = 'index.html'; // Redirect
+                    } else {
+                        localStorage.removeItem(SESSION_KEY);
+                    }
+                } catch (e) {
+                    localStorage.removeItem(SESSION_KEY);
+                }
+            }
+        });
 
         async function handleLogin(event) {
             event.preventDefault();
@@ -105,19 +117,23 @@
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    // Simpan Kredensial di Local Storage browser (sebagai ganti Cookie)
-                    localStorage.setItem("inaportnet_auth", "true");
-                    localStorage.setItem("inaportnet_user", user);
+                    // SIMPAN SESI LOKAL (EXPIRED 1 JAM)
+                    const sessionData = {
+                        username: user,
+                        expiry: Date.now() + SESSION_DURATION
+                    };
+                    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
 
                     Swal.fire({
                         toast: true, position: 'top-end', icon: 'success',
-                        title: 'Login Berhasil', showConfirmButton: false, timer: 1500
+                        title: 'Login Berhasil', text: 'Mengalihkan...', showConfirmButton: false, timer: 1500
                     });
 
-                    // Pindah ke halaman utama
+                    // Redirect ke Dashboard setelah delay singkat
                     setTimeout(() => {
-                        window.location.href = "index.html";
+                        window.location.href = 'index.html';
                     }, 1000);
+
                 } else {
                     throw new Error(result.message || 'Kredensial tidak valid.');
                 }
