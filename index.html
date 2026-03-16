@@ -54,7 +54,7 @@
                         <span id="displayPeriod">Memuat...</span>
                     </div>
                     <!-- Tombol Pengaturan -->
-                    <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-full border border-slate-600 transition-colors shadow-sm ml-2 outline-none" title="Pengaturan Sistem">
+                    <button type="button" onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-full border border-slate-600 transition-colors shadow-sm ml-2 outline-none" title="Pengaturan Sistem">
                         <i data-lucide="settings" class="w-4 h-4 text-slate-200"></i>
                     </button>
                 </div>
@@ -92,7 +92,7 @@
                     </select>
                 </div>
                 <div class="col-span-2 sm:col-span-1 w-full sm:w-auto mt-2 sm:mt-0">
-                    <button id="refreshBtn" onclick="loadData()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 py-2.5 transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-500/30">
+                    <button type="button" id="refreshBtn" onclick="loadData()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 py-2.5 transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-500/30">
                         <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                         Refresh Data
                     </button>
@@ -197,14 +197,14 @@
     </main>
 
     <!-- Modal Detail Kapal -->
-    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex justify-center items-end sm:items-center p-0 sm:p-6 transition-opacity">
-        <div class="bg-white sm:rounded-2xl shadow-2xl w-full max-w-6xl max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden modal-animate border border-slate-200 rounded-t-2xl">
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex justify-center items-end sm:items-center p-0 sm:p-6 transition-opacity cursor-pointer">
+        <div class="bg-white sm:rounded-2xl shadow-2xl w-full max-w-6xl max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden modal-animate border border-slate-200 rounded-t-2xl cursor-default" onclick="event.stopPropagation()">
             <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                 <h3 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2 sm:gap-3">
                     <div class="bg-blue-100 p-1.5 sm:p-2 rounded-lg text-blue-600"><i data-lucide="file-text" class="w-4 h-4 sm:w-5 sm:h-5"></i></div>
                     Detail Lengkap & Muatan
                 </h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-rose-500 bg-white hover:bg-rose-50 p-2 rounded-full transition-colors outline-none border border-slate-200">
+                <button type="button" onclick="closeDetailModal()" class="text-slate-400 hover:text-rose-500 bg-white hover:bg-rose-50 p-2 rounded-full transition-colors outline-none border border-slate-200">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -212,7 +212,7 @@
                 <!-- Content injected here via JS -->
             </div>
             <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 flex justify-end bg-slate-50">
-                <button onclick="closeModal()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-md">
+                <button type="button" onclick="closeDetailModal()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-md">
                     Tutup
                 </button>
             </div>
@@ -220,14 +220,14 @@
     </div>
 
     <!-- Modal Pengaturan (Config) -->
-    <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex justify-center items-center p-4 transition-opacity">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden modal-animate border border-slate-200">
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex justify-center items-center p-4 transition-opacity cursor-pointer">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden modal-animate border border-slate-200 cursor-default" onclick="event.stopPropagation()">
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                 <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <div class="bg-slate-200 p-1.5 rounded-lg text-slate-700"><i data-lucide="settings" class="w-5 h-5"></i></div>
                     Pengaturan Sistem
                 </h3>
-                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-rose-500 bg-white p-1.5 rounded-full transition-colors outline-none border border-slate-200">
+                <button type="button" onclick="closeSettingsModal()" class="text-slate-400 hover:text-rose-500 bg-white p-1.5 rounded-full transition-colors outline-none border border-slate-200">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -259,8 +259,8 @@
                 </div>
             </div>
             <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
-                <button onclick="closeSettingsModal()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors">Batal</button>
-                <button onclick="saveSettingsConfig()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg transition-colors shadow-md flex items-center gap-2">
+                <button type="button" onclick="closeSettingsModal()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors">Batal</button>
+                <button type="button" onclick="saveSettingsConfig()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg transition-colors shadow-md flex items-center gap-2">
                     <i data-lucide="save" class="w-4 h-4"></i> Simpan
                 </button>
             </div>
@@ -290,6 +290,14 @@
         let trayekChartInst = null;
         let currentData = []; 
 
+        // PENDAFTARAN FUNGSI KE WINDOW (Mencegah fungsi tidak terakses dari elemen HTML)
+        window.openDetailModal = openDetailModal;
+        window.closeDetailModal = closeDetailModal;
+        window.openSettingsModal = openSettingsModal;
+        window.closeSettingsModal = closeSettingsModal;
+        window.saveSettingsConfig = saveSettingsConfig;
+        window.cetakDokumenScrape = cetakDokumenScrape;
+
         // FUNGSI FORMAT TANGGAL INDONESIA (DD-MM-YYYY HH:mm)
         const formatTanggalIndo = (dateStr) => {
             if (!dateStr || dateStr === '-') return '-';
@@ -314,9 +322,14 @@
             }
         };
 
-        // AUTO-FETCH SAAT HALAMAN DIBUKA
+        // AUTO-FETCH SAAT HALAMAN DIBUKA & LISTENER MODAL KLIK LUAR
         document.addEventListener('DOMContentLoaded', () => {
-            // Biarkan port kosong dulu, tunggu loadData menarik konfigurasi asli dari server
+            document.getElementById('detailModal').addEventListener('click', function(e) {
+                if (e.target.id === 'detailModal') closeDetailModal();
+            });
+            document.getElementById('settingsModal').addEventListener('click', function(e) {
+                if (e.target.id === 'settingsModal') closeSettingsModal();
+            });
             loadData();
         });
 
@@ -357,7 +370,7 @@
                 
                 // --- PROSES KONFIGURASI DARI SERVER ---
                 if (result.config) {
-                    APP_CONFIG = { ...APP_CONFIG, ...result.config }; // Update local config
+                    APP_CONFIG = { ...APP_CONFIG, ...result.config }; 
                     
                     if (!portCodeInput && APP_CONFIG.DEFAULT_PORT_CODE) {
                         document.getElementById('portCode').value = APP_CONFIG.DEFAULT_PORT_CODE;
@@ -598,7 +611,7 @@
                     <td class="px-4 sm:px-6 py-4 text-center align-middle min-w-[150px]">
                         <div class="flex flex-col gap-1.5 w-full items-center mx-auto">
                             <!-- Tombol Detail Utama -->
-                            <button onclick="openModal(${index})" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white transition-colors py-1.5 px-3 rounded-lg border border-blue-100 shadow-sm flex items-center justify-center gap-1.5 w-full">
+                            <button type="button" onclick="openDetailModal(${index})" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white transition-colors py-1.5 px-3 rounded-lg border border-blue-100 shadow-sm flex items-center justify-center gap-1.5 w-full">
                                 <i data-lucide="file-search" class="w-4 h-4"></i> 
                                 <span class="text-[11px] font-bold whitespace-nowrap">Detail Lengkap</span>
                             </button>
@@ -627,7 +640,7 @@
             lucide.createIcons();
         }
 
-        function openModal(index) {
+        function openDetailModal(index) {
             const item = currentData[index];
             if (!item) return;
 
@@ -823,6 +836,10 @@
             document.getElementById('modalBody').innerHTML = contentHtml;
             document.getElementById('detailModal').classList.remove('hidden');
             lucide.createIcons();
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
         }
 
         // FUNGSI SCRAPING FRONTEND (ON-DEMAND) UNTUK LK3 & CREWLIST
