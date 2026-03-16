@@ -110,7 +110,7 @@
                     <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-4 items-end w-full md:w-auto">
                         <div class="col-span-1 w-full sm:w-auto">
                             <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Cari & Pilih Pelabuhan</label>
-                            <input type="search" id="portNameInput" list="portDatalist" placeholder="Ketik Nama Pelabuhan..." class="w-full sm:w-56 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase">
+                            <input type="search" id="portNameInput" list="portDatalist" oninput="this.value = this.value.toUpperCase()" placeholder="Ketik Nama Pelabuhan..." class="w-full sm:w-56 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase">
                             <datalist id="portDatalist"></datalist>
                         </div>
                         <div class="col-span-1 w-full sm:w-auto">
@@ -319,7 +319,8 @@
                 <div class="p-6 bg-white space-y-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Kode Port Default</label>
-                        <input type="text" id="cfgPortCode" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase" placeholder="Mis: IDLPO">
+                        <input type="search" id="cfgPortCode" list="portDatalistSettings" oninput="this.value = this.value.toUpperCase()" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase" placeholder="Mis: IDLPO">
+                        <datalist id="portDatalistSettings"></datalist>
                         <p class="text-xs text-slate-500 mt-1">Kode pelabuhan bawaan saat sistem baru login.</p>
                     </div>
                     <div>
@@ -347,6 +348,45 @@
 
     <script>
         lucide.createIcons();
+
+        // ==========================================
+        // FUNGSI HELPER GLOBAL
+        // ==========================================
+        function formatTanggalIndo(dateStr) {
+            if (!dateStr || dateStr === '-' || String(dateStr).trim() === '') return '-';
+            try {
+                let parsedStr = String(dateStr).trim();
+                // Konversi standar datetime ke ISO agar dibaca benar oleh JS
+                if (parsedStr.includes(' ') && !parsedStr.includes('T')) {
+                    parsedStr = parsedStr.replace(' ', 'T');
+                }
+                const date = new Date(parsedStr);
+                if (isNaN(date.getTime())) return dateStr; 
+                
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                
+                if (String(dateStr).length <= 10) return `${day}-${month}-${year}`;
+                return `${day}-${month}-${year} ${hours}:${minutes}`;
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        function formatUang(nominal) {
+            if (nominal === null || nominal === undefined || nominal === '') return '-';
+            const num = parseInt(nominal);
+            return isNaN(num) ? '-' : 'Rp ' + num.toLocaleString('id-ID');
+        }
+
+        function statusTag(val, trueLabel, falseLabel) {
+            return (val == 1 || val == '1' || val === true) 
+                ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-bold">${trueLabel}</span>` 
+                : (falseLabel ? `<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-xs">${falseLabel}</span>` : '-');
+        }
 
         // WAJIB DIISI: URL GAS WEB APP ANDA
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwAZV6iSElbw8XDTvR8IqalIwlhky-C1ozxK_NUIhWLGYf63U5fqOyhdGngl1KVey09rg/exec"; 
@@ -655,25 +695,8 @@
         let trayekChartInst = null;
         let currentData = []; 
 
-        // PENDAFTARAN FUNGSI KE WINDOW
-        window.openDetailModal = openDetailModal;
-        window.closeDetailModal = closeDetailModal;
-        window.openSettingsModal = openSettingsModal;
-        window.closeSettingsModal = closeSettingsModal;
-        window.saveSettingsConfig = saveSettingsConfig;
-        window.cetakDokumenScrape = cetakDokumenScrape;
-        window.handleLogout = handleLogout;
-        window.filterDashboardData = filterDashboardData;
-
         // LISTENER SAAT HALAMAN DIBUKA
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('detailModal').addEventListener('click', function(e) {
-                if (e.target.id === 'detailModal') closeDetailModal();
-            });
-            document.getElementById('settingsModal').addEventListener('click', function(e) {
-                if (e.target.id === 'settingsModal') closeSettingsModal();
-            });
-
             // Tampilkan Username dari Session
             if (sessionDataObj && sessionDataObj.username) {
                 document.getElementById('displayUsername').textContent = sessionDataObj.username;
@@ -885,7 +908,7 @@
                 
                 if (result.status === 'success') {
                     APP_CONFIG = { ...APP_CONFIG, ...newConfig }; 
-                    localStorage.setItem('inaportnet_config', JSON.stringify(APP_CONFIG)); // Update cache
+                    localStorage.setItem('inaportnet_config', JSON.stringify(APP_CONFIG)); 
                     closeSettingsModal();
                     Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Pengaturan telah disimpan di Server.', timer: 2000, showConfirmButton: false });
                     
@@ -913,8 +936,8 @@
                 const trayek = item.trayek_datang || 'UNKNOWN';
                 trayekCounts[trayek] = (trayekCounts[trayek] || 0) + 1;
 
-                const date = item.tgl_eta || 'TBA';
-                etaCounts[date] = (etaCounts[date] || 0) + 1;
+                const date = formatTanggalIndo(item.eta || item.tgl_eta).substring(0, 10); // Group by Date
+                if (date && date !== '-') etaCounts[date] = (etaCounts[date] || 0) + 1;
             });
 
             document.getElementById('totalShips').textContent = data.length;
@@ -964,7 +987,7 @@
             tbody.innerHTML = '';
 
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-slate-500 font-medium">Tidak ada data yang ditemukan.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-slate-500 font-medium">Tidak ada data yang ditemukan.</td></tr>';
                 return;
             }
 
@@ -1002,7 +1025,7 @@
                                 
                                 <div class="flex flex-wrap items-center gap-1.5 mt-1.5 mb-1.5">
                                     <span class="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded font-medium border border-slate-200 shadow-sm">GT: ${item.gt || 0}</span>
-                                    <span class="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded font-medium border border-slate-200 shadow-sm">Dimensi: ${item.loa || '-'}m x ${item.lebar || '-'}m</span>
+                                    <span class="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded font-medium border border-slate-200 shadow-sm">Dim: ${item.loa || '-'}m x ${item.lebar || '-'}m</span>
                                 </div>
 
                                 <p class="text-[10px] sm:text-xs text-slate-500 flex items-center gap-1.5 flex-wrap">
@@ -1027,8 +1050,8 @@
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <p class="text-xs sm:text-sm whitespace-nowrap"><span class="text-emerald-600 font-medium bg-emerald-50 px-1 rounded inline-block w-8 text-center">ETA</span> ${formatTanggalIndo(item.eta)}</p>
-                        <p class="text-xs sm:text-sm mt-1 whitespace-nowrap"><span class="text-amber-600 font-medium bg-amber-50 px-1 rounded inline-block w-8 text-center">ETD</span> ${formatTanggalIndo(item.etd)}</p>
+                        <p class="text-xs sm:text-sm whitespace-nowrap"><span class="text-emerald-600 font-medium bg-emerald-50 px-1 rounded inline-block w-8 text-center">ETA</span> ${formatTanggalIndo(item.eta || item.tgl_eta)}</p>
+                        <p class="text-xs sm:text-sm mt-1 whitespace-nowrap"><span class="text-amber-600 font-medium bg-amber-50 px-1 rounded inline-block w-8 text-center">ETD</span> ${formatTanggalIndo(item.etd || item.tgl_etd)}</p>
                     </td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-2 sm:gap-4 bg-slate-50 p-1.5 rounded-lg border border-slate-100 w-max mx-auto">
@@ -1062,7 +1085,7 @@
                                     <i data-lucide="users" class="w-3.5 h-3.5"></i> Daftar Kru
                                 </a>
                                 <a href="${urlManifest}" target="_blank" class="text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white transition-colors py-2 px-3 rounded-lg border border-rose-100 flex items-center justify-center gap-1.5 text-xs sm:text-sm font-bold ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}" title="Cetak Manifest">
-                                    <i data-lucide="package" class="w-3.5 h-3.5"></i> Manifest Dokumen
+                                    <i data-lucide="package" class="w-3.5 h-3.5"></i> Manifest
                                 </a>
                             </div>
                         </div>
@@ -1075,12 +1098,8 @@
         }
 
         function openDetailModal(uid) {
-            // Pencarian data berdasarkan Unique ID, sangat akurat meskipun data sedang difilter
             const item = currentData.find(x => x._uid === uid);
             if (!item) return;
-
-            const formatUang = (nominal) => nominal ? 'Rp ' + parseInt(nominal).toLocaleString('id-ID') : '-';
-            const statusTag = (val, trueLabel, falseLabel) => val == 1 ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-bold">${trueLabel}</span>` : (falseLabel ? `<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-xs">${falseLabel}</span>` : '-');
 
             const noLayanan = item.nomor_layanan_berangkat || item.nomor_layanan_datang || '';
             const noPkk = item.nomor_pkk || '';
@@ -1108,7 +1127,7 @@
                                 <i data-lucide="users" class="w-3.5 h-3.5"></i> Daftar Kru
                             </a>
                             <a href="${urlManifest}" target="_blank" class="flex-1 sm:flex-none justify-center bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white border border-rose-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}">
-                                <i data-lucide="package" class="w-3.5 h-3.5"></i> Manifest Dokumen
+                                <i data-lucide="package" class="w-3.5 h-3.5"></i> Manifest
                             </a>
                         </div>
                     </div>
@@ -1273,6 +1292,7 @@
             document.getElementById('detailModal').classList.add('hidden');
         }
 
+        // FUNGSI SCRAPING FRONTEND (ON-DEMAND) UNTUK LK3 & CREWLIST
         async function cetakDokumenScrape(event, jenis, noPkk) {
             event.preventDefault();
             if (!noPkk) return;
@@ -1314,6 +1334,7 @@
 
             try {
                 const detailUrl = `https://monitoring-inaportnet.dephub.go.id/monitoring/detail?nomor_pkk=${noPkk}`;
+                
                 const response = await fetch(detailUrl);
                 if(!response.ok) throw new Error('Server Inaportnet gagal merespon');
                 
@@ -1344,6 +1365,7 @@
                     <h2>Beralih ke Pencarian...</h2>
                     <p>Gagal mengekstrak ID Direct. Membuka melalui sistem bawaan Inaportnet.</p>
                 `;
+                
                 setTimeout(() => {
                     if (jenis === 'LK3') {
                         newWindow.location.href = `https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=${noPkk}`;
@@ -1353,6 +1375,7 @@
                 }, 1500);
             }
         }
+
     </script>
 </body>
 </html>
