@@ -112,10 +112,10 @@
         </nav>
 
         <!-- Main Content -->
-        <main class="flex-grow w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10">
+        <main class="flex-grow w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 z-10">
 
             <!-- Controls / Filters -->
-            <div class="glass-card rounded-xl p-4 sm:p-6 mb-6 flex flex-col gap-4">
+            <div class="glass-card rounded-xl p-3 sm:p-4 mb-4 flex flex-col gap-3">
                 <div class="flex flex-col md:flex-row md:flex-wrap gap-4 items-start md:items-end justify-between w-full">
                     <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-4 items-end w-full md:w-auto">
                         <div class="col-span-1 w-full sm:w-auto">
@@ -162,126 +162,154 @@
                     </div>
                 </div>
 
-                <!-- Filter Lokal -->
-                <div class="w-full border-t border-slate-100 pt-4 mt-2 flex flex-col gap-4">
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Filter Data Lokal</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-                        <div class="relative w-full">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i data-lucide="ship" class="w-4 h-4 text-slate-400"></i>
-                            </div>
-                            <input type="search" id="filterKapal" list="listKapal" oninput="window._debounceFilter()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Kapal...">
-                            <datalist id="listKapal"></datalist>
-                        </div>
-                        <div class="relative w-full">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i data-lucide="building" class="w-4 h-4 text-slate-400"></i>
-                            </div>
-                            <input type="search" id="filterPerusahaan" list="listPerusahaan" oninput="window._debounceFilter()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Perusahaan/Agen...">
-                            <datalist id="listPerusahaan"></datalist>
-                        </div>
-                        <div class="relative w-full">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i data-lucide="user-check" class="w-4 h-4 text-slate-400"></i>
-                            </div>
-                            <input type="search" id="filterPetugas" list="listPetugas" oninput="window._debounceFilter()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Petugas SPB...">
-                            <datalist id="listPetugas"></datalist>
-                        </div>
-                        <div class="relative w-full">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i>
-                            </div>
-                            <input type="search" id="filterLokasi" list="listLokasi" oninput="window._debounceFilter()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Lokasi Sandar/Tolak...">
-                            <datalist id="listLokasi"></datalist>
-                        </div>
-                    </div>
-                    <div class="text-sm text-slate-500 font-medium w-full text-left md:hidden block mt-2">
-                        Diperbarui: <span id="lastUpdatedMobile" class="text-slate-800 font-semibold">-</span>
-                    </div>
+                <div class="text-sm text-slate-500 font-medium w-full text-left md:hidden block mt-2">
+                    Diperbarui: <span id="lastUpdatedMobile" class="text-slate-800 font-semibold">-</span>
                 </div>
             </div>
 
             <!-- Summary Widgets -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-8">
-                <div class="glass-card rounded-xl p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 mb-4">
+                <div class="glass-card rounded-xl p-3 flex items-center gap-3 relative overflow-hidden group">
                     <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
-                    <div class="p-3 rounded-lg bg-blue-100 text-blue-600 z-10"><i data-lucide="ship" class="w-6 h-6"></i></div>
+                    <div class="p-2 rounded-lg bg-blue-100 text-blue-600 z-10"><i data-lucide="ship" class="w-5 h-5"></i></div>
                     <div class="z-10">
                         <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Kapal</p>
-                        <h3 class="text-2xl font-bold text-slate-800" id="totalShips">0</h3>
+                        <h3 class="text-xl font-bold text-slate-800" id="totalShips">0</h3>
                     </div>
                 </div>
-                <div class="glass-card rounded-xl p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
+                <div class="glass-card rounded-xl p-3 flex items-center gap-3 relative overflow-hidden group">
                     <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
-                    <div class="p-3 rounded-lg bg-indigo-100 text-indigo-600 z-10"><i data-lucide="weight" class="w-6 h-6"></i></div>
+                    <div class="p-2 rounded-lg bg-indigo-100 text-indigo-600 z-10"><i data-lucide="weight" class="w-5 h-5"></i></div>
                     <div class="z-10">
                         <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total GT</p>
-                        <h3 class="text-2xl font-bold text-slate-800" id="totalGT">0</h3>
+                        <h3 class="text-xl font-bold text-slate-800" id="totalGT">0</h3>
                     </div>
                 </div>
-                <div class="glass-card rounded-xl p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
+                <div class="glass-card rounded-xl p-3 flex items-center gap-3 relative overflow-hidden group">
                     <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
-                    <div class="p-3 rounded-lg bg-amber-100 text-amber-600 z-10"><i data-lucide="ferris-wheel" class="w-6 h-6"></i></div>
+                    <div class="p-2 rounded-lg bg-amber-100 text-amber-600 z-10"><i data-lucide="ferris-wheel" class="w-5 h-5"></i></div>
                     <div class="z-10">
                         <p class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Penyeberangan/Minerba</p>
-                        <h3 class="text-2xl font-bold text-slate-800" id="totalKhusus">0</h3>
+                        <h3 class="text-xl font-bold text-slate-800" id="totalKhusus">0</h3>
                     </div>
                 </div>
-                <div class="glass-card rounded-xl p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
+                <div class="glass-card rounded-xl p-3 flex items-center gap-3 relative overflow-hidden group">
                     <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
-                    <div class="p-3 rounded-lg bg-emerald-100 text-emerald-600 z-10"><i data-lucide="user-plus" class="w-6 h-6"></i></div>
+                    <div class="p-2 rounded-lg bg-emerald-100 text-emerald-600 z-10"><i data-lucide="user-plus" class="w-5 h-5"></i></div>
                     <div class="z-10">
                         <p class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Penumpang Naik</p>
-                        <h3 class="text-2xl font-bold text-slate-800" id="totalPaxNaik">0</h3>
+                        <h3 class="text-xl font-bold text-slate-800" id="totalPaxNaik">0</h3>
                     </div>
                 </div>
-                <div class="glass-card rounded-xl p-4 sm:p-5 flex items-center gap-4 relative overflow-hidden group">
+                <div class="glass-card rounded-xl p-3 flex items-center gap-3 relative overflow-hidden group">
                     <div class="absolute -right-4 -top-4 w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
-                    <div class="p-3 rounded-lg bg-rose-100 text-rose-600 z-10"><i data-lucide="user-minus" class="w-6 h-6"></i></div>
+                    <div class="p-2 rounded-lg bg-rose-100 text-rose-600 z-10"><i data-lucide="user-minus" class="w-5 h-5"></i></div>
                     <div class="z-10">
                         <p class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Penumpang Turun</p>
-                        <h3 class="text-2xl font-bold text-slate-800" id="totalPaxTurun">0</h3>
+                        <h3 class="text-xl font-bold text-slate-800" id="totalPaxTurun">0</h3>
                     </div>
                 </div>
             </div>
 
             <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div class="glass-card rounded-xl p-4 sm:p-6 lg:col-span-2 shadow-sm">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
+                <div class="glass-card rounded-xl p-3 sm:p-4 lg:col-span-2 shadow-sm">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-base sm:text-lg font-bold text-slate-800">Kedatangan Kapal (ETA) per Hari</h2>
                         <div class="bg-slate-100 p-2 rounded-lg hidden sm:block"><i data-lucide="bar-chart-2" class="w-5 h-5 text-slate-500"></i></div>
                     </div>
-                    <div class="relative h-64 sm:h-72 w-full"><canvas id="etaChart"></canvas></div>
+                    <div class="relative h-52 sm:h-60 w-full"><canvas id="etaChart"></canvas></div>
                 </div>
-                <div class="glass-card rounded-xl p-4 sm:p-6 shadow-sm">
+                <div class="glass-card rounded-xl p-3 sm:p-4 shadow-sm">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-base sm:text-lg font-bold text-slate-800">Distribusi Trayek</h2>
                         <div class="bg-slate-100 p-2 rounded-lg hidden sm:block"><i data-lucide="pie-chart" class="w-5 h-5 text-slate-500"></i></div>
                     </div>
-                    <div class="relative h-64 sm:h-72 w-full flex justify-center"><canvas id="trayekChart"></canvas></div>
+                    <div class="relative h-52 sm:h-60 w-full flex justify-center"><canvas id="trayekChart"></canvas></div>
                 </div>
             </div>
 
             <!-- Data Table -->
             <div class="glass-card rounded-xl shadow-sm overflow-hidden flex flex-col">
-                <div class="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-white flex-wrap gap-2">
-                    <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <i data-lucide="list" class="w-5 h-5 text-blue-600"></i>
+
+                <!-- Header baris 1: judul + badge -->
+                <div class="px-4 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-white">
+                    <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="list" class="w-4 h-4 text-blue-600"></i>
                         Daftar Kedatangan & Keberangkatan
                     </h2>
-                    <span class="bg-blue-100 text-blue-800 text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-1 rounded-full border border-blue-200 whitespace-nowrap" id="tableRecordCount">0 Kapal</span>
+                    <span class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-blue-200 whitespace-nowrap" id="tableRecordCount">0 Kapal</span>
                 </div>
+
+                <!-- Header baris 2: filter + row limit + toggle kolom -->
+                <div class="px-3 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap gap-2 items-center">
+
+                    <!-- Filter inputs -->
+                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                        <i data-lucide="ship" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                        <input type="search" id="filterKapal" list="listKapal" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Nama Kapal...">
+                        <datalist id="listKapal"></datalist>
+                    </div>
+                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                        <i data-lucide="building" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                        <input type="search" id="filterPerusahaan" list="listPerusahaan" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Perusahaan...">
+                        <datalist id="listPerusahaan"></datalist>
+                    </div>
+                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                        <i data-lucide="user-check" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                        <input type="search" id="filterPetugas" list="listPetugas" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Petugas SPB...">
+                        <datalist id="listPetugas"></datalist>
+                    </div>
+                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                        <i data-lucide="map-pin" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                        <input type="search" id="filterLokasi" list="listLokasi" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Lokasi...">
+                        <datalist id="listLokasi"></datalist>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 ml-auto flex-shrink-0">
+                        <!-- Row limit -->
+                        <select id="rowLimitSelect" onchange="window._applyTableFilters()" class="text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                            <option value="20">20 baris</option>
+                            <option value="50">50 baris</option>
+                            <option value="100">100 baris</option>
+                            <option value="0">Semua</option>
+                        </select>
+
+                        <!-- Toggle kolom dropdown -->
+                        <div class="relative" id="colToggleWrapper">
+                            <button onclick="document.getElementById('colToggleMenu').classList.toggle('hidden')" class="flex items-center gap-1 text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 hover:bg-slate-50 transition-colors">
+                                <i data-lucide="columns" class="w-3.5 h-3.5"></i>
+                                <span class="hidden sm:inline">Kolom</span>
+                            </button>
+                            <div id="colToggleMenu" class="hidden absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 p-3 min-w-[160px]">
+                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tampilkan Kolom</p>
+                                <label class="flex items-center gap-2 text-xs text-slate-700 py-1 cursor-pointer hover:text-blue-600">
+                                    <input type="checkbox" id="col-rute" checked onchange="window._toggleCol('rute')" class="rounded border-slate-300 accent-blue-600">
+                                    Rute & Trayek
+                                </label>
+                                <label class="flex items-center gap-2 text-xs text-slate-700 py-1 cursor-pointer hover:text-blue-600">
+                                    <input type="checkbox" id="col-jadwal" checked onchange="window._toggleCol('jadwal')" class="rounded border-slate-300 accent-blue-600">
+                                    Jadwal ETA/ETD
+                                </label>
+                                <label class="flex items-center gap-2 text-xs text-slate-700 py-1 cursor-pointer hover:text-blue-600">
+                                    <input type="checkbox" id="col-pax" checked onchange="window._toggleCol('pax')" class="rounded border-slate-300 accent-blue-600">
+                                    Penumpang
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="table-container">
-                    <table class="w-full min-w-max text-sm text-left text-slate-600 whitespace-nowrap">
+                    <table class="w-full min-w-max text-sm text-left text-slate-600 whitespace-nowrap" id="mainTable">
                         <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th scope="col" class="px-3 py-3 font-semibold tracking-wider text-center w-10">No</th>
-                                <th scope="col" class="px-4 py-3 font-semibold tracking-wider">Kapal & Spesifikasi</th>
-                                <th scope="col" class="px-4 py-3 font-semibold tracking-wider">Rute & Trayek</th>
-                                <th scope="col" class="px-4 py-3 font-semibold tracking-wider">Jadwal</th>
-                                <th scope="col" class="px-4 py-3 font-semibold tracking-wider text-center">Penumpang</th>
-                                <th scope="col" class="px-4 py-3 font-semibold tracking-wider text-center">Aksi</th>
+                                <th scope="col" class="px-3 py-2.5 font-semibold tracking-wider text-center w-10">No</th>
+                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider">Kapal & Spesifikasi</th>
+                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider col-rute">Rute & Trayek</th>
+                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider col-jadwal">Jadwal</th>
+                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider text-center col-pax">Penumpang</th>
+                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="divide-y divide-slate-100 bg-white">
@@ -580,10 +608,14 @@ function buildFilterDatalist(data) {
 // ==========================================
 // RENDER DATA KE TABEL & CHART
 // ==========================================
+// processDataAndRender: dipanggil setelah loadData berhasil
+// Stats & chart selalu pakai currentData PENUH, bukan data yang difilter
 function processDataAndRender(data) {
+    // data = currentData (penuh) — update stats dan chart
     updateSummaryCards(data);
-    renderTable(data);
     renderCharts(data);
+    // Tabel: terapkan filter & row limit yang sedang aktif (hanya tabel)
+    window._applyTableFilters();
 }
 
 // Helper: baca nilai penumpang dari berbagai kemungkinan nama field API Inaportnet
@@ -639,7 +671,7 @@ function updateSummaryCards(data) {
 
 function renderTable(data) {
     const tbody = document.getElementById('tableBody');
-    document.getElementById('tableRecordCount').textContent = `${data.length} Kapal`;
+    // Badge dihandle oleh _applyTableFilters, bukan di sini
 
     if (data.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-slate-400 font-medium">Tidak ada data yang cocok dengan filter.</td></tr>';
@@ -739,7 +771,7 @@ function renderTable(data) {
                 <p class="mt-2 text-[10px] text-slate-400 leading-snug border-t border-slate-100 pt-1.5 whitespace-normal">${perusahaan || '-'}</p>
             </td>
 
-            <td class="px-4 py-3 align-top" style="min-width:180px">
+            <td class="px-4 py-3 align-top col-rute" style="min-width:180px">
                 <p class="text-[11px] font-semibold text-slate-800 leading-snug">${asalTujuan}</p>
                 <span class="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${trayekColor}">${trayek}</span>
                 ${(voyIn || voyOut) ? `<p class="text-[10px] text-slate-400 mt-1">${voyIn ? `In: <span class="text-slate-600">${voyIn}</span>` : ''}${voyIn && voyOut ? ' / ' : ''}${voyOut ? `Out: <span class="text-slate-600">${voyOut}</span>` : ''}</p>` : ''}
@@ -747,7 +779,7 @@ function renderTable(data) {
                 ${lokasiTolak  ? `<p class="text-[10px] text-slate-500 leading-tight">\u26F5 ${lokasiTolak}</p>` : ''}
             </td>
 
-            <td class="px-4 py-3 align-top" style="min-width:140px">
+            <td class="px-4 py-3 align-top col-jadwal" style="min-width:140px">
                 <div class="space-y-1.5">
                     <div>
                         <span class="text-[9px] text-slate-400 uppercase font-semibold block mb-0.5">ETA</span>
@@ -760,7 +792,7 @@ function renderTable(data) {
                 </div>
             </td>
 
-            <td class="px-4 py-3 text-center align-top" style="min-width:90px">
+            <td class="px-4 py-3 text-center align-top col-pax" style="min-width:90px">
                 <div class="flex gap-2 justify-center mt-0.5">
                     <div>
                         <p class="text-[9px] text-rose-400 font-semibold uppercase">Turun</p>
@@ -924,39 +956,76 @@ function renderCharts(data) {
 }
 
 // ==========================================
-// FIX: DEBOUNCE UNTUK FILTER (sebelumnya tidak ada)
+// FILTER & ROW LIMIT — hanya mempengaruhi TABEL
+// Statistik, chart, summary cards tidak berubah
 // ==========================================
 let _filterDebounceTimer = null;
 window._debounceFilter = function() {
     clearTimeout(_filterDebounceTimer);
-    _filterDebounceTimer = setTimeout(window.filterDashboardData, 300);
+    _filterDebounceTimer = setTimeout(window._applyTableFilters, 250);
 };
 
-window.filterDashboardData = function() {
-    const kw = id => document.getElementById(id).value.toLowerCase();
-    const keywordKapal = kw('filterKapal');
-    const keywordPerusahaan = kw('filterPerusahaan');
-    const keywordPetugas = kw('filterPetugas');
-    const keywordLokasi = kw('filterLokasi');
+// Tutup col toggle menu saat klik di luar
+document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('colToggleWrapper');
+    const menu    = document.getElementById('colToggleMenu');
+    if (wrapper && menu && !wrapper.contains(e.target)) {
+        menu.classList.add('hidden');
+    }
+});
 
-    if (!keywordKapal && !keywordPerusahaan && !keywordPetugas && !keywordLokasi) {
-        processDataAndRender(currentData);
-        return;
+// Toggle kolom 3-5 (rute, jadwal, penumpang)
+window._toggleCol = function(col) {
+    const show = document.getElementById('col-' + col).checked;
+    document.querySelectorAll('.col-' + col).forEach(el => {
+        el.style.display = show ? '' : 'none';
+    });
+};
+
+// Terapkan filter + row limit ke tabel saja
+window._applyTableFilters = function() {
+    const kw = id => (document.getElementById(id)?.value || '').toLowerCase().trim();
+    const kwKapal      = kw('filterKapal');
+    const kwPerusahaan = kw('filterPerusahaan');
+    const kwPetugas    = kw('filterPetugas');
+    const kwLokasi     = kw('filterLokasi');
+    const limitVal     = parseInt(document.getElementById('rowLimitSelect')?.value || '20');
+
+    let filtered = currentData;
+
+    if (kwKapal || kwPerusahaan || kwPetugas || kwLokasi) {
+        filtered = currentData.filter(item => {
+            if (kwKapal      && !(item.nama_kapal || '').toLowerCase().includes(kwKapal))          return false;
+            if (kwPerusahaan && !(item.perusahaan || item.keagenan || '').toLowerCase().includes(kwPerusahaan)) return false;
+            if (kwPetugas    && !(item.spb_approve_fullname || '').toLowerCase().includes(kwPetugas)) return false;
+            if (kwLokasi) {
+                const lok = ((item.lokasi_sandar||'') + ' ' + (item.lokasi_tolak||'')).toLowerCase();
+                if (!lok.includes(kwLokasi)) return false;
+            }
+            return true;
+        });
     }
 
-    const filtered = currentData.filter(item => {
-        if (keywordKapal && !(item.nama_kapal || '').toLowerCase().includes(keywordKapal)) return false;
-        if (keywordPerusahaan && !(item.perusahaan || item.keagenan || '').toLowerCase().includes(keywordPerusahaan)) return false;
-        if (keywordPetugas && !(item.spb_approve_fullname || '').toLowerCase().includes(keywordPetugas)) return false;
-        if (keywordLokasi) {
-            const lok = ((item.lokasi_sandar || '') + ' ' + (item.lokasi_tolak || '')).toLowerCase();
-            if (!lok.includes(keywordLokasi)) return false;
-        }
-        return true;
-    });
+    // Terapkan row limit
+    const sliced = (limitVal > 0) ? filtered.slice(0, limitVal) : filtered;
 
-    processDataAndRender(filtered);
+    // Update badge record count dengan info filter
+    const badge = document.getElementById('tableRecordCount');
+    if (badge) {
+        if (filtered.length < currentData.length) {
+            badge.textContent = `${sliced.length} / ${filtered.length} (filter aktif)`;
+        } else if (limitVal > 0 && sliced.length < filtered.length) {
+            badge.textContent = `${sliced.length} dari ${filtered.length} Kapal`;
+        } else {
+            badge.textContent = `${filtered.length} Kapal`;
+        }
+    }
+
+    renderTable(sliced);
 };
+
+// Alias lama tetap ada agar tidak error jika ada pemanggilan lain
+window.filterDashboardData = window._applyTableFilters;
 
 // ==========================================
 // MODAL DETAIL — FIX XSS: semua data di-escape
@@ -1084,13 +1153,24 @@ window.openDetailModal = function(uid) {
                 </dl>
             </div>
 
-            <!-- Finansial & Status -->
+            <!-- Penumpang & Status -->
             <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <h4 class="font-bold text-blue-800 flex items-center gap-2 border-b border-slate-200 pb-2 mb-3 text-sm">Finansial & Status</h4>
-                <dl class="space-y-2.5 text-xs sm:text-sm">
+                <h4 class="font-bold text-blue-800 flex items-center gap-2 border-b border-slate-200 pb-2 mb-3 text-sm">Penumpang & Status</h4>
+                <!-- Penumpang card -->
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div class="bg-rose-50 border border-rose-100 rounded-lg p-2.5 text-center">
+                        <p class="text-[9px] text-rose-400 font-bold uppercase tracking-wider mb-1">Penumpang Turun</p>
+                        <p class="text-xl font-bold text-rose-600">${getPaxTurun(item).toLocaleString('id-ID')}</p>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-2.5 text-center">
+                        <p class="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mb-1">Penumpang Naik</p>
+                        <p class="text-xl font-bold text-emerald-600">${getPaxNaik(item).toLocaleString('id-ID')}</p>
+                    </div>
+                </div>
+                <dl class="space-y-2 text-xs sm:text-sm">
                     <div class="flex justify-between"><dt class="text-slate-500">Nominal Billing</dt><dd class="font-bold text-slate-900 text-right ml-2">${window.formatUang(item.nominal_billing)}</dd></div>
-                    <div class="flex justify-between mt-2"><dt class="text-slate-500 text-[10px] pt-1">Waktu Respon</dt><dd class="font-medium text-slate-900 text-right ml-2 leading-tight">${window.formatTanggalIndo(item.waktu_respon_xls || item.waktu_respon)}</dd></div>
-                    <div class="flex justify-between mt-3 items-center"><dt class="text-slate-500">Penyeberangan?</dt><dd>${window.statusTag(item.is_penyebrangan, 'YA', 'TIDAK')}</dd></div>
+                    <div class="flex justify-between"><dt class="text-slate-500 text-[10px]">Waktu Respon</dt><dd class="font-medium text-slate-900 text-right ml-2 leading-tight text-xs">${window.formatTanggalIndo(item.waktu_respon_xls || item.waktu_respon)}</dd></div>
+                    <div class="flex justify-between items-center"><dt class="text-slate-500">Penyeberangan?</dt><dd>${window.statusTag(item.is_penyebrangan, 'YA', 'TIDAK')}</dd></div>
                     <div class="flex justify-between items-center"><dt class="text-slate-500">Minerba?</dt><dd>${window.statusTag(item.is_minerba, 'YA', 'TIDAK')}</dd></div>
                 </dl>
             </div>
