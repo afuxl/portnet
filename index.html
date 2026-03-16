@@ -8,13 +8,13 @@
     <script>
         const SESSION_KEY = 'inaportnet_session';
         const sessionString = localStorage.getItem(SESSION_KEY);
-        let isValidSession = false;
+        let sessionDataObj = null;
 
         if (sessionString) {
             try {
                 const sessionData = JSON.parse(sessionString);
                 if (Date.now() < sessionData.expiry) {
-                    isValidSession = true;
+                    sessionDataObj = sessionData;
                 } else {
                     localStorage.removeItem(SESSION_KEY);
                 }
@@ -23,8 +23,7 @@
             }
         }
 
-        // Jika tidak valid, langsung redirect sebelum merender halaman
-        if (!isValidSession) {
+        if (!sessionDataObj) {
             window.location.href = 'login.html';
         }
     </script>
@@ -54,22 +53,16 @@
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .modal-animate { animation: fadeIn 0.2s ease-out forwards; }
 
-        /* Mengembalikan tombol Clear (X) bawaan browser untuk input type search pada Tailwind */
         input[type="search"]::-webkit-search-cancel-button {
             -webkit-appearance: searchfield-cancel-button;
             cursor: pointer;
             opacity: 0.6;
         }
-        input[type="search"]::-webkit-search-cancel-button:hover {
-            opacity: 1;
-        }
+        input[type="search"]::-webkit-search-cancel-button:hover { opacity: 1; }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen relative bg-slate-50">
 
-    <!-- ============================================== -->
-    <!-- HALAMAN UTAMA DASHBOARD -->
-    <!-- ============================================== -->
     <div id="dashboardSection" class="flex flex-col min-h-screen relative w-full">
         <!-- Navbar -->
         <nav class="bg-blue-900 text-white shadow-lg sticky top-0 z-40">
@@ -83,6 +76,10 @@
                         </div>
                     </div>
                     <div class="hidden sm:flex items-center gap-2 text-sm font-medium">
+                        <div class="bg-blue-800 px-3 py-1.5 rounded-full border border-blue-700 flex items-center gap-2 mr-2">
+                            <i data-lucide="user" class="w-4 h-4 text-blue-300"></i>
+                            <span id="displayUsername">Pengguna</span>
+                        </div>
                         <div class="bg-blue-800 px-3 py-1.5 rounded-full border border-blue-700 flex items-center gap-2 mr-2">
                             <i data-lucide="map-pin" class="w-4 h-4"></i>
                             <span id="displayPort">Memuat...</span>
@@ -109,12 +106,11 @@
             
             <!-- Controls / Filters -->
             <div class="glass-card rounded-xl p-4 sm:p-6 mb-6 flex flex-col gap-4">
-                <!-- Baris Atas: Filter API -->
                 <div class="flex flex-col md:flex-row md:flex-wrap gap-4 items-start md:items-end justify-between w-full">
                     <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-4 items-end w-full md:w-auto">
                         <div class="col-span-1 w-full sm:w-auto">
-                            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Cari & Pilih Port</label>
-                            <input type="search" id="portCode" list="portDatalist" oninput="this.value = this.value.toUpperCase()" placeholder="Cari pelabuhan..." class="w-full sm:w-48 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase">
+                            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Cari & Pilih Pelabuhan</label>
+                            <input type="search" id="portNameInput" list="portDatalist" placeholder="Ketik Nama Pelabuhan..." class="w-full sm:w-56 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase">
                             <datalist id="portDatalist"></datalist>
                         </div>
                         <div class="col-span-1 w-full sm:w-auto">
@@ -143,9 +139,9 @@
                             </select>
                         </div>
                         <div class="col-span-2 sm:col-span-1 w-full sm:w-auto mt-2 sm:mt-0">
-                            <button type="button" id="refreshBtn" onclick="loadData()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 py-2.5 transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-500/30">
+                            <button type="button" id="refreshBtn" onclick="loadData()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-6 py-2.5 transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-500/30">
                                 <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                                Refresh Data
+                                Memuat Data
                             </button>
                         </div>
                     </div>
@@ -154,40 +150,36 @@
                     </div>
                 </div>
 
-                <!-- Baris Bawah: Pencarian Spesifik (Live Search dengan Sugesti) -->
+                <!-- Baris Bawah: Pencarian Spesifik -->
                 <div class="w-full border-t border-slate-100 pt-4 mt-2 flex flex-col gap-4">
                     <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Filter Data Lokal</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-                        <!-- Filter Nama Kapal -->
                         <div class="relative w-full">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i data-lucide="ship" class="w-4 h-4 text-slate-400"></i>
                             </div>
-                            <input type="search" id="filterKapal" list="listKapal" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Kapal...">
+                            <input type="search" id="filterKapal" list="listKapal" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Kapal...">
                             <datalist id="listKapal"></datalist>
                         </div>
-                        <!-- Filter Perusahaan -->
                         <div class="relative w-full">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i data-lucide="building" class="w-4 h-4 text-slate-400"></i>
                             </div>
-                            <input type="search" id="filterPerusahaan" list="listPerusahaan" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Perusahaan/Agen...">
+                            <input type="search" id="filterPerusahaan" list="listPerusahaan" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Perusahaan/Agen...">
                             <datalist id="listPerusahaan"></datalist>
                         </div>
-                        <!-- Filter Petugas -->
                         <div class="relative w-full">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i data-lucide="user-check" class="w-4 h-4 text-slate-400"></i>
                             </div>
-                            <input type="search" id="filterPetugas" list="listPetugas" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Petugas SPB...">
+                            <input type="search" id="filterPetugas" list="listPetugas" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Nama Petugas SPB...">
                             <datalist id="listPetugas"></datalist>
                         </div>
-                        <!-- Filter Lokasi -->
                         <div class="relative w-full">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i>
                             </div>
-                            <input type="search" id="filterLokasi" list="listLokasi" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Lokasi Sandar/Tolak...">
+                            <input type="search" id="filterLokasi" list="listLokasi" oninput="filterDashboardData()" class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm placeholder-slate-400" placeholder="Lokasi Sandar/Tolak...">
                             <datalist id="listLokasi"></datalist>
                         </div>
                     </div>
@@ -264,9 +256,9 @@
                 <div class="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-white flex-wrap gap-2">
                     <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
                         <i data-lucide="list" class="w-5 h-5 text-blue-600"></i>
-                        Daftar Kedatangan/Keberangkatan
+                        Daftar Kedatangan & Keberangkatan
                     </h2>
-                    <span class="bg-blue-100 text-blue-800 text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-1 rounded-full border border-blue-200 whitespace-nowrap" id="tableRecordCount">0 Records</span>
+                    <span class="bg-blue-100 text-blue-800 text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-1 rounded-full border border-blue-200 whitespace-nowrap" id="tableRecordCount">0 Kapal</span>
                 </div>
                 <div class="table-container">
                     <table class="w-full min-w-max text-sm text-left text-slate-600 whitespace-nowrap">
@@ -276,12 +268,12 @@
                                 <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Data Kapal & Agen</th>
                                 <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Rute & Trayek</th>
                                 <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Jadwal (ETA / ETD)</th>
-                                <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-center">Pax (Trn/Nk)</th>
-                                <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-center">Aksi</th>
+                                <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-center">Penumpang (Turun/Naik)</th>
+                                <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-center">Tindakan / Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="divide-y divide-slate-100 bg-white">
-                            <tr><td colspan="6" class="px-6 py-8 text-center text-slate-500">Silakan klik Refresh Data.</td></tr>
+                            <tr><td colspan="6" class="px-6 py-8 text-center text-slate-500 font-medium">Silakan klik Memuat Data.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -306,7 +298,7 @@
                 </div>
                 <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 flex justify-end bg-slate-50">
                     <button type="button" onclick="closeDetailModal()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-md">
-                        Tutup
+                        Tutup Panel
                     </button>
                 </div>
             </div>
@@ -327,9 +319,8 @@
                 <div class="p-6 bg-white space-y-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Kode Port Default</label>
-                        <input type="search" id="cfgPortCode" list="portDatalistSettings" oninput="this.value = this.value.toUpperCase()" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase" placeholder="Mis: IDLPO">
-                        <datalist id="portDatalistSettings"></datalist>
-                        <p class="text-xs text-slate-500 mt-1">Kode pelabuhan bawaan saat aplikasi pertama kali dimuat.</p>
+                        <input type="text" id="cfgPortCode" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase" placeholder="Mis: IDLPO">
+                        <p class="text-xs text-slate-500 mt-1">Kode pelabuhan bawaan saat sistem baru login.</p>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Metode Cetak Dokumen (LK3 & Crewlist)</label>
@@ -338,24 +329,11 @@
                             <option value="FALSE">Pencarian Standar Inaportnet (Aman)</option>
                         </select>
                     </div>
-                    <div class="border-t border-slate-200 pt-4 mt-2">
-                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Kredensial Login</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
-                                <input type="text" id="cfgUser" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg block p-2 outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                                <input type="password" id="cfgPass" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg block p-2 outline-none">
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
                     <button type="button" onclick="closeSettingsModal()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors">Batal</button>
                     <button type="button" onclick="saveSettingsConfig()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg transition-colors shadow-md flex items-center gap-2">
-                        <i data-lucide="save" class="w-4 h-4"></i> Simpan
+                        <i data-lucide="save" class="w-4 h-4"></i> Simpan Setelan
                     </button>
                 </div>
             </div>
@@ -365,11 +343,14 @@
         <footer class="bg-slate-800 text-slate-400 py-6 mt-auto text-xs sm:text-sm text-center z-10 px-4">
             <p>&copy; 2026 Inaportnet Dashboard Monitoring. Data Source: dephub.go.id via GAS Backend</p>
         </footer>
-    </div> <!-- End of Dashboard Section -->
+    </div>
 
     <script>
         lucide.createIcons();
 
+        // WAJIB DIISI: URL GAS WEB APP ANDA
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwAZV6iSElbw8XDTvR8IqalIwlhky-C1ozxK_NUIhWLGYf63U5fqOyhdGngl1KVey09rg/exec"; 
+        
         // ==========================================
         // DATA PELABUHAN LOKAL
         // ==========================================
@@ -647,32 +628,34 @@
         function initPortDatalist() {
             let optionsHtml = '';
             PORT_LIST.forEach(port => {
-                optionsHtml += `<option value="${port.kode_pelabuhan}">${port.nama_pelabuhan}</option>`;
+                optionsHtml += `<option value="${port.nama_pelabuhan}"></option>`;
             });
 
             const datalist = document.getElementById('portDatalist');
             if (datalist) datalist.innerHTML = optionsHtml;
-
-            const datalistSettings = document.getElementById('portDatalistSettings');
-            if (datalistSettings) datalistSettings.innerHTML = optionsHtml;
         }
 
-        // WAJIB DIISI: URL GAS WEB APP ANDA
-        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwAZV6iSElbw8XDTvR8IqalIwlhky-C1ozxK_NUIhWLGYf63U5fqOyhdGngl1KVey09rg/exec"; 
-        
-        // Config State Frontend (Akan di-override oleh balasan GAS Backend saat load awal)
+        // MENCARI KODE PELABUHAN DARI NAMA YANG DIKETIK
+        function getSelectedPortCode() {
+            const nameInput = document.getElementById('portNameInput').value.trim().toUpperCase();
+            if (!nameInput) return APP_CONFIG.DEFAULT_PORT_CODE;
+            
+            const port = PORT_LIST.find(p => p.nama_pelabuhan.toUpperCase() === nameInput);
+            return port ? port.kode_pelabuhan : APP_CONFIG.DEFAULT_PORT_CODE;
+        }
+
+        // Config State Frontend (Akan di-override oleh LocalStorage)
         let APP_CONFIG = {
             DEFAULT_PORT_CODE: 'IDLPO',
             USE_SCRAPING: 'FALSE',
-            AUTH_USERNAME: '',
-            AUTH_PASSWORD: ''
+            AUTH_USERNAME: ''
         };
 
         let etaChartInst = null;
         let trayekChartInst = null;
         let currentData = []; 
 
-        // PENDAFTARAN FUNGSI KE WINDOW (Mencegah fungsi tidak terakses dari elemen HTML)
+        // PENDAFTARAN FUNGSI KE WINDOW
         window.openDetailModal = openDetailModal;
         window.closeDetailModal = closeDetailModal;
         window.openSettingsModal = openSettingsModal;
@@ -682,33 +665,8 @@
         window.handleLogout = handleLogout;
         window.filterDashboardData = filterDashboardData;
 
-        // FUNGSI FORMAT TANGGAL INDONESIA (DD-MM-YYYY HH:mm)
-        const formatTanggalIndo = (dateStr) => {
-            if (!dateStr || dateStr === '-') return '-';
-            try {
-                let parsedStr = dateStr;
-                if (typeof parsedStr === 'string' && parsedStr.includes(' ') && !parsedStr.includes('T')) {
-                    parsedStr = parsedStr.replace(' ', 'T');
-                }
-                const date = new Date(parsedStr);
-                if (isNaN(date.getTime())) return dateStr; 
-                
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const year = date.getFullYear();
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                
-                if (typeof dateStr === 'string' && dateStr.length <= 10) return `${day}-${month}-${year}`;
-                return `${day}-${month}-${year} ${hours}:${minutes}`;
-            } catch (e) {
-                return dateStr;
-            }
-        };
-
         // LISTENER SAAT HALAMAN DIBUKA
         document.addEventListener('DOMContentLoaded', () => {
-            // Listener Area Kosong Modal
             document.getElementById('detailModal').addEventListener('click', function(e) {
                 if (e.target.id === 'detailModal') closeDetailModal();
             });
@@ -716,8 +674,27 @@
                 if (e.target.id === 'settingsModal') closeSettingsModal();
             });
 
-            // Mulai muat data utama & Inisiasi Datalist Port
+            // Tampilkan Username dari Session
+            if (sessionDataObj && sessionDataObj.username) {
+                document.getElementById('displayUsername').textContent = sessionDataObj.username;
+            }
+
+            // Muat Config dari LocalStorage
+            const savedConfig = localStorage.getItem('inaportnet_config');
+            if (savedConfig) {
+                APP_CONFIG = { ...APP_CONFIG, ...JSON.parse(savedConfig) };
+            }
+
+            // Set Form Input Nama Port Default
+            const defaultPortInfo = PORT_LIST.find(p => p.kode_pelabuhan === APP_CONFIG.DEFAULT_PORT_CODE);
+            if (defaultPortInfo) {
+                document.getElementById('portNameInput').value = defaultPortInfo.nama_pelabuhan;
+            }
+
+            // Inisiasi Datalist Port
             initPortDatalist();
+            
+            // Muat data utama (Tanpa ambil config lagi)
             loadData();
         });
 
@@ -732,8 +709,7 @@
         // FUNGSI UTAMA LOAD DATA
         // ==========================================
         async function loadData() {
-            const portCodeInput = document.getElementById('portCode').value.trim().toUpperCase();
-            
+            const portCode = getSelectedPortCode();
             const year = document.getElementById('yearFilter').value;
             const month = document.getElementById('monthFilter').value;
 
@@ -751,11 +727,7 @@
                      throw new Error("URL Web App GAS belum dikonfigurasi.");
                 }
 
-                // Jika port form belum diisi, kita biarkan parameter kosong, GAS akan memberikan defaultnya.
-                let targetUrl = `${GAS_WEB_APP_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
-                if (portCodeInput) {
-                     targetUrl += `&portCode=${encodeURIComponent(portCodeInput)}`;
-                }
+                let targetUrl = `${GAS_WEB_APP_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}&portCode=${encodeURIComponent(portCode)}`;
                 
                 const response = await fetch(targetUrl, {
                     method: 'GET',
@@ -766,30 +738,17 @@
 
                 const result = await response.json();
                 
-                // --- PROSES KONFIGURASI DARI SERVER ---
-                if (result.config) {
-                    APP_CONFIG = { ...APP_CONFIG, ...result.config }; 
-                    
-                    const activePortCode = portCodeInput || APP_CONFIG.DEFAULT_PORT_CODE;
-                    
-                    if (!portCodeInput && APP_CONFIG.DEFAULT_PORT_CODE) {
-                        document.getElementById('portCode').value = APP_CONFIG.DEFAULT_PORT_CODE;
-                    } 
-                    
-                    // Cek nama pelabuhan berdasarkan kode di array lokal
-                    const portInfo = PORT_LIST.find(p => p.kode_pelabuhan === activePortCode);
-                    const portDisplayName = portInfo ? `${portInfo.nama_pelabuhan} (${portInfo.kode_pelabuhan})` : activePortCode;
-                    document.getElementById('displayPort').textContent = portDisplayName;
-                }
+                const portInfo = PORT_LIST.find(p => p.kode_pelabuhan === portCode);
+                const portDisplayName = portInfo ? `${portInfo.nama_pelabuhan} (${portInfo.kode_pelabuhan})` : portCode;
+                document.getElementById('displayPort').textContent = portDisplayName;
 
-                // --- PROSES DATA ---
                 if (result.status === "success" || result.status === "cache") {
                      currentData = result.data.data || [];
                      if (result.status === "cache") {
-                         Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Data dimuat dari Cache', text: 'Gagal menghubungi Inaportnet secara live.', showConfirmButton: false, timer: 4000 });
+                         Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Data dimuat dari Backup (Cache)', text: 'Gagal menghubungi Inaportnet secara live.', showConfirmButton: false, timer: 4000 });
                      }
 
-                     // Bersihkan form pencarian dan isi opsi filter saat data baru selesai ditarik
+                     // Bersihkan form pencarian 
                      document.getElementById('filterKapal').value = '';
                      document.getElementById('filterPerusahaan').value = '';
                      document.getElementById('filterPetugas').value = '';
@@ -860,20 +819,17 @@
             const keywordPetugas = document.getElementById('filterPetugas').value.toLowerCase();
             const keywordLokasi = document.getElementById('filterLokasi').value.toLowerCase();
             
-            // Jika semua input kosong, kembalikan ke data asli
             if (!keywordKapal && !keywordPerusahaan && !keywordPetugas && !keywordLokasi) {
                 processDataAndRender(currentData);
                 return;
             }
 
-            // Filter data menggunakan kombinasi pencarian yang diisi
             const filteredData = currentData.filter(item => {
                 const namaKapal = (item.nama_kapal || '').toLowerCase();
                 const perusahaan = (item.perusahaan || item.keagenan || '').toLowerCase();
                 const petugas = (item.spb_approve_fullname || '').toLowerCase();
                 const lokasiTolak = (item.lokasi_tolak || '').toLowerCase();
                 const lokasiSandar = (item.lokasi_sandar || '').toLowerCase();
-                
                 const lokasiGabungan = lokasiSandar + ' ' + lokasiTolak;
 
                 let matchKapal = true;
@@ -886,14 +842,11 @@
                 if (keywordPetugas) matchPetugas = petugas.includes(keywordPetugas);
                 if (keywordLokasi) matchLokasi = lokasiGabungan.includes(keywordLokasi);
 
-                // Kembalikan kapal yang memenuhi SEMUA filter yang sedang diketik (Logika AND)
                 return matchKapal && matchPerusahaan && matchPetugas && matchLokasi;
             });
 
-            // Proses ulang tampilan dashboard sesuai hasil pencarian
             processDataAndRender(filteredData);
         }
-
 
         // ==========================================
         // FUNGSI PENGATURAN
@@ -901,11 +854,6 @@
         function openSettingsModal() {
             document.getElementById('cfgPortCode').value = APP_CONFIG.DEFAULT_PORT_CODE || '';
             document.getElementById('cfgScraping').value = APP_CONFIG.USE_SCRAPING === 'TRUE' ? 'TRUE' : 'FALSE';
-            document.getElementById('cfgUser').value = APP_CONFIG.AUTH_USERNAME || '';
-            
-            // Password tidak disuplai penuh oleh GET request untuk alasan keamanan dasar, kita tampilkan bintang
-            document.getElementById('cfgPass').value = APP_CONFIG.AUTH_USERNAME ? '********' : '';
-            
             document.getElementById('settingsModal').classList.remove('hidden');
         }
 
@@ -914,18 +862,10 @@
         }
 
         async function saveSettingsConfig() {
-            const passInput = document.getElementById('cfgPass').value;
-            
             const newConfig = {
                 DEFAULT_PORT_CODE: document.getElementById('cfgPortCode').value.trim().toUpperCase(),
-                USE_SCRAPING: document.getElementById('cfgScraping').value,
-                AUTH_USERNAME: document.getElementById('cfgUser').value.trim()
+                USE_SCRAPING: document.getElementById('cfgScraping').value
             };
-
-            // Hanya update password jika diubah (bukan default placeholder bintang)
-            if (passInput !== '********' && passInput !== '') {
-                newConfig.AUTH_PASSWORD = passInput;
-            }
 
             Swal.fire({
                 title: 'Menyimpan Pengaturan...',
@@ -934,32 +874,21 @@
             });
 
             try {
-                // Mengirim data ke doPost() di GAS menggunakan body text/plain untuk menghindari CORS Preflight
                 const response = await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8', 
-                    },
-                    body: JSON.stringify({
-                        action: 'updateConfig',
-                        config: newConfig
-                    })
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'updateConfig', config: newConfig })
                 });
 
                 if (!response.ok) throw new Error('Network response was not ok');
-                
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    APP_CONFIG = { ...APP_CONFIG, ...newConfig }; // Update global local config
+                    APP_CONFIG = { ...APP_CONFIG, ...newConfig }; 
+                    localStorage.setItem('inaportnet_config', JSON.stringify(APP_CONFIG)); // Update cache
                     closeSettingsModal();
                     Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Pengaturan telah disimpan di Server.', timer: 2000, showConfirmButton: false });
                     
-                    // Reload data jika default port code diubah
-                    if (document.getElementById('portCode').value !== APP_CONFIG.DEFAULT_PORT_CODE) {
-                        document.getElementById('portCode').value = APP_CONFIG.DEFAULT_PORT_CODE;
-                        setTimeout(loadData, 500);
-                    }
                 } else {
                     throw new Error(result.message);
                 }
@@ -1035,7 +964,7 @@
             tbody.innerHTML = '';
 
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-slate-500 font-medium">Tidak ada data yang ditemukan.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-slate-500 font-medium">Tidak ada data yang ditemukan.</td></tr>';
                 return;
             }
 
@@ -1050,9 +979,11 @@
                 if(item.is_minerba == 1) tags += `<span class="px-2 py-0.5 rounded bg-stone-100 text-stone-600 text-[10px] font-bold border border-stone-200 mr-1 mt-1 inline-block">MINERBA</span>`;
                 if(item.is_penyebrangan == 1 || item.jenis_kapal_xls?.includes("RO-RO")) tags += `<span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-700 text-[10px] font-bold border border-cyan-200 mt-1 inline-block">PENYEBERANGAN</span>`;
 
-                // Persiapan Link Cetak
                 const noLayanan = item.nomor_layanan_berangkat || item.nomor_layanan_datang || '';
                 const noPkk = item.nomor_pkk || '';
+                
+                // Beri identitas unik untuk memecahkan bug Modal Index
+                item._uid = noPkk || 'UID_' + index;
                 
                 const urlSPB = noLayanan ? `https://sps-inaportnet.dephub.go.id/index.php/builtin/manage/spb/cetak/${noLayanan}` : '#';
                 const urlManifest = noLayanan ? `https://sps-inaportnet.dephub.go.id/index.php/builtin/manage/spb/detail/${noLayanan}` : '#';
@@ -1071,7 +1002,7 @@
                                 
                                 <div class="flex flex-wrap items-center gap-1.5 mt-1.5 mb-1.5">
                                     <span class="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded font-medium border border-slate-200 shadow-sm">GT: ${item.gt || 0}</span>
-                                    <span class="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded font-medium border border-slate-200 shadow-sm">Dim: ${item.loa || '-'}m x ${item.lebar || '-'}m</span>
+                                    <span class="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded font-medium border border-slate-200 shadow-sm">Dimensi: ${item.loa || '-'}m x ${item.lebar || '-'}m</span>
                                 </div>
 
                                 <p class="text-[10px] sm:text-xs text-slate-500 flex items-center gap-1.5 flex-wrap">
@@ -1112,27 +1043,26 @@
                             </div>
                         </div>
                     </td>
-                    <td class="px-4 sm:px-6 py-4 text-center align-middle min-w-[150px]">
-                        <div class="flex flex-col gap-1.5 w-full items-center mx-auto">
+                    <td class="px-4 sm:px-6 py-4 text-center align-middle min-w-[200px]">
+                        <div class="flex flex-col gap-2 w-full items-center mx-auto">
                             <!-- Tombol Detail Utama -->
-                            <button type="button" onclick="openDetailModal(${index})" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white transition-colors py-1.5 px-3 rounded-lg border border-blue-100 shadow-sm flex items-center justify-center gap-1.5 w-full">
-                                <i data-lucide="file-search" class="w-4 h-4"></i> 
-                                <span class="text-[11px] font-bold whitespace-nowrap">Detail Lengkap</span>
+                            <button type="button" onclick="openDetailModal('${item._uid}')" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white transition-colors py-2 px-4 rounded-lg border border-blue-100 shadow-sm flex items-center justify-center gap-2 w-full text-xs sm:text-sm font-bold">
+                                <i data-lucide="file-search" class="w-4 h-4"></i> Detail Lengkap
                             </button>
                             
-                            <!-- Grid Tombol Aksi Tambahan (Tepat Di Bawah Detail) -->
-                            <div class="grid grid-cols-2 gap-1 w-full">
-                                <a href="${urlSPB}" target="_blank" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-colors py-1 px-2 rounded-md border border-indigo-100 flex items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}" title="Cetak SPB">
-                                    <i data-lucide="printer" class="w-3 h-3"></i> SPB
+                            <!-- Grid Tombol Aksi Tambahan -->
+                            <div class="grid grid-cols-2 gap-2 w-full">
+                                <a href="${urlSPB}" target="_blank" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-colors py-2 px-3 rounded-lg border border-indigo-100 flex items-center justify-center gap-1.5 text-xs sm:text-sm font-bold ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}" title="Cetak SPB">
+                                    <i data-lucide="printer" class="w-3.5 h-3.5"></i> Cetak SPB
                                 </a>
-                                <a href="#" onclick="cetakDokumenScrape(event, 'LK3', '${noPkk}')" class="text-emerald-600 bg-emerald-50 hover:bg-emerald-600 hover:text-white transition-colors py-1 px-2 rounded-md border border-emerald-100 flex items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${!noPkk ? 'opacity-50 pointer-events-none' : ''}" title="Cetak LK3">
-                                    <i data-lucide="file-spreadsheet" class="w-3 h-3"></i> LK3
+                                <a href="#" onclick="cetakDokumenScrape(event, 'LK3', '${noPkk}')" class="text-emerald-600 bg-emerald-50 hover:bg-emerald-600 hover:text-white transition-colors py-2 px-3 rounded-lg border border-emerald-100 flex items-center justify-center gap-1.5 text-xs sm:text-sm font-bold ${!noPkk ? 'opacity-50 pointer-events-none' : ''}" title="Cetak LK3">
+                                    <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Cetak LK3
                                 </a>
-                                <a href="#" onclick="cetakDokumenScrape(event, 'CREW', '${noPkk}')" class="text-amber-600 bg-amber-50 hover:bg-amber-600 hover:text-white transition-colors py-1 px-2 rounded-md border border-amber-100 flex items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${!noPkk ? 'opacity-50 pointer-events-none' : ''}" title="Cetak Crewlist">
-                                    <i data-lucide="users" class="w-3 h-3"></i> Crew
+                                <a href="#" onclick="cetakDokumenScrape(event, 'CREW', '${noPkk}')" class="text-amber-600 bg-amber-50 hover:bg-amber-600 hover:text-white transition-colors py-2 px-3 rounded-lg border border-amber-100 flex items-center justify-center gap-1.5 text-xs sm:text-sm font-bold ${!noPkk ? 'opacity-50 pointer-events-none' : ''}" title="Cetak Crewlist">
+                                    <i data-lucide="users" class="w-3.5 h-3.5"></i> Daftar Kru
                                 </a>
-                                <a href="${urlManifest}" target="_blank" class="text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white transition-colors py-1 px-2 rounded-md border border-rose-100 flex items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}" title="Cetak Manifest">
-                                    <i data-lucide="package" class="w-3 h-3"></i> Mnfst
+                                <a href="${urlManifest}" target="_blank" class="text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white transition-colors py-2 px-3 rounded-lg border border-rose-100 flex items-center justify-center gap-1.5 text-xs sm:text-sm font-bold ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}" title="Cetak Manifest">
+                                    <i data-lucide="package" class="w-3.5 h-3.5"></i> Manifest Dokumen
                                 </a>
                             </div>
                         </div>
@@ -1144,14 +1074,14 @@
             lucide.createIcons();
         }
 
-        function openDetailModal(index) {
-            const item = currentData[index];
+        function openDetailModal(uid) {
+            // Pencarian data berdasarkan Unique ID, sangat akurat meskipun data sedang difilter
+            const item = currentData.find(x => x._uid === uid);
             if (!item) return;
 
             const formatUang = (nominal) => nominal ? 'Rp ' + parseInt(nominal).toLocaleString('id-ID') : '-';
             const statusTag = (val, trueLabel, falseLabel) => val == 1 ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-bold">${trueLabel}</span>` : (falseLabel ? `<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-xs">${falseLabel}</span>` : '-');
 
-            // Link persiapan untuk aksi di dalam Modal
             const noLayanan = item.nomor_layanan_berangkat || item.nomor_layanan_datang || '';
             const noPkk = item.nomor_pkk || '';
 
@@ -1175,10 +1105,10 @@
                                 <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Cetak LK3
                             </a>
                             <a href="#" onclick="cetakDokumenScrape(event, 'CREW', '${noPkk}')" class="flex-1 sm:flex-none justify-center bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white border border-amber-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noPkk ? 'opacity-50 pointer-events-none' : ''}">
-                                <i data-lucide="users" class="w-3.5 h-3.5"></i> Crewlist
+                                <i data-lucide="users" class="w-3.5 h-3.5"></i> Daftar Kru
                             </a>
                             <a href="${urlManifest}" target="_blank" class="flex-1 sm:flex-none justify-center bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white border border-rose-200 py-1.5 px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm ${!noLayanan ? 'opacity-50 pointer-events-none' : ''}">
-                                <i data-lucide="package" class="w-3.5 h-3.5"></i> Manifest
+                                <i data-lucide="package" class="w-3.5 h-3.5"></i> Manifest Dokumen
                             </a>
                         </div>
                     </div>
@@ -1247,17 +1177,14 @@
                         <dl class="space-y-2.5 text-xs sm:text-sm">
                             <div class="flex flex-col"><dt class="text-slate-500 text-[10px] sm:text-xs">Nomor PKK</dt><dd class="font-mono text-slate-900 text-[10px] sm:text-xs bg-white border border-slate-200 p-1.5 mt-1 rounded break-all">${item.nomor_pkk || '-'}</dd></div>
                             
-                            <!-- TAMBAHAN: Nomor LK3 -->
                             <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">Nomor LK3</dt><dd class="font-mono text-slate-900 text-[10px] sm:text-xs bg-white border border-slate-200 p-1.5 mt-1 rounded break-all">${item.no_lk3 || '-'}</dd></div>
                             
-                            <!-- TAMBAHAN: Nomor Layanan -->
                             <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">No. Layanan (Masuk/Keluar)</dt><dd class="font-mono text-slate-900 text-[10px] sm:text-xs bg-white border border-slate-200 p-1.5 mt-1 rounded break-all leading-relaxed">${item.nomor_layanan_datang || '-'}<br><span class="text-slate-400">/</span><br>${item.nomor_layanan_berangkat || '-'}</dd></div>
 
                             <div class="flex flex-col mt-2"><dt class="text-slate-500 text-[10px] sm:text-xs">Nomor SPB</dt><dd class="font-mono text-slate-900 text-[10px] sm:text-xs bg-white border border-slate-200 p-1.5 mt-1 rounded break-all">${item.no_spb || '-'}</dd></div>
                             <div class="flex justify-between mt-3"><dt class="text-slate-500">Nakhoda</dt><dd class="font-medium text-slate-900 text-right ml-2">${item.nakhoda || '-'}</dd></div>
                             <div class="flex justify-between"><dt class="text-slate-500">Jumlah Awak</dt><dd class="font-medium text-slate-900 text-right ml-2">${item.jumlah_awak || '0'} Orang</dd></div>
                             
-                            <!-- TAMBAHAN: Informasi Petugas -->
                             <div class="mt-3 pt-3 border-t border-slate-200">
                                 <dt class="text-slate-500 text-[10px] sm:text-xs mb-1">Petugas Persetujuan SPB</dt>
                                 <dd class="flex items-center gap-2 bg-blue-50 p-2 rounded border border-blue-100">
@@ -1346,12 +1273,10 @@
             document.getElementById('detailModal').classList.add('hidden');
         }
 
-        // FUNGSI SCRAPING FRONTEND (ON-DEMAND) UNTUK LK3 & CREWLIST
         async function cetakDokumenScrape(event, jenis, noPkk) {
             event.preventDefault();
             if (!noPkk) return;
 
-            // Jika mode scraping dimatikan via APP_CONFIG, langsung arahkan ke laman search default
             if (APP_CONFIG.USE_SCRAPING !== 'TRUE') {
                 if (jenis === 'LK3') {
                     window.open(`https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=${noPkk}`, '_blank');
@@ -1361,7 +1286,6 @@
                 return;
             }
 
-            // BUKA TAB BARU SECARA LANGSUNG UNTUK MENCEGAH POPUP BLOCKER BROWSER
             const newWindow = window.open('', '_blank');
             newWindow.document.write(`
                 <!DOCTYPE html>
@@ -1389,16 +1313,13 @@
             `);
 
             try {
-                // Fetch halaman detail secara langsung (Direct) tanpa proxy
                 const detailUrl = `https://monitoring-inaportnet.dephub.go.id/monitoring/detail?nomor_pkk=${noPkk}`;
-                
                 const response = await fetch(detailUrl);
                 if(!response.ok) throw new Error('Server Inaportnet gagal merespon');
                 
                 const html = await response.text();
 
                 if (jenis === 'LK3') {
-                    // Cari pola SL003. (misal: SL003.IDLPO.0326.000351) dari HTML
                     const match = html.match(/(SL003\.[A-Z0-9\.]+)/i);
                     if (match) {
                         const realLk3 = match[1];
@@ -1407,11 +1328,9 @@
                         throw new Error('Kode LK3 (SL003) tidak ditemukan.');
                     }
                 } else if (jenis === 'CREW') {
-                    // Cari pola SL019. (misal: SL019.IDLPO.0326.000427) dari HTML
                     const match = html.match(/(SL019\.[A-Z0-9\.]+)/i);
                     if (match) {
                         const realCrew = match[1];
-                        // Enkripsi Base64 dan sesuaikan karakter untuk URI Codeigniter Inaportnet
                         const base64Crew = btoa(realCrew).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '-');
                         newWindow.location.href = `https://sps-inaportnet.dephub.go.id/index.php/printdokumen/pelaut/${base64Crew}`;
                     } else {
@@ -1420,13 +1339,11 @@
                 }
             } catch (e) {
                 console.error('Error saat scraping:', e);
-                // Mekanisme Fallback jika proxy error / timeout / pola tidak ketemu
                 newWindow.document.querySelector('.loader').innerHTML = `
                     <div class="spinner" style="border-top-color: #f59e0b;"></div>
                     <h2>Beralih ke Pencarian...</h2>
                     <p>Gagal mengekstrak ID Direct. Membuka melalui sistem bawaan Inaportnet.</p>
                 `;
-                
                 setTimeout(() => {
                     if (jenis === 'LK3') {
                         newWindow.location.href = `https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=${noPkk}`;
@@ -1436,7 +1353,6 @@
                 }, 1500);
             }
         }
-
     </script>
 </body>
 </html>
