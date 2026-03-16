@@ -1,0 +1,1070 @@
+[
+    {
+        "kode_pelabuhan": "IDBLW",
+        "nama_pelabuhan": "BELAWAN"
+    },
+    {
+        "kode_pelabuhan": "IDJKT",
+        "nama_pelabuhan": "TANJUNG PRIOK"
+    },
+    {
+        "kode_pelabuhan": "IDSUB",
+        "nama_pelabuhan": "TANJUNG PERAK"
+    },
+    {
+        "kode_pelabuhan": "IDMAK",
+        "nama_pelabuhan": "MAKASSAR"
+    },
+    {
+        "kode_pelabuhan": "IDPNJ",
+        "nama_pelabuhan": "PANJANG"
+    },
+    {
+        "kode_pelabuhan": "IDBTN",
+        "nama_pelabuhan": "BANTEN"
+    },
+    {
+        "kode_pelabuhan": "IDDUM",
+        "nama_pelabuhan": "DUMAI"
+    },
+    {
+        "kode_pelabuhan": "IDSRG",
+        "nama_pelabuhan": "TANJUNG EMAS, SEMARANG"
+    },
+    {
+        "kode_pelabuhan": "IDBDJ",
+        "nama_pelabuhan": "BANJARMASIN"
+    },
+    {
+        "kode_pelabuhan": "IDBPN",
+        "nama_pelabuhan": "BALIKPAPAN"
+    },
+    {
+        "kode_pelabuhan": "IDBIT",
+        "nama_pelabuhan": "BITUNG"
+    },
+    {
+        "kode_pelabuhan": "IDAMQ",
+        "nama_pelabuhan": "AMBON"
+    },
+    {
+        "kode_pelabuhan": "IDSOQ",
+        "nama_pelabuhan": "SORONG"
+    },
+    {
+        "kode_pelabuhan": "IDTAN",
+        "nama_pelabuhan": "TANJUNG UBAN"
+    },
+    {
+        "kode_pelabuhan": "IDBII",
+        "nama_pelabuhan": "BAGAN SIAPI-API"
+    },
+    {
+        "kode_pelabuhan": "IDBKS",
+        "nama_pelabuhan": "BENGKULU"
+    },
+    {
+        "kode_pelabuhan": "IDBOA",
+        "nama_pelabuhan": "BENOA"
+    },
+    {
+        "kode_pelabuhan": "IDCXP",
+        "nama_pelabuhan": "CILACAP"
+    },
+    {
+        "kode_pelabuhan": "IDCBN",
+        "nama_pelabuhan": "CIREBON"
+    },
+    {
+        "kode_pelabuhan": "IDGTO",
+        "nama_pelabuhan": "GORONTALO"
+    },
+    {
+        "kode_pelabuhan": "IDDJJ",
+        "nama_pelabuhan": "JAYAPURA"
+    },
+    {
+        "kode_pelabuhan": "IDKDI",
+        "nama_pelabuhan": "KENDARI"
+    },
+    {
+        "kode_pelabuhan": "IDKOE",
+        "nama_pelabuhan": "KUPANG"
+    },
+    {
+        "kode_pelabuhan": "IDLSW",
+        "nama_pelabuhan": "LHOKSEUMAWE"
+    },
+    {
+        "kode_pelabuhan": "IDLUW",
+        "nama_pelabuhan": "LUWUK"
+    },
+    {
+        "kode_pelabuhan": "IDMDC",
+        "nama_pelabuhan": "MANADO"
+    },
+    {
+        "kode_pelabuhan": "IDMKW",
+        "nama_pelabuhan": "MANOKWARI"
+    },
+    {
+        "kode_pelabuhan": "IDMKQ",
+        "nama_pelabuhan": "MERAUKE"
+    },
+    {
+        "kode_pelabuhan": "IDPLM",
+        "nama_pelabuhan": "PALEMBANG"
+    },
+    {
+        "kode_pelabuhan": "IDPKU",
+        "nama_pelabuhan": "PEKANBARU"
+    },
+    {
+        "kode_pelabuhan": "IDPNK",
+        "nama_pelabuhan": "PONTIANAK"
+    },
+    {
+        "kode_pelabuhan": "IDSBG",
+        "nama_pelabuhan": "SABANG"
+    },
+    {
+        "kode_pelabuhan": "IDSRI",
+        "nama_pelabuhan": "SAMARINDA"
+    },
+    {
+        "kode_pelabuhan": "IDSMQ",
+        "nama_pelabuhan": "SAMPIT"
+    },
+    {
+        "kode_pelabuhan": "IDSLG",
+        "nama_pelabuhan": "SIBOLGA"
+    },
+    {
+        "kode_pelabuhan": "IDTBR",
+        "nama_pelabuhan": "TELUK BAYUR"
+    },
+    {
+        "kode_pelabuhan": "IDTTE",
+        "nama_pelabuhan": "TERNATE"
+    },
+    {
+        "kode_pelabuhan": "IDTNJ",
+        "nama_pelabuhan": "TANJUNG PINANG"
+    },
+    {
+        "kode_pelabuhan": "IDTUA",
+        "nama_pelabuhan": "TUAL"
+    },
+    {
+        "kode_pelabuhan": "IDTRK",
+        "nama_pelabuhan": "TARAKAN"
+    },
+    {
+        "kode_pelabuhan": "IDPTL",
+        "nama_pelabuhan": "TELUK PALU"
+    },
+    {
+        "kode_pelabuhan": "IDPAP",
+        "nama_pelabuhan": "PARE-PARE"
+    },
+    {
+        "kode_pelabuhan": "IDKUM",
+        "nama_pelabuhan": "KUMAI"
+    },
+    {
+        "kode_pelabuhan": "IDGRE",
+        "nama_pelabuhan": "GRESIK"
+    },
+    {
+        "kode_pelabuhan": "IDAHI",
+        "nama_pelabuhan": "AMAHAI"
+    },
+    {
+        "kode_pelabuhan": "IDAPN",
+        "nama_pelabuhan": "AMPANA"
+    },
+    {
+        "kode_pelabuhan": "IDTZD",
+        "nama_pelabuhan": "AMURANG"
+    },
+    {
+        "kode_pelabuhan": "IDBXD",
+        "nama_pelabuhan": "BADE"
+    },
+    {
+        "kode_pelabuhan": "IDNDA",
+        "nama_pelabuhan": "BANDANAIRA"
+    },
+    {
+        "kode_pelabuhan": "IDBGG",
+        "nama_pelabuhan": "BANGGAI"
+    },
+    {
+        "kode_pelabuhan": "IDBJU",
+        "nama_pelabuhan": "BANYUWANGI /TANJUNG WANGI"
+    },
+    {
+        "kode_pelabuhan": "IDBTM",
+        "nama_pelabuhan": "BATAM"
+    },
+    {
+        "kode_pelabuhan": "IDBTG",
+        "nama_pelabuhan": "BATANG"
+    },
+    {
+        "kode_pelabuhan": "IDBEN",
+        "nama_pelabuhan": "BENETE"
+    },
+    {
+        "kode_pelabuhan": "IDBKI",
+        "nama_pelabuhan": "BENGKALIS"
+    },
+    {
+        "kode_pelabuhan": "IDBIK",
+        "nama_pelabuhan": "BIAK"
+    },
+    {
+        "kode_pelabuhan": "IDBMU",
+        "nama_pelabuhan": "BIMA"
+    },
+    {
+        "kode_pelabuhan": "IDNTI",
+        "nama_pelabuhan": "BINTUNI"
+    },
+    {
+        "kode_pelabuhan": "IDBUI",
+        "nama_pelabuhan": "BULI"
+    },
+    {
+        "kode_pelabuhan": "IDBXT",
+        "nama_pelabuhan": "BONTANG"
+    },
+    {
+        "kode_pelabuhan": "IDBUA",
+        "nama_pelabuhan": "BULA"
+    },
+    {
+        "kode_pelabuhan": "IDBYQ",
+        "nama_pelabuhan": "BUNYU"
+    },
+    {
+        "kode_pelabuhan": "IDCLG",
+        "nama_pelabuhan": "CALANG"
+    },
+    {
+        "kode_pelabuhan": "IDCEB",
+        "nama_pelabuhan": "CELUKAN BAWANG"
+    },
+    {
+        "kode_pelabuhan": "IDDAS",
+        "nama_pelabuhan": "DABO, SINGKEP ISL"
+    },
+    {
+        "kode_pelabuhan": "IDDAR",
+        "nama_pelabuhan": "DARUBA"
+    },
+    {
+        "kode_pelabuhan": "IDDOB",
+        "nama_pelabuhan": "DOBO"
+    },
+    {
+        "kode_pelabuhan": "IDENE",
+        "nama_pelabuhan": "ENDE"
+    },
+    {
+        "kode_pelabuhan": "IDFKQ",
+        "nama_pelabuhan": "FAK FAK"
+    },
+    {
+        "kode_pelabuhan": "IDGIL",
+        "nama_pelabuhan": "GILIMANUK, BALI"
+    },
+    {
+        "kode_pelabuhan": "IDGNS",
+        "nama_pelabuhan": "GUNUNG SITOLI"
+    },
+    {
+        "kode_pelabuhan": "IDDJB",
+        "nama_pelabuhan": "TALANG DUKUH"
+    },
+    {
+        "kode_pelabuhan": "IDJEP",
+        "nama_pelabuhan": "JEPARA"
+    },
+    {
+        "kode_pelabuhan": "IDKNG",
+        "nama_pelabuhan": "KAIMANA"
+    },
+    {
+        "kode_pelabuhan": "IDKBH",
+        "nama_pelabuhan": "KALABAHI"
+    },
+    {
+        "kode_pelabuhan": "IDKAT",
+        "nama_pelabuhan": "KALIANGET"
+    },
+    {
+        "kode_pelabuhan": "IDKDW",
+        "nama_pelabuhan": "KENDAWANGAN"
+    },
+    {
+        "kode_pelabuhan": "IDKTG",
+        "nama_pelabuhan": "KETAPANG"
+    },
+    {
+        "kode_pelabuhan": "IDKID",
+        "nama_pelabuhan": "KIJANG"
+    },
+    {
+        "kode_pelabuhan": "IDKOL",
+        "nama_pelabuhan": "KOLAKA"
+    },
+    {
+        "kode_pelabuhan": "IDKNL",
+        "nama_pelabuhan": "KOLONODALE"
+    },
+    {
+        "kode_pelabuhan": "IDKBU",
+        "nama_pelabuhan": "KOTABARU - BATULICIN"
+    },
+    {
+        "kode_pelabuhan": "IDENO",
+        "nama_pelabuhan": "KUALA ENOK"
+    },
+    {
+        "kode_pelabuhan": "IDKUA",
+        "nama_pelabuhan": "KUALA LANGSA"
+    },
+    {
+        "kode_pelabuhan": "IDKTJ",
+        "nama_pelabuhan": "KUALATANJUNG"
+    },
+    {
+        "kode_pelabuhan": "IDKTK",
+        "nama_pelabuhan": "KUALA TUNGKAL"
+    },
+    {
+        "kode_pelabuhan": "IDLBO",
+        "nama_pelabuhan": "LABUAN BAJO"
+    },
+    {
+        "kode_pelabuhan": "IDLAJ",
+        "nama_pelabuhan": "LABUHAN"
+    },
+    {
+        "kode_pelabuhan": "IDLKA",
+        "nama_pelabuhan": "LARANTUKA"
+    },
+    {
+        "kode_pelabuhan": "IDLWE",
+        "nama_pelabuhan": "LEWOLEBA"
+    },
+    {
+        "kode_pelabuhan": "IDMAJ",
+        "nama_pelabuhan": "MAJENE, SV"
+    },
+    {
+        "kode_pelabuhan": "IDMLH",
+        "nama_pelabuhan": "MALAHAYATI"
+    },
+    {
+        "kode_pelabuhan": "IDMLI",
+        "nama_pelabuhan": "MALILI"
+    },
+    {
+        "kode_pelabuhan": "IDMJU",
+        "nama_pelabuhan": "MAMUJU"
+    },
+    {
+        "kode_pelabuhan": "IDMAN",
+        "nama_pelabuhan": "MANGGAR"
+    },
+    {
+        "kode_pelabuhan": "IDMSI",
+        "nama_pelabuhan": "MASALEMBO"
+    },
+    {
+        "kode_pelabuhan": "IDMOF",
+        "nama_pelabuhan": "MAUMERE"
+    },
+    {
+        "kode_pelabuhan": "IDMEQ",
+        "nama_pelabuhan": "MEULABOH"
+    },
+    {
+        "kode_pelabuhan": "IDMSK",
+        "nama_pelabuhan": "MUARA SABAK"
+    },
+    {
+        "kode_pelabuhan": "IDMSB",
+        "nama_pelabuhan": "MUARA SIBERUT"
+    },
+    {
+        "kode_pelabuhan": "IDLII",
+        "nama_pelabuhan": "LAIWUI"
+    },
+    {
+        "kode_pelabuhan": "IDMUO",
+        "nama_pelabuhan": "MUNTOK"
+    },
+    {
+        "kode_pelabuhan": "IDNBX",
+        "nama_pelabuhan": "NABIRE"
+    },
+    {
+        "kode_pelabuhan": "IDNAM",
+        "nama_pelabuhan": "NAMLEA"
+    },
+    {
+        "kode_pelabuhan": "IDNRE",
+        "nama_pelabuhan": "NAMROLE"
+    },
+    {
+        "kode_pelabuhan": "IDNNX",
+        "nama_pelabuhan": "NUNUKAN"
+    },
+    {
+        "kode_pelabuhan": "IDORA",
+        "nama_pelabuhan": "ORANSBARI"
+    },
+    {
+        "kode_pelabuhan": "IDPGM",
+        "nama_pelabuhan": "PAGIMANA"
+    },
+    {
+        "kode_pelabuhan": "IDPPO",
+        "nama_pelabuhan": "PALOPO, SULAWESI"
+    },
+    {
+        "kode_pelabuhan": "IDPRN",
+        "nama_pelabuhan": "PANARUKAN"
+    },
+    {
+        "kode_pelabuhan": "IDPGX",
+        "nama_pelabuhan": "PANGKAL BALAM, BANGKA"
+    },
+    {
+        "kode_pelabuhan": "IDPKS",
+        "nama_pelabuhan": "PANGKALAN SUSU"
+    },
+    {
+        "kode_pelabuhan": "IDPKN",
+        "nama_pelabuhan": "PANGKALAN BUN"
+    },
+    {
+        "kode_pelabuhan": "IDPBB",
+        "nama_pelabuhan": "BADAS"
+    },
+    {
+        "kode_pelabuhan": "IDPMK",
+        "nama_pelabuhan": "POMAKO"
+    },
+    {
+        "kode_pelabuhan": "IDPUM",
+        "nama_pelabuhan": "POMALAA, SULAWESI"
+    },
+    {
+        "kode_pelabuhan": "IDPSJ",
+        "nama_pelabuhan": "POSO, SULAWESI"
+    },
+    {
+        "kode_pelabuhan": "IDPRO",
+        "nama_pelabuhan": "PROBOLINGGO"
+    },
+    {
+        "kode_pelabuhan": "IDPPS",
+        "nama_pelabuhan": "PULANG PISAU/KUALA KAPUAS"
+    },
+    {
+        "kode_pelabuhan": "IDRAQ",
+        "nama_pelabuhan": "RAHA"
+    },
+    {
+        "kode_pelabuhan": "IDREM",
+        "nama_pelabuhan": "REMBANG"
+    },
+    {
+        "kode_pelabuhan": "IDRGT",
+        "nama_pelabuhan": "KUALA CINAKU"
+    },
+    {
+        "kode_pelabuhan": "IDREO",
+        "nama_pelabuhan": "REO"
+    },
+    {
+        "kode_pelabuhan": "IDSQN",
+        "nama_pelabuhan": "SANANA"
+    },
+    {
+        "kode_pelabuhan": "IDSGQ",
+        "nama_pelabuhan": "SANGATTA"
+    },
+    {
+        "kode_pelabuhan": "IDSKI",
+        "nama_pelabuhan": "SANGKULIRANG, KALIMANTAN"
+    },
+    {
+        "kode_pelabuhan": "IDSPE",
+        "nama_pelabuhan": "SAPE"
+    },
+    {
+        "kode_pelabuhan": "IDZRM",
+        "nama_pelabuhan": "SARMI"
+    },
+    {
+        "kode_pelabuhan": "IDSTU",
+        "nama_pelabuhan": "SATUI"
+    },
+    {
+        "kode_pelabuhan": "IDSXK",
+        "nama_pelabuhan": "SAUMLAKI"
+    },
+    {
+        "kode_pelabuhan": "IDSPA",
+        "nama_pelabuhan": "SELAT PANJANG"
+    },
+    {
+        "kode_pelabuhan": "IDZRI",
+        "nama_pelabuhan": "SERUI"
+    },
+    {
+        "kode_pelabuhan": "IDSNG",
+        "nama_pelabuhan": "SINABANG"
+    },
+    {
+        "kode_pelabuhan": "IDSUQ",
+        "nama_pelabuhan": "SUNGAI GUNTUNG, SUMATRA"
+    },
+    {
+        "kode_pelabuhan": "IDSKT",
+        "nama_pelabuhan": "SAKETA"
+    },
+    {
+        "kode_pelabuhan": "IDSUS",
+        "nama_pelabuhan": "SUSOH, SUMATRA"
+    },
+    {
+        "kode_pelabuhan": "IDTJB",
+        "nama_pelabuhan": "TANJUNG BALAI KARIMUN"
+    },
+    {
+        "kode_pelabuhan": "IDTJQ",
+        "nama_pelabuhan": "TANJUNG PANDAN"
+    },
+    {
+        "kode_pelabuhan": "IDTSX",
+        "nama_pelabuhan": "TANJUNG SANTAN"
+    },
+    {
+        "kode_pelabuhan": "IDTJS",
+        "nama_pelabuhan": "TANJUNG SELOR"
+    },
+    {
+        "kode_pelabuhan": "IDTPK",
+        "nama_pelabuhan": "TAPAKTUAN, SUMATRA"
+    },
+    {
+        "kode_pelabuhan": "IDTEG",
+        "nama_pelabuhan": "TEGAL"
+    },
+    {
+        "kode_pelabuhan": "IDTMO",
+        "nama_pelabuhan": "TELOK MELANO"
+    },
+    {
+        "kode_pelabuhan": "IDTXM",
+        "nama_pelabuhan": "TEMINABUAN"
+    },
+    {
+        "kode_pelabuhan": "IDTBO",
+        "nama_pelabuhan": "TOBELO"
+    },
+    {
+        "kode_pelabuhan": "IDTLI",
+        "nama_pelabuhan": "TOLITOLI"
+    },
+    {
+        "kode_pelabuhan": "IDTLU",
+        "nama_pelabuhan": "TULEHU"
+    },
+    {
+        "kode_pelabuhan": "IDWGP",
+        "nama_pelabuhan": "WAINGAPU"
+    },
+    {
+        "kode_pelabuhan": "IDWSR",
+        "nama_pelabuhan": "WASIOR"
+    },
+    {
+        "kode_pelabuhan": "IDWED",
+        "nama_pelabuhan": "WEDA"
+    },
+    {
+        "kode_pelabuhan": "IDAGS",
+        "nama_pelabuhan": "Agats"
+    },
+    {
+        "kode_pelabuhan": "IDAGK",
+        "nama_pelabuhan": "ANGGREK"
+    },
+    {
+        "kode_pelabuhan": "IDAAU",
+        "nama_pelabuhan": "Atapupu"
+    },
+    {
+        "kode_pelabuhan": "IDBAE",
+        "nama_pelabuhan": "Bajoe"
+    },
+    {
+        "kode_pelabuhan": "IDBAI",
+        "nama_pelabuhan": "BAKAUHENI"
+    },
+    {
+        "kode_pelabuhan": "IDBAA",
+        "nama_pelabuhan": "Baranusa"
+    },
+    {
+        "kode_pelabuhan": "IDBRS",
+        "nama_pelabuhan": "Barus"
+    },
+    {
+        "kode_pelabuhan": "IDBWN",
+        "nama_pelabuhan": "Bawean"
+    },
+    {
+        "kode_pelabuhan": "IDBBM",
+        "nama_pelabuhan": "Belang-Belang"
+    },
+    {
+        "kode_pelabuhan": "IDLBI",
+        "nama_pelabuhan": "Bintuhan/Linau"
+    },
+    {
+        "kode_pelabuhan": "IDBBE",
+        "nama_pelabuhan": "Bulukumba/Lappe'e"
+    },
+    {
+        "kode_pelabuhan": "IDGER",
+        "nama_pelabuhan": "Geser"
+    },
+    {
+        "kode_pelabuhan": "IDHUU",
+        "nama_pelabuhan": "Hatu Piru"
+    },
+    {
+        "kode_pelabuhan": "IDIRU",
+        "nama_pelabuhan": "Indramayu"
+    },
+    {
+        "kode_pelabuhan": "IDJIO",
+        "nama_pelabuhan": "Jailolo"
+    },
+    {
+        "kode_pelabuhan": "IDJEO",
+        "nama_pelabuhan": "Jeneponto/Bunging"
+    },
+    {
+        "kode_pelabuhan": "IDJWA",
+        "nama_pelabuhan": "Juwana"
+    },
+    {
+        "kode_pelabuhan": "IDKNU",
+        "nama_pelabuhan": "Karangantu"
+    },
+    {
+        "kode_pelabuhan": "IDKGQ",
+        "nama_pelabuhan": "KUALA GAUNG"
+    },
+    {
+        "kode_pelabuhan": "IDKJA",
+        "nama_pelabuhan": "Karimun Jawa"
+    },
+    {
+        "kode_pelabuhan": "IDKNP",
+        "nama_pelabuhan": "KINTAP"
+    },
+    {
+        "kode_pelabuhan": "IDKRO",
+        "nama_pelabuhan": "Korido"
+    },
+    {
+        "kode_pelabuhan": "IDKAG",
+        "nama_pelabuhan": "Kota Agung"
+    },
+    {
+        "kode_pelabuhan": "IDKAN",
+        "nama_pelabuhan": "Kotabunan"
+    },
+    {
+        "kode_pelabuhan": "IDKME",
+        "nama_pelabuhan": "Kuala Mendahara"
+    },
+    {
+        "kode_pelabuhan": "IDKSA",
+        "nama_pelabuhan": "Kuala Semboja"
+    },
+    {
+        "kode_pelabuhan": "IDKSB",
+        "nama_pelabuhan": "KEPULAUAN SERIBU"
+    },
+    {
+        "kode_pelabuhan": "IDKWG",
+        "nama_pelabuhan": "Kwandang"
+    },
+    {
+        "kode_pelabuhan": "IDLLO",
+        "nama_pelabuhan": "Labuhan Lombok"
+    },
+    {
+        "kode_pelabuhan": "IDLMA",
+        "nama_pelabuhan": "Labuhan Maringgai"
+    },
+    {
+        "kode_pelabuhan": "IDLUK",
+        "nama_pelabuhan": "Labuhan Uki"
+    },
+    {
+        "kode_pelabuhan": "IDLHA",
+        "nama_pelabuhan": "Lahewa"
+    },
+    {
+        "kode_pelabuhan": "IDLPO",
+        "nama_pelabuhan": "Lapuko"
+    },
+    {
+        "kode_pelabuhan": "IDLEK",
+        "nama_pelabuhan": "Leok"
+    },
+    {
+        "kode_pelabuhan": "IDLUG",
+        "nama_pelabuhan": "Likupang"
+    },
+    {
+        "kode_pelabuhan": "IDMII",
+        "nama_pelabuhan": "Maccini Baji"
+    },
+    {
+        "kode_pelabuhan": "IDMKI",
+        "nama_pelabuhan": "Malakoni/P. Enggano"
+    },
+    {
+        "kode_pelabuhan": "IDMGA",
+        "nama_pelabuhan": "Manggala/Menggala"
+    },
+    {
+        "kode_pelabuhan": "IDMOT",
+        "nama_pelabuhan": "Marapokot"
+    },
+    {
+        "kode_pelabuhan": "IDMRA",
+        "nama_pelabuhan": "Marunda"
+    },
+    {
+        "kode_pelabuhan": "IDMLW",
+        "nama_pelabuhan": "Molawe"
+    },
+    {
+        "kode_pelabuhan": "IDMKA",
+        "nama_pelabuhan": "Muara Angke"
+    },
+    {
+        "kode_pelabuhan": "IDBRO",
+        "nama_pelabuhan": "BAA"
+    },
+    {
+        "kode_pelabuhan": "IDNPE",
+        "nama_pelabuhan": "Nusa Penida (Mentigi)"
+    },
+    {
+        "kode_pelabuhan": "IDOOS",
+        "nama_pelabuhan": "Ogoamas"
+    },
+    {
+        "kode_pelabuhan": "IDBUT",
+        "nama_pelabuhan": "TANJUNG BUTON"
+    },
+    {
+        "kode_pelabuhan": "IDPJA",
+        "nama_pelabuhan": "PULAU JAMPEA"
+    },
+    {
+        "kode_pelabuhan": "IDPBI",
+        "nama_pelabuhan": "PADANG BAI"
+    },
+    {
+        "kode_pelabuhan": "IDPAH",
+        "nama_pelabuhan": "Paloh/Sakura"
+    },
+    {
+        "kode_pelabuhan": "IDPAN",
+        "nama_pelabuhan": "Pangandaran"
+    },
+    {
+        "kode_pelabuhan": "IDPIN",
+        "nama_pelabuhan": "Panipahan"
+    },
+    {
+        "kode_pelabuhan": "IDPRI",
+        "nama_pelabuhan": "Parigi"
+    },
+    {
+        "kode_pelabuhan": "IDPIO",
+        "nama_pelabuhan": "Pattirobajo"
+    },
+    {
+        "kode_pelabuhan": "IDPRA",
+        "nama_pelabuhan": "Pelabuhan Ratu"
+    },
+    {
+        "kode_pelabuhan": "IDPTE",
+        "nama_pelabuhan": "Pulau Tello"
+    },
+    {
+        "kode_pelabuhan": "IDRGG",
+        "nama_pelabuhan": "Rangga Ilung"
+    },
+    {
+        "kode_pelabuhan": "IDSPN",
+        "nama_pelabuhan": "Sapeken"
+    },
+    {
+        "kode_pelabuhan": "IDSPI",
+        "nama_pelabuhan": "Sapudi"
+    },
+    {
+        "kode_pelabuhan": "IDSEA",
+        "nama_pelabuhan": "Seba"
+    },
+    {
+        "kode_pelabuhan": "IDSAG",
+        "nama_pelabuhan": "Senayang"
+    },
+    {
+        "kode_pelabuhan": "IDSIK",
+        "nama_pelabuhan": "SIKAKAP"
+    },
+    {
+        "kode_pelabuhan": "IDSNL",
+        "nama_pelabuhan": "Singkil"
+    },
+    {
+        "kode_pelabuhan": "IDSLA",
+        "nama_pelabuhan": "Sinjai/Larea-rea"
+    },
+    {
+        "kode_pelabuhan": "IDSNE",
+        "nama_pelabuhan": "Sintete"
+    },
+    {
+        "kode_pelabuhan": "IDSRU",
+        "nama_pelabuhan": "Sirombu"
+    },
+    {
+        "kode_pelabuhan": "IDSWA",
+        "nama_pelabuhan": "Siwa/Bangsalae"
+    },
+    {
+        "kode_pelabuhan": "IDSFI",
+        "nama_pelabuhan": "Sofifi"
+    },
+    {
+        "kode_pelabuhan": "IDSAA",
+        "nama_pelabuhan": "Sukamara"
+    },
+    {
+        "kode_pelabuhan": "IDSLU",
+        "nama_pelabuhan": "Sungai Lumpur"
+    },
+    {
+        "kode_pelabuhan": "IDSNY",
+        "nama_pelabuhan": "Sungai Nyamuk"
+    },
+    {
+        "kode_pelabuhan": "IDTHA",
+        "nama_pelabuhan": "TAHUNA"
+    },
+    {
+        "kode_pelabuhan": "IDTSH",
+        "nama_pelabuhan": "TANJUNG BALAI ASAHAN"
+    },
+    {
+        "kode_pelabuhan": "IDTBE",
+        "nama_pelabuhan": "Tanjung Beringin"
+    },
+    {
+        "kode_pelabuhan": "IDTMD",
+        "nama_pelabuhan": "Tanjung Medang"
+    },
+    {
+        "kode_pelabuhan": "IDTRE",
+        "nama_pelabuhan": "Tanjung Redep"
+    },
+    {
+        "kode_pelabuhan": "IDPEI",
+        "nama_pelabuhan": "Tanjung Silopo/Polewali"
+    },
+    {
+        "kode_pelabuhan": "IDTGU",
+        "nama_pelabuhan": "Telaga Biru"
+    },
+    {
+        "kode_pelabuhan": "IDTDA",
+        "nama_pelabuhan": "Teluk Dalam"
+    },
+    {
+        "kode_pelabuhan": "IDLIG",
+        "nama_pelabuhan": "Teluk Leidong"
+    },
+    {
+        "kode_pelabuhan": "IDSEL",
+        "nama_pelabuhan": "Tg. Sarang Elang"
+    },
+    {
+        "kode_pelabuhan": "IDTAA",
+        "nama_pelabuhan": "Tilamuta"
+    },
+    {
+        "kode_pelabuhan": "IDUSI",
+        "nama_pelabuhan": "Ulu Siau"
+    },
+    {
+        "kode_pelabuhan": "IDWIO",
+        "nama_pelabuhan": "Waikelo"
+    },
+    {
+        "kode_pelabuhan": "IDWSA",
+        "nama_pelabuhan": "WAISAI"
+    },
+    {
+        "kode_pelabuhan": "IDWCI",
+        "nama_pelabuhan": "WANCI"
+    },
+    {
+        "kode_pelabuhan": "IDWII",
+        "nama_pelabuhan": "Wini"
+    },
+    {
+        "kode_pelabuhan": "IDWNI",
+        "nama_pelabuhan": "Wonreli"
+    },
+    {
+        "kode_pelabuhan": "IDSLR",
+        "nama_pelabuhan": "SELAYAR"
+    },
+    {
+        "kode_pelabuhan": "IDLBH",
+        "nama_pelabuhan": "BABANG"
+    },
+    {
+        "kode_pelabuhan": "IDSKL",
+        "nama_pelabuhan": "SUNDA KELAPA"
+    },
+    {
+        "kode_pelabuhan": "IDMSJ",
+        "nama_pelabuhan": "MESUJI"
+    },
+    {
+        "kode_pelabuhan": "IDGNG",
+        "nama_pelabuhan": "GARONGKONG"
+    },
+    {
+        "kode_pelabuhan": "IDWRN",
+        "nama_pelabuhan": "WAREN"
+    },
+    {
+        "kode_pelabuhan": "IDTLN",
+        "nama_pelabuhan": "TEMBILAHAN"
+    },
+    {
+        "kode_pelabuhan": "IDBNQ",
+        "nama_pelabuhan": "BRONDONG"
+    },
+    {
+        "kode_pelabuhan": "IDSON",
+        "nama_pelabuhan": "SIUBAN"
+    },
+    {
+        "kode_pelabuhan": "IDPTA",
+        "nama_pelabuhan": "Padang tikar"
+    },
+    {
+        "kode_pelabuhan": "IDPMB",
+        "nama_pelabuhan": "PATIMBAN"
+    },
+    {
+        "kode_pelabuhan": "PUSAT",
+        "nama_pelabuhan": "Kementerian Perhubungan"
+    },
+    {
+        "kode_pelabuhan": "XXOGA",
+        "nama_pelabuhan": "KEMENTERIAN / LEMBAGA LAIN"
+    },
+    {
+        "kode_pelabuhan": "IDLBR",
+        "nama_pelabuhan": "LEMBAR"
+    },
+    {
+        "kode_pelabuhan": "IDBAU",
+        "nama_pelabuhan": "BAU-BAU"
+    },
+    {
+        "kode_pelabuhan": "IDSNP",
+        "nama_pelabuhan": "BRANTA/SUMENEP"
+    },
+    {
+        "kode_pelabuhan": "IDTMP",
+        "nama_pelabuhan": "TAREMPA"
+    },
+    {
+        "kode_pelabuhan": "IDSIO",
+        "nama_pelabuhan": "SOASIO, GALELA"
+    },
+    {
+        "kode_pelabuhan": "IDSDI",
+        "nama_pelabuhan": "Sadai"
+    },
+    {
+        "kode_pelabuhan": "IDMEN",
+        "nama_pelabuhan": "PEMENANG"
+    },
+    {
+        "kode_pelabuhan": "IDTHR",
+        "nama_pelabuhan": "TANA PASER"
+    },
+    {
+        "kode_pelabuhan": "IDBNU",
+        "nama_pelabuhan": "BUNGKU"
+    },
+    {
+        "kode_pelabuhan": "IDBUD",
+        "nama_pelabuhan": "BUNTA"
+    },
+    {
+        "kode_pelabuhan": "IDCLI",
+        "nama_pelabuhan": "CALABAI"
+    },
+    {
+        "kode_pelabuhan": "IDBTX",
+        "nama_pelabuhan": "Batahan"
+    },
+    {
+        "kode_pelabuhan": "IDMGE",
+        "nama_pelabuhan": "Melonguane"
+    },
+    {
+        "kode_pelabuhan": "IDTTN",
+        "nama_pelabuhan": "TELUK SIGINTUNG"
+    },
+    {
+        "kode_pelabuhan": "IDKKS",
+        "nama_pelabuhan": "KOKAS"
+    },
+    {
+        "kode_pelabuhan": "IDNIJ",
+        "nama_pelabuhan": "NIPAH PANJANG"
+    },
+    {
+        "kode_pelabuhan": "IDSSL",
+        "nama_pelabuhan": "SUNGAI SELAN"
+    }
+]
