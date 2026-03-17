@@ -317,6 +317,11 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination -->
+                <div id="paginationBar" class="hidden px-4 py-2.5 border-t border-slate-100 bg-white flex flex-wrap items-center justify-between gap-2">
+                    <p id="paginationInfo" class="text-xs text-slate-500"></p>
+                    <div id="paginationBtns" class="flex items-center gap-1 flex-wrap"></div>
+                </div>
             </div>
 
         </main>
@@ -996,10 +1001,13 @@ function renderCharts(data) {
 }
 
 // ==========================================
-// FILTER & ROW LIMIT — hanya mempengaruhi TABEL
+// FILTER + PAGINATION — hanya mempengaruhi TABEL
 // Statistik, chart, summary cards tidak berubah
 // ==========================================
 let _filterDebounceTimer = null;
+let _currentPage    = 1;   // halaman aktif
+let _filteredData   = [];  // data setelah filter (sebelum paginate)
+
 window._debounceFilter = function() {
     clearTimeout(_filterDebounceTimer);
     _filterDebounceTimer = setTimeout(window._applyTableFilters, 250);
@@ -1022,49 +1030,135 @@ window._toggleCol = function(col) {
     });
 };
 
-// Terapkan filter + row limit ke tabel saja
+// Render bar pagination
+function renderPagination(totalItems, pageSize, currentPage) {
+    const bar  = document.getElementById('paginationBar');
+    const info = document.getElementById('paginationInfo');
+    const btns = document.getElementById('paginationBtns');
+    if (!bar || !info || !btns) return;
+
+    // Jika "Semua" (pageSize=0) atau hanya 1 halaman, sembunyikan
+    if (pageSize === 0 || totalItems <= pageSize) {
+        bar.classList.add('hidden');
+        return;
+    }
+
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const from = (currentPage - 1) * pageSize + 1;
+    const to   = Math.min(currentPage * pageSize, totalItems);
+
+    bar.classList.remove('hidden');
+    info.textContent = `Menampilkan ${from}–${to} dari ${totalItems} kapal`;
+
+    // Bangun tombol halaman
+    const btnCls = (active) =>
+        `inline-flex items-center justify-center w-7 h-7 text-xs font-semibold rounded-md border transition-colors cursor-pointer select-none ` +
+        (active
+            ? 'bg-blue-600 text-white border-blue-600'
+            : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50');
+
+    let html = '';
+
+    // Tombol ← Prev
+    html += `<button onclick="window._goToPage(${currentPage - 1})"
+        class="${btnCls(false)} ${currentPage === 1 ? 'opacity-40 pointer-events-none' : ''}">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>`;
+
+    // Nomor halaman — tampilkan max 7 tombol dengan ellipsis
+    const pages = buildPageRange(currentPage, totalPages);
+    pages.forEach(p => {
+        if (p === '...') {
+            html += `<span class="inline-flex items-center justify-center w-7 h-7 text-xs text-slate-400">…</span>`;
+        } else {
+            html += `<button onclick="window._goToPage(${p})" class="${btnCls(p === currentPage)}">${p}</button>`;
+        }
+    });
+
+    // Tombol Next →
+    html += `<button onclick="window._goToPage(${currentPage + 1})"
+        class="${btnCls(false)} ${currentPage === totalPages ? 'opacity-40 pointer-events-none' : ''}">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>`;
+
+    btns.innerHTML = html;
+}
+
+// Bangun array nomor halaman dengan ellipsis
+function buildPageRange(current, total) {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages = [];
+    if (current <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push('...'); pages.push(total);
+    } else if (current >= total - 3) {
+        pages.push(1); pages.push('...');
+        for (let i = total - 4; i <= total; i++) pages.push(i);
+    } else {
+        pages.push(1); pages.push('...');
+        for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+        pages.push('...'); pages.push(total);
+    }
+    return pages;
+}
+
+// Pindah ke halaman tertentu
+window._goToPage = function(page) {
+    const pageSize  = parseInt(document.getElementById('rowLimitSelect')?.value || '20');
+    if (pageSize === 0) return;
+    const totalPages = Math.ceil(_filteredData.length / pageSize);
+    if (page < 1 || page > totalPages) return;
+    _currentPage = page;
+    const sliced = _filteredData.slice((page - 1) * pageSize, page * pageSize);
+    renderTable(sliced);
+    renderPagination(_filteredData.length, pageSize, _currentPage);
+    // Scroll ke atas tabel
+    document.getElementById('mainTable')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
+
+// Terapkan filter → reset ke halaman 1 → paginate → render
 window._applyTableFilters = function() {
     const kw = id => (document.getElementById(id)?.value || '').toLowerCase().trim();
     const kwKapal      = kw('filterKapal');
     const kwPerusahaan = kw('filterPerusahaan');
     const kwPetugas    = kw('filterPetugas');
     const kwLokasi     = kw('filterLokasi');
-    const limitVal     = parseInt(document.getElementById('rowLimitSelect')?.value || '20');
+    const pageSize     = parseInt(document.getElementById('rowLimitSelect')?.value || '20');
 
-    let filtered = currentData;
+    // Filter
+    _filteredData = currentData.filter(item => {
+        if (kwKapal      && !(item.nama_kapal || '').toLowerCase().includes(kwKapal))                   return false;
+        if (kwPerusahaan && !(item.perusahaan || item.keagenan || '').toLowerCase().includes(kwPerusahaan)) return false;
+        if (kwPetugas    && !(item.spb_approve_fullname || '').toLowerCase().includes(kwPetugas))       return false;
+        if (kwLokasi) {
+            const lok = ((item.lokasi_sandar||'') + ' ' + (item.lokasi_tolak||'')).toLowerCase();
+            if (!lok.includes(kwLokasi)) return false;
+        }
+        return true;
+    });
 
-    if (kwKapal || kwPerusahaan || kwPetugas || kwLokasi) {
-        filtered = currentData.filter(item => {
-            if (kwKapal      && !(item.nama_kapal || '').toLowerCase().includes(kwKapal))          return false;
-            if (kwPerusahaan && !(item.perusahaan || item.keagenan || '').toLowerCase().includes(kwPerusahaan)) return false;
-            if (kwPetugas    && !(item.spb_approve_fullname || '').toLowerCase().includes(kwPetugas)) return false;
-            if (kwLokasi) {
-                const lok = ((item.lokasi_sandar||'') + ' ' + (item.lokasi_tolak||'')).toLowerCase();
-                if (!lok.includes(kwLokasi)) return false;
-            }
-            return true;
-        });
-    }
+    // Reset ke halaman 1 setiap kali filter/row-limit berubah
+    _currentPage = 1;
 
-    // Terapkan row limit
-    const sliced = (limitVal > 0) ? filtered.slice(0, limitVal) : filtered;
+    // Potong sesuai halaman
+    const sliced = (pageSize > 0)
+        ? _filteredData.slice(0, pageSize)
+        : _filteredData;
 
-    // Update badge record count dengan info filter
+    // Update badge
     const badge = document.getElementById('tableRecordCount');
     if (badge) {
-        if (filtered.length < currentData.length) {
-            badge.textContent = `${sliced.length} / ${filtered.length} (filter aktif)`;
-        } else if (limitVal > 0 && sliced.length < filtered.length) {
-            badge.textContent = `${sliced.length} dari ${filtered.length} Kapal`;
-        } else {
-            badge.textContent = `${filtered.length} Kapal`;
-        }
+        const filterActive = kwKapal || kwPerusahaan || kwPetugas || kwLokasi;
+        badge.textContent = filterActive
+            ? `${_filteredData.length} / ${currentData.length} Kapal (filter)`
+            : `${_filteredData.length} Kapal`;
     }
 
     renderTable(sliced);
+    renderPagination(_filteredData.length, pageSize, _currentPage);
 };
 
-// Alias lama tetap ada agar tidak error jika ada pemanggilan lain
+// Alias lama
 window.filterDashboardData = window._applyTableFilters;
 
 // ==========================================
