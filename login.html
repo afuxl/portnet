@@ -1225,9 +1225,19 @@ window.closeDetailModal = function() {
 // SETTINGS MODAL
 // ==========================================
 window.openSettingsModal = function() {
-    // Pre-select kode yang sedang aktif di dropdown
     const sel = document.getElementById('cfgPortCode');
-    if (sel) sel.value = APP_CONFIG.DEFAULT_PORT_CODE || '';
+    if (sel) {
+        // Jika select masih kosong (PORT_LIST belum diisi saat init), isi sekarang
+        if (sel.options.length === 0 && PORT_LIST.length > 0) {
+            sel.innerHTML = PORT_LIST
+                .slice()
+                .sort((a, b) => a.nama_pelabuhan.localeCompare(b.nama_pelabuhan, 'id'))
+                .map(p => `<option value="${escHTML(p.kode_pelabuhan)}">${escHTML(p.nama_pelabuhan)}</option>`)
+                .join('');
+        }
+        // Pre-select kode yang sedang aktif
+        sel.value = APP_CONFIG.DEFAULT_PORT_CODE || '';
+    }
     document.getElementById('cfgScraping').value = APP_CONFIG.USE_SCRAPING === 'TRUE' ? 'TRUE' : 'FALSE';
     document.getElementById('settingsModal').classList.remove('hidden');
 };
