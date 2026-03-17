@@ -583,7 +583,7 @@ window.getSelectedPortCode = function() {
 // ==========================================
 // APP STATE
 // ==========================================
-let APP_CONFIG = { DEFAULT_PORT_CODE: 'IDLPO', USE_SCRAPING: 'FALSE', AUTH_NAME: '', AUTH_USERNAME: '' };
+let APP_CONFIG = { DEFAULT_PORT_CODE: 'IDLPO', USE_SCRAPING: 'FALSE' };
 let etaChartInst = null;
 let trayekChartInst = null;
 let currentData = [];
@@ -1473,27 +1473,6 @@ window.closeDetailModal = function() {
 // ==========================================
 // SETTINGS MODAL — MULTI TAB
 // ==========================================
-let _currentTab = 'sistem';
-
-window._switchTab = function(tab) {
-    _currentTab = tab;
-    ['sistem','akun','users'].forEach(t => {
-        document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1))?.classList.add('hidden');
-        const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
-        if (btn) { btn.classList.remove('border-blue-600','text-blue-600'); btn.classList.add('border-transparent','text-slate-500'); }
-    });
-    document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1))?.classList.remove('hidden');
-    const activeBtn = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
-    if (activeBtn) { activeBtn.classList.add('border-blue-600','text-blue-600'); activeBtn.classList.remove('border-transparent','text-slate-500'); }
-
-    // Tombol simpan: sembunyikan di tab users
-    const btnSimpan = document.getElementById('btnSimpanSettings');
-    if (btnSimpan) btnSimpan.classList.toggle('hidden', tab === 'users');
-
-    if (tab === 'users') window._loadUserList();
-};
-
-// ==========================================
 // SETTINGS MODAL — MULTI TAB
 // ==========================================
 let _currentTab = 'sistem';
@@ -1828,8 +1807,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 7. Tampilkan nama & username dari session + config
     if (sessionDataObj) {
-        const name     = sessionDataObj.name     || APP_CONFIG.AUTH_NAME     || sessionDataObj.username || '';
-        const username = sessionDataObj.username || APP_CONFIG.AUTH_USERNAME || '';
+        const name     = sessionDataObj.name     || sessionDataObj.username || '';
+        const username = sessionDataObj.username || '';
         const dnEl = document.getElementById('displayName');
         const unEl = document.getElementById('displayUsername');
         if (dnEl) dnEl.textContent = escHTML(name || username);
