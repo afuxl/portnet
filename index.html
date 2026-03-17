@@ -586,6 +586,24 @@ window.loadData = async function() {
 
         if (result.status === 'error') throw new Error(result.message);
 
+        // Kasus no_cache: belum ada data sama sekali di spreadsheet
+        if (result.status === 'empty') {
+            document.getElementById('tableBody').innerHTML =
+                `<tr><td colspan="6" class="px-6 py-10 text-center">
+                    <div class="flex flex-col items-center gap-2 text-amber-500">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span class="font-semibold text-slate-700">Belum ada data</span>
+                        <span class="text-xs text-slate-400">${escHTML(result.message || 'Jalankan manualFetch() di Google Apps Script terlebih dahulu.')}</span>
+                    </div>
+                </td></tr>`;
+            ['dataSourceBadge','dataSourceBadgeMobile'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.textContent = '❌ Kosong'; el.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full border bg-rose-50 text-rose-700 border-rose-300'; el.classList.remove('hidden'); }
+            });
+            Swal.fire({ icon: 'warning', title: 'Belum ada data cache', text: result.message, confirmButtonText: 'Mengerti' });
+            return;
+        }
+
         // Normalise data structure — GAS bisa return { data: [...] } atau [...] langsung
         let rawData = result.data;
         if (rawData && !Array.isArray(rawData) && Array.isArray(rawData.data)) {
@@ -610,11 +628,14 @@ window.loadData = async function() {
 
         // ── Badge sumber data permanen ──
         const srcMap = {
-            'cache_hari_ini': { label: 'Cache',    cls: 'bg-slate-100 text-slate-600 border-slate-300',  icon: '📦', desc: 'Data dari cache hari ini' },
-            'live_fetch':     { label: 'Live',      cls: 'bg-emerald-50 text-emerald-700 border-emerald-300', icon: '🌐', desc: 'Data baru dari server' },
-            'cache':          { label: 'Fallback',  cls: 'bg-amber-50 text-amber-700 border-amber-300',  icon: '⚠️', desc: 'Server gagal, pakai cache lama' },
+            'cache_hari_ini': { label: 'Cache',    cls: 'bg-slate-100 text-slate-600 border-slate-300',       icon: '📦', desc: 'Data dari cache hari ini' },
+            'cache_testing':  { label: 'Testing',  cls: 'bg-purple-50 text-purple-700 border-purple-300',     icon: '🧪', desc: 'Mode testing — data dari cache' },
+            'live_fetch':     { label: 'Live',      cls: 'bg-emerald-50 text-emerald-700 border-emerald-300',  icon: '🌐', desc: 'Data baru dari server' },
+            'stale_cache':    { label: 'Kemarin',   cls: 'bg-amber-50 text-amber-700 border-amber-300',        icon: '⚠️', desc: 'Fetch gagal — menampilkan data terakhir' },
+            'fallback_cache': { label: 'Fallback',  cls: 'bg-amber-50 text-amber-700 border-amber-300',        icon: '⚠️', desc: 'Server gagal, pakai cache lama' },
+            'no_cache':       { label: 'Error',     cls: 'bg-rose-50 text-rose-700 border-rose-300',           icon: '❌', desc: 'Fetch gagal dan tidak ada data cache' },
         };
-        const src = srcMap[result.source] || { label: result.source, cls: 'bg-slate-100 text-slate-500 border-slate-200', icon: 'ℹ️', desc: '' };
+        const src = srcMap[result.source] || { label: result.source || '?', cls: 'bg-slate-100 text-slate-500 border-slate-200', icon: 'ℹ️', desc: '' };
 
         ['dataSourceBadge', 'dataSourceBadgeMobile'].forEach(id => {
             const el = document.getElementById(id);
@@ -626,12 +647,28 @@ window.loadData = async function() {
             }
         });
 
-        // Toast ringkas
-        Swal.fire({
-            toast: true, position: 'top-end', icon: result.source === 'cache' ? 'warning' : 'success',
-            title: `${src.icon} ${src.desc || src.label}`,
-            showConfirmButton: false, timer: 2500
-        });
+        // Toast — bedakan stale vs fresh
+        if (result.source === 'stale_cache') {
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'warning',
+                title: '⚠️ Menampilkan data terakhir',
+                text: result.message || 'Fetch gagal, data kemarin ditampilkan.',
+                showConfirmButton: false, timer: 5000
+            });
+        } else if (result.source === 'no_cache') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Belum ada data',
+                text: result.message || 'Jalankan manualFetch() di editor Google Apps Script terlebih dahulu.',
+                confirmButtonText: 'Mengerti'
+            });
+        } else {
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'success',
+                title: `${src.icon} ${src.desc || src.label}`,
+                showConfirmButton: false, timer: 2500
+            });
+        }
 
     } catch (error) {
         console.error('loadData error:', error);
