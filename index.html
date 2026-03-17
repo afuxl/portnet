@@ -1166,6 +1166,7 @@ window.openDetailModal = function(uid) {
                         <p class="font-bold text-slate-900 text-[11px] leading-tight">${e(item.pelabuhan_asal || '-')}</p>
                         <span class="inline-block mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">${fTgl(item.eta || item.tgl_eta)}</span>
                         ${item.lokasi_sandar ? `<p class="text-[9px] text-slate-400 mt-1 leading-tight">⚓ ${e(item.lokasi_sandar)}</p>` : ''}
+                        ${getPaxTurun(item) > 0 ? `<div class="mt-1.5 flex items-center gap-1 bg-rose-50 border border-rose-100 rounded-md px-2 py-1"><span class="text-[9px] text-rose-400 font-semibold">Turun</span><span class="text-[11px] font-bold text-rose-600 ml-auto">${getPaxTurun(item).toLocaleString('id-ID')}</span></div>` : ''}
                     </div>
                     <!-- Tujuan + ETD -->
                     <div class="bg-white rounded-lg border border-amber-100 p-2">
@@ -1173,6 +1174,7 @@ window.openDetailModal = function(uid) {
                         <p class="font-bold text-slate-900 text-[11px] leading-tight">${e(item.pelabuhan_tujuan || '-')}</p>
                         <span class="inline-block mt-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-100">${fTgl(item.etd || item.tgl_etd)}</span>
                         ${item.lokasi_tolak ? `<p class="text-[9px] text-slate-400 mt-1 leading-tight">⛵ ${e(item.lokasi_tolak)}</p>` : ''}
+                        ${getPaxNaik(item) > 0 ? `<div class="mt-1.5 flex items-center gap-1 bg-emerald-50 border border-emerald-100 rounded-md px-2 py-1"><span class="text-[9px] text-emerald-400 font-semibold">Naik</span><span class="text-[11px] font-bold text-emerald-600 ml-auto">${getPaxNaik(item).toLocaleString('id-ID')}</span></div>` : ''}
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-x-4 gap-y-1 text-[10px] border-t border-slate-200 pt-2">
@@ -1191,17 +1193,7 @@ window.openDetailModal = function(uid) {
                     ${item.no_lk3 ? `<div class="flex flex-col"><span class="text-slate-400 text-[9px]">LK3</span><span class="font-mono text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[9px] break-all leading-tight">${e(item.no_lk3)}</span></div>` : ''}
                     ${item.no_spb ? `<div class="flex flex-col"><span class="text-slate-400 text-[9px]">SPB</span><span class="font-mono text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[9px] break-all leading-tight">${e(item.no_spb)}</span></div>` : ''}
                 </div>
-                <!-- Penumpang mini -->
-                <div class="grid grid-cols-2 gap-1.5 mt-2">
-                    <div class="bg-rose-50 border border-rose-100 rounded-lg py-1.5 px-2 text-center">
-                        <p class="text-[8px] text-rose-400 font-bold uppercase">Turun</p>
-                        <p class="text-base font-bold text-rose-600">${getPaxTurun(item).toLocaleString('id-ID')}</p>
-                    </div>
-                    <div class="bg-emerald-50 border border-emerald-100 rounded-lg py-1.5 px-2 text-center">
-                        <p class="text-[8px] text-emerald-400 font-bold uppercase">Naik</p>
-                        <p class="text-base font-bold text-emerald-600">${getPaxNaik(item).toLocaleString('id-ID')}</p>
-                    </div>
-                </div>
+                <!-- Penumpang sudah di panel Rute & Jadwal -->
                 <div class="mt-2 pt-2 border-t border-slate-200 space-y-1 text-[10px]">
                     <div class="flex justify-between"><span class="text-slate-500">Billing</span><span class="font-bold text-slate-800">${fUang(item.nominal_billing)}</span></div>
                     <div class="flex justify-between items-center"><span class="text-slate-500">Penyeberangan</span>${sTag(item.is_penyebrangan,'YA','TIDAK')}</div>
