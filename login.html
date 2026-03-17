@@ -480,7 +480,7 @@ function initPortDatalist() {
         sel.innerHTML = PORT_LIST
             .slice()
             .sort((a, b) => a.nama_pelabuhan.localeCompare(b.nama_pelabuhan, 'id'))
-            .map(p => `<option value="${escHTML(p.kode_pelabuhan)}">${escHTML(p.nama_pelabuhan)} (${escHTML(p.kode_pelabuhan)})</option>`)
+            .map(p => `<option value="${escHTML(p.kode_pelabuhan)}">${escHTML(p.nama_pelabuhan)}</option>`)
             .join('');
     }
 }
