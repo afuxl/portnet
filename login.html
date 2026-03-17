@@ -67,7 +67,7 @@
         </form>
 
         <div class="mt-8 text-center text-xs text-slate-400">
-            <p>created for Irfan Syamsul</p>
+            <p>Dilindungi oleh Keamanan Google Apps Script</p>
         </div>
     </div>
 
@@ -123,22 +123,23 @@
             const result = await response.json();
 
             if (result.status === 'success') {
-                // Simpan config (termasuk AUTH_NAME) ke localStorage
+                // Simpan config sistem ke localStorage
                 if (result.config) {
                     localStorage.setItem('inaportnet_config', JSON.stringify(result.config));
                 }
 
-                // Simpan session — termasuk name dari config
-                const name = result.config?.AUTH_NAME || user;
+                // Simpan session — nama & role dari data user di USERS sheet
+                const nama = result.nama || result.username || user;
                 localStorage.setItem(SESSION_KEY, JSON.stringify({
-                    username: user,
-                    name:     name,
+                    username: result.username || user,
+                    name:     nama,
+                    role:     result.role || 'user',
                     expiry:   Date.now() + SESSION_DURATION
                 }));
 
                 Swal.fire({
                     toast: true, position: 'top-end', icon: 'success',
-                    title: `Selamat datang, ${name || user}!`,
+                    title: `Selamat datang, ${nama}!`,
                     showConfirmButton: false, timer: 1500
                 });
 
