@@ -356,10 +356,11 @@
                 </div>
                 <div class="p-6 bg-white space-y-4">
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">Kode Port Default</label>
-                        <input type="search" id="cfgPortCode" list="portDatalistSettings" oninput="this.value = this.value.toUpperCase()" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase" placeholder="Mis: IDLPO">
-                        <datalist id="portDatalistSettings"></datalist>
-                        <p class="text-xs text-slate-500 mt-1">Kode pelabuhan bawaan saat sistem baru login.</p>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Pelabuhan Default</label>
+                        <select id="cfgPortCode" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
+                            <!-- Diisi oleh JS dari PORT_LIST — value=kode, teks=nama -->
+                        </select>
+                        <p class="text-xs text-slate-500 mt-1">Nama pelabuhan dipilih, kode disimpan otomatis ke sistem.</p>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Metode Cetak Dokumen (LK3 & Crewlist)</label>
@@ -465,21 +466,30 @@ async function loadPortData() {
 }
 
 function initPortDatalist() {
-    let optionsHtml = '';
-    PORT_LIST.forEach(port => {
-        optionsHtml += `<option value="${escHTML(port.nama_pelabuhan)}"></option>`;
-    });
+    // Input utama dashboard: datalist berisi nama pelabuhan
     const dl = document.getElementById('portDatalist');
-    const dls = document.getElementById('portDatalistSettings');
-    if (dl) dl.innerHTML = optionsHtml;
-    if (dls) dls.innerHTML = optionsHtml;
+    if (dl) {
+        dl.innerHTML = PORT_LIST
+            .map(p => `<option value="${escHTML(p.nama_pelabuhan)}"></option>`)
+            .join('');
+    }
+    // Select settings diisi saat openSettingsModal dipanggil (bukan di sini)
 }
 
 window.getSelectedPortCode = function() {
-    const nameInput = document.getElementById('portNameInput').value.trim().toUpperCase();
-    if (!nameInput) return APP_CONFIG.DEFAULT_PORT_CODE;
-    const port = PORT_LIST.find(p => p.nama_pelabuhan.toUpperCase() === nameInput || p.kode_pelabuhan.toUpperCase() === nameInput);
-    return port ? port.kode_pelabuhan : APP_CONFIG.DEFAULT_PORT_CODE;
+    const raw = document.getElementById('portNameInput').value.trim().toUpperCase();
+    if (!raw) return APP_CONFIG.DEFAULT_PORT_CODE;
+
+    // Cari dulu berdasarkan nama pelabuhan (yang ditampilkan di input)
+    const byName = PORT_LIST.find(p => p.nama_pelabuhan.toUpperCase() === raw);
+    if (byName) return byName.kode_pelabuhan;
+
+    // Cari berdasarkan kode (jika user mengetik kode langsung)
+    const byCode = PORT_LIST.find(p => p.kode_pelabuhan.toUpperCase() === raw);
+    if (byCode) return byCode.kode_pelabuhan;
+
+    // Fallback ke kode default
+    return APP_CONFIG.DEFAULT_PORT_CODE;
 };
 
 // ==========================================
@@ -1206,7 +1216,28 @@ window.closeDetailModal = function() {
 // SETTINGS MODAL
 // ==========================================
 window.openSettingsModal = function() {
-    document.getElementById('cfgPortCode').value = APP_CONFIG.DEFAULT_PORT_CODE || '';
+    const sel = document.getElementById('cfgPortCode');
+    if (!sel) return;
+
+    // Selalu bangun ulang options dari PORT_LIST: value=KODE, teks=NAMA
+    sel.innerHTML = PORT_LIST
+        .slice()
+        .sort((a, b) => a.nama_pelabuhan.localeCompare(b.nama_pelabuhan, 'id'))
+        .map(p => `<option value="${escHTML(p.kode_pelabuhan)}">${escHTML(p.nama_pelabuhan)}</option>`)
+        .join('');
+
+    // Normalkan DEFAULT_PORT_CODE: mungkin tersimpan sebagai nama (dari bug sebelumnya)
+    // → cari kode yang sesuai
+    let activeCode = APP_CONFIG.DEFAULT_PORT_CODE || '';
+    const byCode = PORT_LIST.find(p => p.kode_pelabuhan.toUpperCase() === activeCode.toUpperCase());
+    if (!byCode) {
+        // Coba cari berdasarkan nama (fallback untuk data lama yang salah simpan)
+        const byName = PORT_LIST.find(p => p.nama_pelabuhan.toUpperCase() === activeCode.toUpperCase());
+        if (byName) activeCode = byName.kode_pelabuhan;
+    }
+
+    sel.value = activeCode;
+
     document.getElementById('cfgScraping').value = APP_CONFIG.USE_SCRAPING === 'TRUE' ? 'TRUE' : 'FALSE';
     document.getElementById('settingsModal').classList.remove('hidden');
 };
@@ -1216,8 +1247,24 @@ window.closeSettingsModal = function() {
 };
 
 window.saveSettingsConfig = async function() {
+    const sel = document.getElementById('cfgPortCode');
+    // sel.value = kode pelabuhan (sesuai value di option)
+    const selectedCode = sel ? sel.value.trim() : '';
+
+    if (!selectedCode) {
+        Swal.fire({ icon: 'warning', title: 'Pilih pelabuhan terlebih dahulu', showConfirmButton: false, timer: 2000 });
+        return;
+    }
+
+    // Pastikan kode valid (harus ada di PORT_LIST)
+    const portInfo = PORT_LIST.find(p => p.kode_pelabuhan === selectedCode);
+    if (!portInfo) {
+        Swal.fire({ icon: 'error', title: 'Kode tidak valid', text: `"${selectedCode}" tidak ditemukan di daftar pelabuhan.`, timer: 3000, showConfirmButton: false });
+        return;
+    }
+
     const newConfig = {
-        DEFAULT_PORT_CODE: document.getElementById('cfgPortCode').value.trim().toUpperCase(),
+        DEFAULT_PORT_CODE: portInfo.kode_pelabuhan,  // simpan KODE yang sudah terverifikasi
         USE_SCRAPING: document.getElementById('cfgScraping').value
     };
 
@@ -1234,8 +1281,13 @@ window.saveSettingsConfig = async function() {
         if (result.status === 'success') {
             APP_CONFIG = { ...APP_CONFIG, ...newConfig };
             localStorage.setItem('inaportnet_config', JSON.stringify(APP_CONFIG));
+            setDefaultPortInput();
             window.closeSettingsModal();
-            Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Pengaturan telah disimpan.', timer: 2000, showConfirmButton: false });
+            Swal.fire({
+                icon: 'success', title: 'Berhasil disimpan',
+                text: `Pelabuhan default: ${portInfo.nama_pelabuhan}`,
+                timer: 2500, showConfirmButton: false
+            });
         } else {
             throw new Error(result.message);
         }
@@ -1331,14 +1383,49 @@ function setCurrentPeriod() {
 }
 
 // ==========================================
+// SET PORT DEFAULT KE INPUT (nama) & PASTIKAN KODE DIPAKAI KE BACKEND
+// ==========================================
+function setDefaultPortInput() {
+    // Cari entri port berdasarkan kode yang ada di APP_CONFIG
+    const portInfo = PORT_LIST.find(p =>
+        p.kode_pelabuhan.toUpperCase() === (APP_CONFIG.DEFAULT_PORT_CODE || '').toUpperCase()
+    );
+
+    const input = document.getElementById('portNameInput');
+    if (!input) return;
+
+    if (portInfo) {
+        // Selalu isi dengan NAMA pelabuhan supaya datalist match
+        input.value = portInfo.nama_pelabuhan.toUpperCase();
+    } else if (APP_CONFIG.DEFAULT_PORT_CODE) {
+        // Fallback: kode tidak ditemukan di port.json, isi kode apa adanya
+        input.value = APP_CONFIG.DEFAULT_PORT_CODE;
+    }
+}
+
+// ==========================================
 // INIT
 // ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
-    // Set bulan & tahun ke waktu saat ini SEBELUM loadData dipanggil
+    // 1. Set bulan & tahun ke waktu saat ini
     setCurrentPeriod();
 
+    // 2. Baca config dari localStorage SEBELUM load port & set default
+    const savedConfig = localStorage.getItem('inaportnet_config');
+    if (savedConfig) {
+        try { APP_CONFIG = { ...APP_CONFIG, ...JSON.parse(savedConfig) }; } catch(e) {}
+    }
+
+    // 3. Load daftar pelabuhan dari port.json
     await loadPortData();
 
+    // 4. Setelah PORT_LIST tersedia dan APP_CONFIG sudah benar, set input port
+    setDefaultPortInput();
+
+    // 5. Inisiasi datalist (untuk autocomplete)
+    initPortDatalist();
+
+    // 6. Event listener modal
     document.getElementById('detailModal').addEventListener('click', function(e) {
         if (e.target.id === 'detailModal') window.closeDetailModal();
     });
@@ -1346,22 +1433,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.target.id === 'settingsModal') window.closeSettingsModal();
     });
 
+    // 7. Tampilkan username dari session
     if (sessionDataObj && sessionDataObj.username) {
         document.getElementById('displayUsername').textContent = escHTML(sessionDataObj.username);
     }
 
-    const savedConfig = localStorage.getItem('inaportnet_config');
-    if (savedConfig) {
-        try { APP_CONFIG = { ...APP_CONFIG, ...JSON.parse(savedConfig) }; } catch(e) {}
-    }
-
-    const defaultPortInfo = PORT_LIST.find(p => p.kode_pelabuhan === APP_CONFIG.DEFAULT_PORT_CODE);
-    if (defaultPortInfo) {
-        document.getElementById('portNameInput').value = defaultPortInfo.nama_pelabuhan;
-    }
-
-    initPortDatalist();
+    // 8. Mulai monitor sesi
     startSessionMonitor();
+
+    // 9. Load data — portCode sudah pasti benar karena config & port list sudah siap
     window.loadData();
 });
 </script>
