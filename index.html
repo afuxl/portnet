@@ -157,13 +157,15 @@
                             </button>
                         </div>
                     </div>
-                    <div class="text-sm text-slate-500 font-medium w-full md:w-auto mt-2 md:mt-0 text-left md:text-right hidden md:block">
-                        Diperbarui: <span id="lastUpdated" class="text-slate-800 font-semibold">-</span>
+                    <div class="text-sm text-slate-500 font-medium w-full md:w-auto mt-2 md:mt-0 text-left md:text-right hidden md:flex items-center gap-2">
+                        <span id="dataSourceBadge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full border"></span>
+                        <span>Diperbarui: <span id="lastUpdated" class="text-slate-800 font-semibold">-</span></span>
                     </div>
                 </div>
 
-                <div class="text-sm text-slate-500 font-medium w-full text-left md:hidden block mt-2">
-                    Diperbarui: <span id="lastUpdatedMobile" class="text-slate-800 font-semibold">-</span>
+                <div class="text-sm text-slate-500 font-medium w-full text-left md:hidden flex items-center gap-2 mt-2">
+                    <span id="dataSourceBadgeMobile" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full border"></span>
+                    <span>Diperbarui: <span id="lastUpdatedMobile" class="text-slate-800 font-semibold">-</span></span>
                 </div>
             </div>
 
@@ -606,11 +608,30 @@ window.loadData = async function() {
         // Render
         processDataAndRender(currentData);
 
-        // Badge sumber data
-        if (result.source) {
-            const srcLabel = result.source === 'cache_hari_ini' ? '📦 Cache Hari Ini' : result.source === 'live_fetch' ? '🌐 Live' : '⚠️ Fallback Cache';
-            Swal.fire({ toast: true, position: 'bottom-end', icon: 'success', title: `Data dimuat (${srcLabel})`, showConfirmButton: false, timer: 2500 });
-        }
+        // ── Badge sumber data permanen ──
+        const srcMap = {
+            'cache_hari_ini': { label: 'Cache',    cls: 'bg-slate-100 text-slate-600 border-slate-300',  icon: '📦', desc: 'Data dari cache hari ini' },
+            'live_fetch':     { label: 'Live',      cls: 'bg-emerald-50 text-emerald-700 border-emerald-300', icon: '🌐', desc: 'Data baru dari server' },
+            'cache':          { label: 'Fallback',  cls: 'bg-amber-50 text-amber-700 border-amber-300',  icon: '⚠️', desc: 'Server gagal, pakai cache lama' },
+        };
+        const src = srcMap[result.source] || { label: result.source, cls: 'bg-slate-100 text-slate-500 border-slate-200', icon: 'ℹ️', desc: '' };
+
+        ['dataSourceBadge', 'dataSourceBadgeMobile'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = `${src.icon} ${src.label}`;
+                el.className = `text-[10px] font-bold px-2 py-0.5 rounded-full border ${src.cls}`;
+                el.classList.remove('hidden');
+                el.title = src.desc;
+            }
+        });
+
+        // Toast ringkas
+        Swal.fire({
+            toast: true, position: 'top-end', icon: result.source === 'cache' ? 'warning' : 'success',
+            title: `${src.icon} ${src.desc || src.label}`,
+            showConfirmButton: false, timer: 2500
+        });
 
     } catch (error) {
         console.error('loadData error:', error);
