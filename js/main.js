@@ -1342,9 +1342,10 @@ window.saveSettingsConfig = async function() {
 
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            // Simpan sebagai default_port user (bukan config global)
+            // Sertakan nama dari session agar tidak tertimpa kosong
             const userData = {
                 username:     sessionDataObj?.username,
+                nama:         sessionDataObj?.name || '',
                 default_port: portInfo.kode_pelabuhan
             };
             const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'saveUser', user: userData }) });
@@ -1370,7 +1371,13 @@ window.saveSettingsConfig = async function() {
         const newPwd  = (document.getElementById('cfgAuthPassword')?.value || '').trim();
         const newPwd2 = (document.getElementById('cfgAuthPasswordConfirm')?.value || '').trim();
         if (newPwd && newPwd !== newPwd2) { Swal.fire({ icon: 'error', title: 'Password tidak cocok' }); return; }
-        const userData = { username: sessionDataObj?.username, nama: newName, password: newPwd };
+        // Sertakan default_port dari session agar tidak tertimpa kosong
+        const userData = {
+            username:     sessionDataObj?.username,
+            nama:         newName,
+            password:     newPwd,
+            default_port: sessionDataObj?.default_port || ''
+        };
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
             const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'saveUser', user: userData }) });
