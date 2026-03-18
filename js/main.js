@@ -1116,6 +1116,8 @@ window.openDetailModal = function(uid) {
             <!-- ② Asal + ETA | Tujuan + ETD | Trayek — gabung rute dan waktu -->
             <div class="lg:col-span-2 bg-slate-50 rounded-xl border border-slate-200 p-3">
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-2">Rute & Jadwal</p>
+
+                <!-- Kartu Asal/Tujuan -->
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <!-- Asal + ETA -->
                     <div class="bg-white rounded-lg border border-emerald-100 p-2">
@@ -1123,7 +1125,6 @@ window.openDetailModal = function(uid) {
                         <p class="font-bold text-slate-900 text-[11px] leading-tight">${e(item.pelabuhan_asal || '-')}</p>
                         <span class="inline-block mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">${fTgl(item.eta || item.tgl_eta)}</span>
                         ${item.lokasi_sandar ? `<p class="text-[9px] text-slate-400 mt-1 leading-tight">⚓ ${e(item.lokasi_sandar)}</p>` : ''}
-                        ${getPaxTurun(item) > 0 ? `<div class="mt-1.5 flex items-center gap-1 bg-rose-50 border border-rose-100 rounded-md px-2 py-1"><span class="text-[9px] text-rose-400 font-semibold">Turun</span><span class="text-[11px] font-bold text-rose-600 ml-auto">${getPaxTurun(item).toLocaleString('id-ID')}</span></div>` : ''}
                     </div>
                     <!-- Tujuan + ETD -->
                     <div class="bg-white rounded-lg border border-amber-100 p-2">
@@ -1131,23 +1132,52 @@ window.openDetailModal = function(uid) {
                         <p class="font-bold text-slate-900 text-[11px] leading-tight">${e(item.pelabuhan_tujuan || '-')}</p>
                         <span class="inline-block mt-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-100">${fTgl(item.etd || item.tgl_etd)}</span>
                         ${item.lokasi_tolak ? `<p class="text-[9px] text-slate-400 mt-1 leading-tight">⛵ ${e(item.lokasi_tolak)}</p>` : ''}
-                        ${getPaxNaik(item) > 0 ? `<div class="mt-1.5 flex items-center gap-1 bg-emerald-50 border border-emerald-100 rounded-md px-2 py-1"><span class="text-[9px] text-emerald-400 font-semibold">Naik</span><span class="text-[11px] font-bold text-emerald-600 ml-auto">${getPaxNaik(item).toLocaleString('id-ID')}</span></div>` : ''}
                     </div>
                 </div>
-                ${(item.roda_dua_muat||item.roda_dua_bongkar||item.roda_empat_muat||item.roda_empat_bongkar||item.truk_muat||item.truk_bongkar||item.bus_muat||item.bus_bongkar||item.alat_berat_muat||item.alat_berat_bongkar) ? `
-                <div class="border-t border-slate-200 pt-2 mb-2">
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Kendaraan</p>
-                    <table class="w-full text-[9px]">
-                        <thead><tr class="text-slate-400 border-b border-slate-100"><th class="text-left font-semibold pb-0.5">Jenis</th><th class="text-center font-semibold">Muat</th><th class="text-center font-semibold">Bongkar</th></tr></thead>
-                        <tbody class="divide-y divide-slate-100">
-                            ${(item.roda_dua_muat||item.roda_dua_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Roda Dua</td><td class="text-center font-bold text-emerald-700">${item.roda_dua_muat||0}</td><td class="text-center font-bold text-rose-600">${item.roda_dua_bongkar||0}</td></tr>` : ''}
-                            ${(item.roda_empat_muat||item.roda_empat_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Roda Empat</td><td class="text-center font-bold text-emerald-700">${item.roda_empat_muat||0}</td><td class="text-center font-bold text-rose-600">${item.roda_empat_bongkar||0}</td></tr>` : ''}
-                            ${(item.bus_muat||item.bus_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Bus</td><td class="text-center font-bold text-emerald-700">${item.bus_muat||0}</td><td class="text-center font-bold text-rose-600">${item.bus_bongkar||0}</td></tr>` : ''}
-                            ${(item.truk_muat||item.truk_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Truk</td><td class="text-center font-bold text-emerald-700">${item.truk_muat||0}</td><td class="text-center font-bold text-rose-600">${item.truk_bongkar||0}</td></tr>` : ''}
-                            ${(item.alat_berat_muat||item.alat_berat_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Alat Berat</td><td class="text-center font-bold text-emerald-700">${item.alat_berat_muat||0}</td><td class="text-center font-bold text-rose-600">${item.alat_berat_bongkar||0}</td></tr>` : ''}
-                        </tbody>
-                    </table>
+
+                <!-- Penumpang: Turun (kiri) | Naik (kanan) -->
+                ${(getPaxTurun(item) > 0 || getPaxNaik(item) > 0) ? `
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <div class="bg-rose-50 border border-rose-100 rounded-lg px-3 py-2 flex items-center justify-between">
+                        <span class="text-[9px] font-bold text-rose-400 uppercase tracking-wider">Turun</span>
+                        <span class="text-base font-bold text-rose-600">${getPaxTurun(item).toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 flex items-center justify-between">
+                        <span class="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Naik</span>
+                        <span class="text-base font-bold text-emerald-600">${getPaxNaik(item).toLocaleString('id-ID')}</span>
+                    </div>
                 </div>` : ''}
+
+                <!-- Kendaraan: Bongkar (kiri) | Muat (kanan) -->
+                ${(item.roda_dua_muat||item.roda_dua_bongkar||item.roda_empat_muat||item.roda_empat_bongkar||item.truk_muat||item.truk_bongkar||item.bus_muat||item.bus_bongkar||item.alat_berat_muat||item.alat_berat_bongkar) ? `
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <!-- Bongkar -->
+                    <div class="bg-white border border-rose-100 rounded-lg p-2">
+                        <p class="text-[9px] font-bold text-rose-500 uppercase tracking-wider mb-1">Bongkar</p>
+                        <div class="space-y-0.5 text-[9px]">
+                            ${item.roda_dua_bongkar  ? `<div class="flex justify-between"><span class="text-slate-500">Roda Dua</span><span class="font-bold text-slate-800">${item.roda_dua_bongkar}</span></div>` : ''}
+                            ${item.roda_empat_bongkar? `<div class="flex justify-between"><span class="text-slate-500">Roda Empat</span><span class="font-bold text-slate-800">${item.roda_empat_bongkar}</span></div>` : ''}
+                            ${item.bus_bongkar       ? `<div class="flex justify-between"><span class="text-slate-500">Bus</span><span class="font-bold text-slate-800">${item.bus_bongkar}</span></div>` : ''}
+                            ${item.truk_bongkar      ? `<div class="flex justify-between"><span class="text-slate-500">Truk</span><span class="font-bold text-slate-800">${item.truk_bongkar}</span></div>` : ''}
+                            ${item.alat_berat_bongkar? `<div class="flex justify-between"><span class="text-slate-500">Alat Berat</span><span class="font-bold text-slate-800">${item.alat_berat_bongkar}</span></div>` : ''}
+                            ${!item.roda_dua_bongkar && !item.roda_empat_bongkar && !item.bus_bongkar && !item.truk_bongkar && !item.alat_berat_bongkar ? `<p class="text-slate-400 italic">-</p>` : ''}
+                        </div>
+                    </div>
+                    <!-- Muat -->
+                    <div class="bg-white border border-emerald-100 rounded-lg p-2">
+                        <p class="text-[9px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Muat</p>
+                        <div class="space-y-0.5 text-[9px]">
+                            ${item.roda_dua_muat  ? `<div class="flex justify-between"><span class="text-slate-500">Roda Dua</span><span class="font-bold text-slate-800">${item.roda_dua_muat}</span></div>` : ''}
+                            ${item.roda_empat_muat? `<div class="flex justify-between"><span class="text-slate-500">Roda Empat</span><span class="font-bold text-slate-800">${item.roda_empat_muat}</span></div>` : ''}
+                            ${item.bus_muat       ? `<div class="flex justify-between"><span class="text-slate-500">Bus</span><span class="font-bold text-slate-800">${item.bus_muat}</span></div>` : ''}
+                            ${item.truk_muat      ? `<div class="flex justify-between"><span class="text-slate-500">Truk</span><span class="font-bold text-slate-800">${item.truk_muat}</span></div>` : ''}
+                            ${item.alat_berat_muat? `<div class="flex justify-between"><span class="text-slate-500">Alat Berat</span><span class="font-bold text-slate-800">${item.alat_berat_muat}</span></div>` : ''}
+                            ${!item.roda_dua_muat && !item.roda_empat_muat && !item.bus_muat && !item.truk_muat && !item.alat_berat_muat ? `<p class="text-slate-400 italic">-</p>` : ''}
+                        </div>
+                    </div>
+                </div>` : ''}
+
+                <!-- Trayek & Voyage -->
                 <div class="flex flex-wrap gap-x-4 gap-y-1 text-[10px] border-t border-slate-200 pt-2">
                     ${item.trayek_datang ? `<span class="text-slate-500">Trayek Masuk <b class="text-slate-700">${e(item.trayek_datang)}</b></span>` : ''}
                     ${item.trayek_berangkat ? `<span class="text-slate-500">Trayek Keluar <b class="text-slate-700">${e(item.trayek_berangkat)}</b></span>` : ''}
