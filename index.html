@@ -216,18 +216,32 @@
             <!-- Charts Section -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
                 <div class="glass-card rounded-xl p-3 sm:p-4 lg:col-span-2 shadow-sm">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-base sm:text-lg font-bold text-slate-800">Kedatangan Kapal (ETA) per Hari</h2>
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-sm sm:text-base font-bold text-slate-800">Kedatangan &amp; Keberangkatan per Hari</h2>
                         <div class="bg-slate-100 p-2 rounded-lg hidden sm:block"><i data-lucide="bar-chart-2" class="w-5 h-5 text-slate-500"></i></div>
                     </div>
-                    <div class="relative h-52 sm:h-60 w-full"><canvas id="etaChart"></canvas></div>
+                    <div class="relative h-52 sm:h-56 w-full"><canvas id="etaChart"></canvas></div>
                 </div>
                 <div class="glass-card rounded-xl p-3 sm:p-4 shadow-sm">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-base sm:text-lg font-bold text-slate-800">Distribusi Trayek</h2>
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-sm sm:text-base font-bold text-slate-800">Distribusi Trayek</h2>
                         <div class="bg-slate-100 p-2 rounded-lg hidden sm:block"><i data-lucide="pie-chart" class="w-5 h-5 text-slate-500"></i></div>
                     </div>
-                    <div class="relative h-52 sm:h-60 w-full flex justify-center"><canvas id="trayekChart"></canvas></div>
+                    <div class="relative h-52 sm:h-56 w-full flex justify-center"><canvas id="trayekChart"></canvas></div>
+                </div>
+                <div class="glass-card rounded-xl p-3 sm:p-4 lg:col-span-2 shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-sm sm:text-base font-bold text-slate-800">Penumpang Naik &amp; Turun per Hari</h2>
+                        <div class="bg-slate-100 p-2 rounded-lg hidden sm:block"><i data-lucide="users" class="w-5 h-5 text-slate-500"></i></div>
+                    </div>
+                    <div class="relative h-48 sm:h-52 w-full"><canvas id="paxChart"></canvas></div>
+                </div>
+                <div class="glass-card rounded-xl p-3 sm:p-4 shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-sm sm:text-base font-bold text-slate-800">Top Jenis Kapal</h2>
+                        <div class="bg-slate-100 p-2 rounded-lg hidden sm:block"><i data-lucide="anchor" class="w-5 h-5 text-slate-500"></i></div>
+                    </div>
+                    <div class="relative h-48 sm:h-52 w-full flex justify-center"><canvas id="jenisChart"></canvas></div>
                 </div>
             </div>
 
@@ -253,6 +267,11 @@
                         <datalist id="listKapal"></datalist>
                     </div>
                     <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                        <i data-lucide="anchor" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                        <input type="search" id="filterJenisKapal" list="listJenisKapal" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Jenis Kapal...">
+                        <datalist id="listJenisKapal"></datalist>
+                    </div>
+                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
                         <i data-lucide="building" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
                         <input type="search" id="filterPerusahaan" list="listPerusahaan" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Perusahaan...">
                         <datalist id="listPerusahaan"></datalist>
@@ -276,6 +295,14 @@
                             <option value="100">100 baris</option>
                             <option value="0">Semua</option>
                         </select>
+
+                        <!-- Download button -->
+                        <div class="relative" id="downloadWrapper">
+                            <button onclick="window._openDownloadModal()" class="flex items-center gap-1 text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 hover:bg-slate-50 transition-colors" title="Download data sebagai Excel/CSV">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span class="hidden sm:inline">Unduh</span>
+                            </button>
+                        </div>
 
                         <!-- Toggle kolom dropdown -->
                         <div class="relative" id="colToggleWrapper">
@@ -346,6 +373,42 @@
                 <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 flex justify-end bg-slate-50">
                     <button type="button" onclick="window.closeDetailModal()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-md">
                         Tutup Panel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Download -->
+        <div id="downloadModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex justify-center items-center p-4 cursor-pointer">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden modal-animate border border-slate-200 cursor-default" onclick="event.stopPropagation()">
+                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <div class="bg-emerald-100 p-1.5 rounded-lg text-emerald-700"><i data-lucide="download" class="w-4 h-4"></i></div>
+                        Unduh Data
+                    </h3>
+                    <button onclick="document.getElementById(&apos;downloadModal&apos;).classList.add(&apos;hidden&apos;)" class="text-slate-400 hover:text-rose-500 bg-white p-1.5 rounded-full border border-slate-200 transition-colors">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-5 space-y-4">
+                    <p class="text-xs text-slate-500">Pilih kolom yang akan disertakan dalam file unduhan:</p>
+                    <div class="grid grid-cols-2 gap-2" id="downloadColList"></div>
+                    <div class="border-t border-slate-100 pt-3">
+                        <p class="text-xs font-semibold text-slate-600 mb-2">Format</p>
+                        <div class="flex gap-2">
+                            <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                                <input type="radio" name="dlFormat" value="csv" checked class="accent-blue-600"> CSV
+                            </label>
+                            <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                                <input type="radio" name="dlFormat" value="excel" class="accent-blue-600"> Excel (TSV)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
+                    <button onclick="document.getElementById(&apos;downloadModal&apos;).classList.add(&apos;hidden&apos;)" class="bg-white border border-slate-300 text-slate-700 font-medium py-2 px-4 rounded-lg text-sm hover:bg-slate-50">Batal</button>
+                    <button onclick="window._doDownload()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-5 rounded-lg text-sm flex items-center gap-2">
+                        <i data-lucide="download" class="w-4 h-4"></i> Unduh
                     </button>
                 </div>
             </div>
@@ -568,16 +631,24 @@ window.getSelectedPortCode = function() {
     const raw = document.getElementById('portNameInput').value.trim().toUpperCase();
     if (!raw) return APP_CONFIG.DEFAULT_PORT_CODE;
 
-    // Cari dulu berdasarkan nama pelabuhan (yang ditampilkan di input)
+    // 1. Exact match nama pelabuhan
     const byName = PORT_LIST.find(p => p.nama_pelabuhan.toUpperCase() === raw);
     if (byName) return byName.kode_pelabuhan;
 
-    // Cari berdasarkan kode (jika user mengetik kode langsung)
+    // 2. Exact match kode pelabuhan
     const byCode = PORT_LIST.find(p => p.kode_pelabuhan.toUpperCase() === raw);
     if (byCode) return byCode.kode_pelabuhan;
 
-    // Fallback ke kode default
-    return APP_CONFIG.DEFAULT_PORT_CODE;
+    // 3. Partial match nama (startsWith)
+    const byPartial = PORT_LIST.find(p => p.nama_pelabuhan.toUpperCase().startsWith(raw));
+    if (byPartial) return byPartial.kode_pelabuhan;
+
+    // 4. Partial match nama (includes)
+    const byIncludes = PORT_LIST.find(p => p.nama_pelabuhan.toUpperCase().includes(raw));
+    if (byIncludes) return byIncludes.kode_pelabuhan;
+
+    // 5. Kembalikan raw sebagai kode jika tidak ditemukan (jangan fallback ke default)
+    return raw;
 };
 
 // ==========================================
@@ -586,6 +657,8 @@ window.getSelectedPortCode = function() {
 let APP_CONFIG = { DEFAULT_PORT_CODE: 'IDLPO', USE_SCRAPING: 'FALSE' };
 let etaChartInst = null;
 let trayekChartInst = null;
+let paxChartInst = null;
+let jenisChartInst = null;
 let currentData = [];
 
 // ==========================================
@@ -597,7 +670,7 @@ window.loadData = async function() {
     const month = document.getElementById('monthFilter').value;
 
     // Reset filter lokal
-    ['filterKapal','filterPerusahaan','filterPetugas','filterLokasi'].forEach(id => {
+    ['filterKapal','filterJenisKapal','filterPerusahaan','filterPetugas','filterLokasi'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
@@ -739,9 +812,11 @@ window.loadData = async function() {
 // BANGUN DATALIST UNTUK FILTER LOKAL
 // ==========================================
 function buildFilterDatalist(data) {
-    const kapalSet = new Set(), perusahaanSet = new Set(), petugasSet = new Set(), lokasiSet = new Set();
+    const kapalSet = new Set(), jenisKapalSet = new Set(), perusahaanSet = new Set(), petugasSet = new Set(), lokasiSet = new Set();
     data.forEach(item => {
         if (item.nama_kapal) kapalSet.add(item.nama_kapal);
+        const jk = item.jenis_kapal_xls || item.tipe_kapal;
+        if (jk && jk !== '-') jenisKapalSet.add(jk);
         const p = item.perusahaan || item.keagenan;
         if (p) perusahaanSet.add(p);
         if (item.spb_approve_fullname) petugasSet.add(item.spb_approve_fullname);
@@ -751,9 +826,10 @@ function buildFilterDatalist(data) {
 
     const fill = (id, set) => {
         const el = document.getElementById(id);
-        if (el) el.innerHTML = [...set].map(v => `<option value="${escHTML(v)}"></option>`).join('');
+        if (el) el.innerHTML = [...set].sort().map(v => `<option value="${escHTML(v)}"></option>`).join('');
     };
     fill('listKapal', kapalSet);
+    fill('listJenisKapal', jenisKapalSet);
     fill('listPerusahaan', perusahaanSet);
     fill('listPetugas', petugasSet);
     fill('listLokasi', lokasiSet);
@@ -1048,30 +1124,54 @@ function renderCharts(data) {
     const chartTitle = document.querySelector('h2.text-base.sm\\:text-lg.font-bold.text-slate-800');
     // (judul via elemen langsung lebih aman — skip)
 
+    // Juga hitung ETD per hari untuk chart kedatangan/keberangkatan
+    const etdCount = {};
+    if (!useTrayek) {
+        data.forEach(item => {
+            const etdStr = getETD(item);
+            if (!etdStr || etdStr === '-') return;
+            try {
+                let s = String(etdStr).trim();
+                const dmyMatch = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+                if (dmyMatch) s = `${dmyMatch[3]}-${dmyMatch[2].padStart(2,'0')}-${dmyMatch[1].padStart(2,'0')}`;
+                else if (s.includes(' ') && !s.includes('T')) s = s.replace(' ','T');
+                const d = new Date(s);
+                if (!isNaN(d.getTime())) {
+                    const key = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+                    etdCount[key] = (etdCount[key] || 0) + 1;
+                }
+            } catch(e) {}
+        });
+    }
+    // Gabungkan label dari ETA + ETD
+    const allDaysSet = new Set([...barLabels, ...Object.keys(etdCount)]);
+    const allDays = [...allDaysSet].sort((a,b) => {
+        const [da,ma]=a.split('/').map(Number), [db,mb]=b.split('/').map(Number);
+        return (ma*100+da)-(mb*100+db);
+    });
     const etaCtx = document.getElementById('etaChart').getContext('2d');
     if (etaChartInst) etaChartInst.destroy();
     etaChartInst = new Chart(etaCtx, {
         type: 'bar',
         data: {
-            labels: barLabels,
-            datasets: [{
-                label: 'Kapal',
-                data: barValues,
-                backgroundColor: 'rgba(59,130,246,0.7)',
-                borderColor: 'rgba(37,99,235,0.9)',
-                borderWidth: 1.5,
-                borderRadius: 4,
-            }]
+            labels: useTrayek ? barLabels : allDays,
+            datasets: useTrayek ? [{
+                label: 'Kapal', data: barValues,
+                backgroundColor: 'rgba(59,130,246,0.7)', borderColor: 'rgba(37,99,235,0.9)',
+                borderWidth: 1.5, borderRadius: 4
+            }] : [
+                { label: 'Kedatangan (ETA)', data: allDays.map(k => etaCount[k] || 0), backgroundColor: 'rgba(59,130,246,0.7)', borderColor: 'rgba(37,99,235,0.9)', borderWidth: 1.5, borderRadius: 3 },
+                { label: 'Keberangkatan (ETD)', data: allDays.map(k => etdCount[k] || 0), backgroundColor: 'rgba(245,158,11,0.65)', borderColor: 'rgba(217,119,6,0.9)', borderWidth: 1.5, borderRadius: 3 }
+            ]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
+                legend: { display: !useTrayek, position: 'top', labels: { font: { size: 10 }, boxWidth: 12, padding: 8 } },
                 title: { display: useTrayek, text: barTitle, font: { size: 12 } }
             },
             scales: {
-                y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } },
+                y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } } },
                 x: { ticks: { font: { size: 10 }, maxRotation: 45 } }
             }
         }
@@ -1101,6 +1201,71 @@ function renderCharts(data) {
             plugins: {
                 legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12, padding: 8 } }
             }
+        }
+    });
+
+    // ---- Bar chart: penumpang naik & turun per hari ----
+    const paxByDay = {};
+    data.forEach(item => {
+        const etaStr = getETA(item) || getETD(item);
+        if (!etaStr || etaStr === '-') return;
+        try {
+            let s = String(etaStr).trim();
+            const dmyMatch = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+            if (dmyMatch) s = `${dmyMatch[3]}-${dmyMatch[2].padStart(2,'0')}-${dmyMatch[1].padStart(2,'0')}`;
+            else if (s.includes(' ') && !s.includes('T')) s = s.replace(' ','T');
+            const d = new Date(s);
+            if (isNaN(d.getTime())) return;
+            const key = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+            if (!paxByDay[key]) paxByDay[key] = { naik: 0, turun: 0 };
+            paxByDay[key].naik  += getPaxNaik(item);
+            paxByDay[key].turun += getPaxTurun(item);
+        } catch(e) {}
+    });
+    const paxDays = Object.keys(paxByDay).sort((a,b) => {
+        const [da,ma] = a.split('/').map(Number), [db,mb] = b.split('/').map(Number);
+        return (ma*100+da)-(mb*100+db);
+    });
+    const paxCtx = document.getElementById('paxChart').getContext('2d');
+    if (paxChartInst) paxChartInst.destroy();
+    paxChartInst = new Chart(paxCtx, {
+        type: 'bar',
+        data: {
+            labels: paxDays,
+            datasets: [
+                { label: 'Naik',  data: paxDays.map(k => paxByDay[k].naik),  backgroundColor: 'rgba(16,185,129,0.7)',  borderColor: 'rgba(5,150,105,0.9)',  borderWidth: 1.5, borderRadius: 3 },
+                { label: 'Turun', data: paxDays.map(k => paxByDay[k].turun), backgroundColor: 'rgba(239,68,68,0.65)',  borderColor: 'rgba(220,38,38,0.9)',  borderWidth: 1.5, borderRadius: 3 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12, padding: 8 } } },
+            scales: {
+                y: { beginAtZero: true, stacked: false, ticks: { stepSize: 1, font: { size: 10 } } },
+                x: { ticks: { font: { size: 10 }, maxRotation: 45 } }
+            }
+        }
+    });
+
+    // ---- Doughnut: top jenis kapal ----
+    const jenisCount = {};
+    data.forEach(item => {
+        const jk = (item.jenis_kapal_xls || item.tipe_kapal || 'Tidak Diketahui').trim();
+        if (jk && jk !== '-') jenisCount[jk] = (jenisCount[jk] || 0) + 1;
+    });
+    const jenisEntries = Object.entries(jenisCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const jenisColors = ['#0ea5e9','#6366f1','#f59e0b','#10b981','#f97316','#8b5cf6','#14b8a6','#ec4899'];
+    const jenisCtx = document.getElementById('jenisChart').getContext('2d');
+    if (jenisChartInst) jenisChartInst.destroy();
+    jenisChartInst = new Chart(jenisCtx, {
+        type: 'doughnut',
+        data: {
+            labels: jenisEntries.map(e => e[0]),
+            datasets: [{ data: jenisEntries.map(e => e[1]), backgroundColor: jenisColors, borderWidth: 2 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 6 } } }
         }
     });
 }
@@ -1224,15 +1389,17 @@ window._goToPage = function(page) {
 // Terapkan filter → reset ke halaman 1 → paginate → render
 window._applyTableFilters = function() {
     const kw = id => (document.getElementById(id)?.value || '').toLowerCase().trim();
-    const kwKapal      = kw('filterKapal');
-    const kwPerusahaan = kw('filterPerusahaan');
-    const kwPetugas    = kw('filterPetugas');
-    const kwLokasi     = kw('filterLokasi');
-    const pageSize     = parseInt(document.getElementById('rowLimitSelect')?.value || '20');
+    const kwKapal       = kw('filterKapal');
+    const kwJenisKapal  = kw('filterJenisKapal');
+    const kwPerusahaan  = kw('filterPerusahaan');
+    const kwPetugas     = kw('filterPetugas');
+    const kwLokasi      = kw('filterLokasi');
+    const pageSize      = parseInt(document.getElementById('rowLimitSelect')?.value || '20');
 
     // Filter
     _filteredData = currentData.filter(item => {
         if (kwKapal      && !(item.nama_kapal || '').toLowerCase().includes(kwKapal))                   return false;
+        if (kwJenisKapal && !((item.jenis_kapal_xls || item.tipe_kapal || '')).toLowerCase().includes(kwJenisKapal)) return false;
         if (kwPerusahaan && !(item.perusahaan || item.keagenan || '').toLowerCase().includes(kwPerusahaan)) return false;
         if (kwPetugas    && !(item.spb_approve_fullname || '').toLowerCase().includes(kwPetugas))       return false;
         if (kwLokasi) {
@@ -1671,6 +1838,88 @@ window._deleteUser = async function(username) {
 window.handleLogout = function() {
     localStorage.removeItem(SESSION_KEY);
     window.location.href = 'login.html';
+};
+
+// ==========================================
+// DOWNLOAD DATA — pilih kolom lalu ekspor CSV/TSV
+// ==========================================
+const DOWNLOAD_COLS = [
+    { key: 'no',                   label: 'No',               get: (item, i) => i + 1 },
+    { key: 'nama_kapal',           label: 'Nama Kapal',       get: item => item.nama_kapal || '' },
+    { key: 'jenis_kapal',          label: 'Jenis Kapal',      get: item => item.jenis_kapal_xls || item.tipe_kapal || '' },
+    { key: 'perusahaan',           label: 'Perusahaan',       get: item => item.perusahaan || item.keagenan || '' },
+    { key: 'bendera',              label: 'Bendera',          get: item => item.bendera || '' },
+    { key: 'gt',                   label: 'GT',               get: item => item.gt || '' },
+    { key: 'dwt',                  label: 'DWT',              get: item => item.dwt || '' },
+    { key: 'loa',                  label: 'LOA (m)',          get: item => item.loa || '' },
+    { key: 'nomor_pkk',            label: 'No PKK',           get: item => item.nomor_pkk || '' },
+    { key: 'no_spb',               label: 'No SPB',           get: item => item.no_spb || '' },
+    { key: 'no_lk3',               label: 'No LK3',           get: item => item.no_lk3 || '' },
+    { key: 'pelabuhan_asal',       label: 'Asal',             get: item => item.pelabuhan_asal || '' },
+    { key: 'pelabuhan_tujuan',     label: 'Tujuan',           get: item => item.pelabuhan_tujuan || '' },
+    { key: 'eta',                  label: 'ETA',              get: item => item.eta || item.tgl_eta || '' },
+    { key: 'etd',                  label: 'ETD',              get: item => item.etd || item.tgl_etd || '' },
+    { key: 'trayek',               label: 'Trayek',           get: item => item.trayek_datang || item.trayek_berangkat || '' },
+    { key: 'lokasi_sandar',        label: 'Lokasi Sandar',    get: item => item.lokasi_sandar || '' },
+    { key: 'lokasi_tolak',         label: 'Lokasi Tolak',     get: item => item.lokasi_tolak || '' },
+    { key: 'penumpang_naik',       label: 'Pax Naik',         get: item => getPaxNaik(item) },
+    { key: 'penumpang_turun',      label: 'Pax Turun',        get: item => getPaxTurun(item) },
+    { key: 'nakhoda',              label: 'Nakhoda',          get: item => item.nakhoda || '' },
+    { key: 'jumlah_awak',          label: 'Jml Awak',         get: item => item.jumlah_awak || '' },
+    { key: 'petugas_spb',          label: 'Petugas SPB',      get: item => item.spb_approve_fullname || '' },
+    { key: 'nominal_billing',      label: 'Billing (Rp)',     get: item => item.nominal_billing || '' },
+];
+
+window._openDownloadModal = function() {
+    const container = document.getElementById('downloadColList');
+    if (!container) return;
+    container.innerHTML = DOWNLOAD_COLS.map(col =>
+        `<label class="flex items-center gap-1.5 text-xs cursor-pointer hover:text-blue-600">
+            <input type="checkbox" class="dl-col-check accent-blue-600" value="${col.key}" checked>
+            ${col.label}
+        </label>`
+    ).join('');
+    const modal = document.getElementById('downloadModal');
+    if (modal) { modal.classList.remove('hidden'); lucide.createIcons({ nodes: [modal] }); }
+};
+
+window._doDownload = function() {
+    const checked = [...document.querySelectorAll('.dl-col-check:checked')].map(el => el.value);
+    if (checked.length === 0) {
+        Swal.fire({ toast: true, icon: 'warning', title: 'Pilih minimal 1 kolom', timer: 2000, showConfirmButton: false, position: 'top-end' });
+        return;
+    }
+    const format = document.querySelector('input[name="dlFormat"]:checked')?.value || 'csv';
+    const sep    = format === 'excel' ? '\t' : ',';
+    const ext    = format === 'excel' ? 'tsv' : 'csv';
+    const mime   = format === 'excel' ? 'text/tab-separated-values' : 'text/csv';
+
+    const cols = DOWNLOAD_COLS.filter(c => checked.includes(c.key));
+    const header = cols.map(c => c.label).join(sep);
+    const rows   = _filteredData.map((item, i) =>
+        cols.map(c => {
+            let v = String(c.get(item, i) ?? '').replace(/\r?\n/g, ' ');
+            if (sep === ',' && (v.includes(',') || v.includes('"') || v.includes('\n'))) {
+                v = '"' + v.replace(/"/g, '""') + '"';
+            }
+            return v;
+        }).join(sep)
+    );
+
+    const content = [header, ...rows].join('\n');
+    const blob = new Blob(['\uFEFF' + content], { type: mime + ';charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const now  = new Date();
+    const ts   = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    a.href     = url;
+    a.download = `inaportnet_${ts}.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    document.getElementById('downloadModal').classList.add('hidden');
+    Swal.fire({ toast: true, icon: 'success', title: `${_filteredData.length} baris diunduh`, timer: 2000, showConfirmButton: false, position: 'top-end' });
 };
 
 // ==========================================
