@@ -117,6 +117,7 @@ window.getSelectedPortCode = function() {
 // APP STATE
 // ==========================================
 let APP_CONFIG = { DEFAULT_PORT_CODE: 'IDLPO', USE_SCRAPING: 'FALSE' };
+// default_port per-user diset di DOMContentLoaded setelah session dibaca
 let etaChartInst = null;
 let trayekChartInst = null;
 let paxChartInst = null;
@@ -1290,7 +1291,8 @@ window.openSettingsModal = function() {
         .slice().sort((a, b) => a.nama_pelabuhan.localeCompare(b.nama_pelabuhan, 'id'))
         .map(p => `<option value="${escHTML(p.kode_pelabuhan)}">${escHTML(p.nama_pelabuhan)}</option>`)
         .join('');
-    let activeCode = APP_CONFIG.DEFAULT_PORT_CODE || '';
+    // Port default: prioritas dari user session, fallback ke global config
+    let activeCode = (sessionDataObj?.default_port) || APP_CONFIG.DEFAULT_PORT_CODE || '';
     const byCode = PORT_LIST.find(p => p.kode_pelabuhan.toUpperCase() === activeCode.toUpperCase());
     if (!byCode) {
         const byName = PORT_LIST.find(p => p.nama_pelabuhan.toUpperCase() === activeCode.toUpperCase());
@@ -1337,17 +1339,28 @@ window.saveSettingsConfig = async function() {
         if (!selectedCode) { Swal.fire({ icon: 'warning', title: 'Pilih pelabuhan terlebih dahulu', showConfirmButton: false, timer: 2000 }); return; }
         const portInfo = PORT_LIST.find(p => p.kode_pelabuhan === selectedCode);
         if (!portInfo) { Swal.fire({ icon: 'error', title: 'Kode tidak valid', timer: 2000, showConfirmButton: false }); return; }
-        const newConfig = { DEFAULT_PORT_CODE: portInfo.kode_pelabuhan, USE_SCRAPING: document.getElementById('cfgScraping').value };
+
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'updateConfig', config: newConfig }) });
+            // Simpan sebagai default_port user (bukan config global)
+            const userData = {
+                username:     sessionDataObj?.username,
+                default_port: portInfo.kode_pelabuhan
+            };
+            const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'saveUser', user: userData }) });
             const res = await r.json();
             if (res.status === 'success') {
-                APP_CONFIG = { ...APP_CONFIG, ...newConfig };
-                localStorage.setItem('inaportnet_config', JSON.stringify(APP_CONFIG));
+                // Update session lokal
+                if (sessionDataObj) {
+                    sessionDataObj.default_port = portInfo.kode_pelabuhan;
+                    const sess = JSON.parse(localStorage.getItem(SESSION_KEY) || '{}');
+                    sess.default_port = portInfo.kode_pelabuhan;
+                    localStorage.setItem(SESSION_KEY, JSON.stringify(sess));
+                }
+                APP_CONFIG.DEFAULT_PORT_CODE = portInfo.kode_pelabuhan;
                 setDefaultPortInput();
                 window.closeSettingsModal();
-                Swal.fire({ icon: 'success', title: 'Tersimpan', text: `Pelabuhan: ${portInfo.nama_pelabuhan}`, timer: 2000, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Port default diperbarui', text: portInfo.nama_pelabuhan, timer: 2000, showConfirmButton: false });
             } else throw new Error(res.message);
         } catch(err) { Swal.fire({ icon: 'error', title: 'Gagal', text: err.message }); }
         return;
@@ -1418,6 +1431,17 @@ window._openUserForm = function(user) {
     document.getElementById('uRole').value     = user?.role || 'user';
     document.getElementById('uAktif').checked  = user ? user.aktif : true;
     document.getElementById('uPwdRequired').textContent = user ? '' : '*';
+
+    // Isi select port default dari PORT_LIST
+    const portSel = document.getElementById('uDefaultPort');
+    if (portSel) {
+        portSel.innerHTML = '<option value="">— Gunakan port global —</option>' +
+            PORT_LIST.slice().sort((a,b) => a.nama_pelabuhan.localeCompare(b.nama_pelabuhan,'id'))
+                .map(p => `<option value="${escHTML(p.kode_pelabuhan)}">${escHTML(p.nama_pelabuhan)}</option>`)
+                .join('');
+        portSel.value = user?.default_port || '';
+    }
+
     document.getElementById('userFormPanel').classList.remove('hidden');
 };
 
@@ -1434,8 +1458,9 @@ window._saveUser = async function() {
     const aktif    = document.getElementById('uAktif').checked;
     if (!username) { Swal.fire({ icon: 'warning', title: 'Username wajib diisi', timer: 2000, showConfirmButton: false }); return; }
     if (!_editingUsername && !password) { Swal.fire({ icon: 'warning', title: 'Password wajib untuk akun baru', timer: 2000, showConfirmButton: false }); return; }
+    const default_port = document.getElementById('uDefaultPort')?.value || '';
     try {
-        const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'saveUser', user: { username, nama, password, role, aktif } }) });
+        const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'saveUser', user: { username, nama, password, role, aktif, default_port } }) });
         const res = await r.json();
         if (res.status !== 'success') throw new Error(res.message);
         window._closeUserForm();
@@ -1706,16 +1731,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         try { APP_CONFIG = { ...APP_CONFIG, ...JSON.parse(savedConfig) }; } catch(e) {}
     }
 
-    // 3. Load daftar pelabuhan dari port.json
+    // 3. Override DEFAULT_PORT_CODE dari session user jika ada
+    if (sessionDataObj && sessionDataObj.default_port) {
+        APP_CONFIG.DEFAULT_PORT_CODE = sessionDataObj.default_port;
+    }
+
+    // 4. Load daftar pelabuhan dari port.json
     await loadPortData();
 
-    // 4. Setelah PORT_LIST tersedia dan APP_CONFIG sudah benar, set input port
+    // 5. Setelah PORT_LIST tersedia dan APP_CONFIG sudah benar, set input port
     setDefaultPortInput();
 
-    // 5. Inisiasi datalist (untuk autocomplete)
+    // 6. Inisiasi datalist (untuk autocomplete)
     initPortDatalist();
 
-    // 6. Event listener modal
+    // 7. Event listener modal
     document.getElementById('detailModal').addEventListener('click', function(e) {
         if (e.target.id === 'detailModal') window.closeDetailModal();
     });
@@ -1723,7 +1753,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.target.id === 'settingsModal') window.closeSettingsModal();
     });
 
-    // 7. Tampilkan nama & username dari session + config
+    // 8. Tampilkan nama & username dari session + config
     if (sessionDataObj) {
         const name     = sessionDataObj.name     || sessionDataObj.username || '';
         const username = sessionDataObj.username || '';
@@ -1733,9 +1763,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (unEl) unEl.textContent = escHTML(username);
     }
 
-    // 8. Mulai monitor sesi
+    // 9. Mulai monitor sesi
     startSessionMonitor();
 
-    // 9. Load data — portCode sudah pasti benar karena config & port list sudah siap
+    // 10. Load data — portCode sudah pasti benar karena config & port list sudah siap
     window.loadData();
 });
