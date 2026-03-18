@@ -503,33 +503,36 @@ function renderTable(data) {
                 </div>
             </td>
 
-            <td class="px-3 py-3 align-top" style="min-width:170px">
-                <div class="flex flex-col gap-1">
-                        <button onclick="window.openDetailModal('${uid}')"
-                            class="inline-flex items-center gap-1.5 text-[10px] font-bold py-1 px-2 rounded-md bg-blue-600 text-white border border-blue-700 hover:bg-blue-700 transition-colors shadow-sm w-full justify-start">
-                            <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                            Detail
-                        </button>
-                        <a href="${urlSPB}" target="_blank" rel="noopener noreferrer"
-                            class="inline-flex items-center gap-1.5 text-[10px] font-bold py-1 px-2 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-colors w-full justify-start ${!hasLayanan ? dis : ''}">
-                            <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                            SPB
-                        </a>
-                        <a href="${urlLK3}" target="_blank" rel="noopener noreferrer"
-                            class="inline-flex items-center gap-1.5 text-[10px] font-bold py-1 px-2 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-colors w-full justify-start ${!hasPkk ? dis : ''}">
-                            <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-                            LK3
-                        </a>
-                        <a href="${urlKru}" target="_blank" rel="noopener noreferrer"
-                            class="inline-flex items-center gap-1.5 text-[10px] font-bold py-1 px-2 rounded-md bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-600 hover:text-white hover:border-amber-600 transition-colors w-full justify-start ${!hasPkk ? dis : ''}">
-                            <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                            Kru
-                        </a>
-                        <a href="${urlManifest}" target="_blank" rel="noopener noreferrer"
-                            class="inline-flex items-center gap-1.5 text-[10px] font-bold py-1 px-2 rounded-md bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-colors w-full justify-start ${!hasLayanan ? dis : ''}">
-                            <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                            Manifest
-                        </a>
+            <td class="px-2 py-3 align-top" style="min-width:130px">
+                <div class="grid grid-cols-2 gap-1">
+                    <!-- Baris 1: Detail — full width -->
+                    <button onclick="window.openDetailModal('${uid}')"
+                        class="col-span-2 inline-flex items-center justify-center gap-1.5 text-[10px] font-bold py-1.5 px-2 rounded-lg bg-blue-600 text-white border border-blue-700 hover:bg-blue-700 transition-colors shadow-sm">
+                        <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Detail
+                    </button>
+                    <!-- Baris 2: SPB | LK3 -->
+                    <a href="${urlSPB}" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center justify-center gap-1 text-[10px] font-bold py-1.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-colors ${!hasLayanan ? dis : ''}">
+                        <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        SPB
+                    </a>
+                    <a href="${urlLK3}" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center justify-center gap-1 text-[10px] font-bold py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-colors ${!hasPkk ? dis : ''}">
+                        <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                        LK3
+                    </a>
+                    <!-- Baris 3: Kru | Manifest -->
+                    <a href="${urlKru}" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center justify-center gap-1 text-[10px] font-bold py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-600 hover:text-white hover:border-amber-600 transition-colors ${!hasPkk ? dis : ''}">
+                        <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Kru
+                    </a>
+                    <a href="${urlManifest}" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center justify-center gap-1 text-[10px] font-bold py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-colors ${!hasLayanan ? dis : ''}">
+                        <svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        Manifest
+                    </a>
                 </div>
             </td>
         </tr>`;
@@ -1005,9 +1008,19 @@ window.openDetailModal = function(uid) {
     const urlManifest = noLayananRaw ? `https://sps-inaportnet.dephub.go.id/index.php/builtin/manage/spb/detail/${noLayanan}` : '#';
     const urlLK3      = noPkkRaw    ? `https://simpadu-inaportnet.dephub.go.id/document/lk3/loadDocument/2?by=sps.nomor_pkk&keyword=${encodeURIComponent(noPkkRaw)}` : '#';
     const urlKru      = noPkkRaw    ? `https://sps-inaportnet.dephub.go.id/index.php/document/pelaut/loadDocument/2?by=sps.nomor_pkk&keyword=${encodeURIComponent(noPkkRaw)}` : '#';
+    const urlDetail   = noPkkRaw    ? `https://monitoring-inaportnet.dephub.go.id/monitoring/detail?nomor_pkk=${encodeURIComponent(noPkkRaw)}` : '#';
 
-    const dis = 'opacity-40 pointer-events-none';
-    const btnCls = (color, dis='') => `inline-flex items-center gap-1 text-[10px] font-bold py-1 px-2 rounded-md border transition-colors ${color} ${dis}`;
+    const dis    = 'opacity-40 pointer-events-none cursor-not-allowed';
+    const aktif  = (kondisi) => kondisi ? '' : dis;
+
+    // Helper tombol — ukuran penuh, ikon + label, dengan warna hover solid
+    const btn = (url, kondisi, icon, label, colorBase, colorHover) =>
+        `<a href="${url}" target="_blank" rel="noopener noreferrer"
+            class="flex items-center justify-center gap-2 py-2 px-3 rounded-xl border font-semibold text-xs transition-all duration-150 select-none
+                   ${colorBase} ${kondisi ? `hover:${colorHover} hover:text-white hover:border-transparent hover:shadow-md` : dis}">
+            <i data-lucide="${icon}" class="w-3.5 h-3.5 flex-shrink-0"></i>
+            <span>${label}</span>
+        </a>`;
 
     // ── Update header judul + tombol aksi ──
     const titleEl = document.getElementById('modalTitle');
@@ -1015,22 +1028,16 @@ window.openDetailModal = function(uid) {
 
     const actionsEl = document.getElementById('modalActions');
     if (actionsEl) actionsEl.innerHTML = `
-        <a href="${urlSPB}" target="_blank" rel="noopener noreferrer"
-            class="${btnCls('bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-600', !noLayananRaw ? dis : '')}">
-            SPB
-        </a>
-        <a href="${urlLK3}" target="_blank" rel="noopener noreferrer"
-            class="${btnCls('bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-emerald-600', !noPkkRaw ? dis : '')}">
-            LK3
-        </a>
-        <a href="${urlKru}" target="_blank" rel="noopener noreferrer"
-            class="${btnCls('bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-600 hover:text-white hover:border-amber-600', !noPkkRaw ? dis : '')}">
-            Kru
-        </a>
-        <a href="${urlManifest}" target="_blank" rel="noopener noreferrer"
-            class="${btnCls('bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600', !noLayananRaw ? dis : '')}">
-            Manifest
-        </a>`;
+        <!-- Baris 1: Detail — full width -->
+        <div class="col-span-2">
+            ${btn(urlDetail, !!noPkkRaw, 'external-link', 'Lihat Detail di Monitoring Inaportnet', 'bg-blue-50 text-blue-700 border-blue-200', 'bg-blue-600')}
+        </div>
+        <!-- Baris 2: SPB | LK3 -->
+        ${btn(urlSPB,  !!noLayananRaw, 'file-text',  'SPB',  'bg-indigo-50 text-indigo-700 border-indigo-200', 'bg-indigo-600')}
+        ${btn(urlLK3,  !!noPkkRaw,     'anchor',      'LK3',  'bg-emerald-50 text-emerald-700 border-emerald-200', 'bg-emerald-600')}
+        <!-- Baris 3: Kru | Manifest -->
+        ${btn(urlKru,      !!noPkkRaw,     'users',       'Kru',      'bg-amber-50 text-amber-700 border-amber-200', 'bg-amber-600')}
+        ${btn(urlManifest, !!noLayananRaw, 'clipboard-list', 'Manifest', 'bg-rose-50 text-rose-700 border-rose-200', 'bg-rose-600')}`;
 
     // ── Render bongkar muat ──
     const renderBongkarMuat = (items, warna) => {
