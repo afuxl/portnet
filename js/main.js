@@ -1381,35 +1381,82 @@ window._doDownload = function() {
         Swal.fire({ toast: true, icon: 'warning', title: 'Pilih minimal 1 kolom', timer: 2000, showConfirmButton: false, position: 'top-end' });
         return;
     }
-    const format = document.querySelector('input[name="dlFormat"]:checked')?.value || 'csv';
-    const sep    = format === 'excel' ? '\t' : ',';
-    const ext    = format === 'excel' ? 'tsv' : 'csv';
-    const mime   = format === 'excel' ? 'text/tab-separated-values' : 'text/csv';
 
-    const cols = DOWNLOAD_COLS.filter(c => checked.includes(c.key));
-    const header = cols.map(c => c.label).join(sep);
-    const rows   = _filteredData.map((item, i) =>
-        cols.map(c => {
-            let v = String(c.get(item, i) ?? '').replace(/\r?\n/g, ' ');
-            if (sep === ',' && (v.includes(',') || v.includes('"') || v.includes('\n'))) {
-                v = '"' + v.replace(/"/g, '""') + '"';
+    const format = document.querySelector('input[name="dlFormat"]:checked')?.value || 'xlsx';
+    const cols   = DOWNLOAD_COLS.filter(c => checked.includes(c.key));
+    const now    = new Date();
+    const ts     = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+
+    if (format === 'xlsx') {
+        // ── XLSX via SheetJS ──────────────────────────────────────
+        if (typeof XLSX === 'undefined') {
+            Swal.fire({ icon: 'error', title: 'Library XLSX belum dimuat', text: 'Coba muat ulang halaman.' });
+            return;
+        }
+
+        // Baris header + data
+        const wsData = [
+            cols.map(c => c.label),
+            ..._filteredData.map((item, i) =>
+                cols.map(c => {
+                    const v = c.get(item, i);
+                    // Kembalikan angka sebagai angka agar Excel bisa proses
+                    if (v !== null && v !== undefined && v !== '' && !isNaN(Number(v)) && String(v).trim() !== '') {
+                        return Number(v);
+                    }
+                    return String(v ?? '');
+                })
+            )
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        // Lebar kolom otomatis
+        ws['!cols'] = cols.map((c, ci) => {
+            const maxLen = Math.max(
+                c.label.length,
+                ..._filteredData.slice(0, 50).map(item => String(c.get(item, ci) ?? '').length)
+            );
+            return { wch: Math.min(Math.max(maxLen + 2, 10), 50) };
+        });
+
+        // Style baris header (bold) — SheetJS Community mendukung lewat cell style terbatas
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let C = range.s.c; C <= range.e.c; C++) {
+            const cellAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+            if (ws[cellAddr]) {
+                ws[cellAddr].s = { font: { bold: true }, fill: { fgColor: { rgb: 'E2E8F0' } } };
             }
-            return v;
-        }).join(sep)
-    );
+        }
 
-    const content = [header, ...rows].join('\n');
-    const blob = new Blob(['\uFEFF' + content], { type: mime + ';charset=utf-8' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    const now  = new Date();
-    const ts   = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-    a.href     = url;
-    a.download = `inaportnet_${ts}.${ext}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Data Inaportnet');
+        XLSX.writeFile(wb, `inaportnet_${ts}.xlsx`);
+
+    } else {
+        // ── CSV dengan encoding UTF-8 BOM ─────────────────────────
+        const header = cols.map(c => c.label).join(',');
+        const rows   = _filteredData.map((item, i) =>
+            cols.map(c => {
+                let v = String(c.get(item, i) ?? '').replace(/\r?\n/g, ' ');
+                if (v.includes(',') || v.includes('"') || v.includes('\n')) {
+                    v = '"' + v.replace(/"/g, '""') + '"';
+                }
+                return v;
+            }).join(',')
+        );
+        const content = [header, ...rows].join('\n');
+        const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `inaportnet_${ts}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
     document.getElementById('downloadModal').classList.add('hidden');
     Swal.fire({ toast: true, icon: 'success', title: `${_filteredData.length} baris diunduh`, timer: 2000, showConfirmButton: false, position: 'top-end' });
 };
