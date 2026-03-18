@@ -1509,36 +1509,50 @@ window.handleLogout = function() {
 // DOWNLOAD DATA — pilih kolom lalu ekspor CSV/TSV
 // ==========================================
 const DOWNLOAD_COLS = [
-    { key: 'no',                   label: 'No',               get: (item, i) => i + 1 },
-    { key: 'nama_kapal',           label: 'Nama Kapal',       get: item => item.nama_kapal || '' },
-    { key: 'jenis_kapal',          label: 'Jenis Kapal',      get: item => item.jenis_kapal_xls || item.tipe_kapal || '' },
-    { key: 'perusahaan',           label: 'Perusahaan',       get: item => item.perusahaan || item.keagenan || '' },
-    { key: 'bendera',              label: 'Bendera',          get: item => item.bendera || '' },
-    { key: 'gt',                   label: 'GT',               get: item => item.gt || '' },
-    { key: 'dwt',                  label: 'DWT',              get: item => item.dwt || '' },
-    { key: 'loa',                  label: 'LOA (m)',          get: item => item.loa || '' },
-    { key: 'nomor_pkk',            label: 'No PKK',           get: item => item.nomor_pkk || '' },
-    { key: 'no_spb',               label: 'No SPB',           get: item => item.no_spb || '' },
-    { key: 'no_lk3',               label: 'No LK3',           get: item => item.no_lk3 || '' },
-    { key: 'pelabuhan_asal',       label: 'Asal',             get: item => item.pelabuhan_asal || '' },
-    { key: 'pelabuhan_tujuan',     label: 'Tujuan',           get: item => item.pelabuhan_tujuan || '' },
-    { key: 'eta',                  label: 'ETA',              get: item => item.eta || item.tgl_eta || '' },
-    { key: 'etd',                  label: 'ETD',              get: item => item.etd || item.tgl_etd || '' },
-    { key: 'trayek',               label: 'Trayek',           get: item => item.trayek_datang || item.trayek_berangkat || '' },
-    { key: 'lokasi_sandar',        label: 'Lokasi Sandar',    get: item => item.lokasi_sandar || '' },
-    { key: 'lokasi_tolak',         label: 'Lokasi Tolak',     get: item => item.lokasi_tolak || '' },
-    { key: 'penumpang_naik',       label: 'Pax Naik',         get: item => getPaxNaik(item) },
-    { key: 'penumpang_turun',      label: 'Pax Turun',        get: item => getPaxTurun(item) },
-    { key: 'nakhoda',              label: 'Nakhoda',          get: item => item.nakhoda || '' },
-    { key: 'jumlah_awak',          label: 'Jml Awak',         get: item => item.jumlah_awak || '' },
-    { key: 'petugas_spb',          label: 'Petugas SPB',      get: item => item.spb_approve_fullname || '' },
-    { key: 'nominal_billing',      label: 'Billing (Rp)',     get: item => item.nominal_billing || '' },
+    { key: 'no',               label: 'No',                 checked: true,  get: (item, i) => i + 1 },
+    { key: 'nama_kapal',       label: 'Nama Kapal',         checked: true,  get: item => item.nama_kapal || '' },
+    { key: 'jenis_kapal',      label: 'Jenis Kapal',        checked: true,  get: item => item.jenis_kapal_xls || item.tipe_kapal || '' },
+    { key: 'perusahaan',       label: 'Perusahaan',         checked: true,  get: item => item.perusahaan || item.keagenan || '' },
+    { key: 'bendera',          label: 'Bendera',            checked: true,  get: item => item.bendera || '' },
+    { key: 'gt',               label: 'GT',                 checked: true,  get: item => item.gt || '' },
+    { key: 'nomor_pkk',        label: 'No PKK',             checked: true,  get: item => item.nomor_pkk || '' },
+    { key: 'no_spb',           label: 'No SPB',             checked: true,  get: item => item.no_spb || '' },
+    { key: 'no_lk3',           label: 'No LK3',             checked: false, get: item => item.no_lk3 || '' },
+    { key: 'pelabuhan_asal',   label: 'Asal',               checked: true,  get: item => item.pelabuhan_asal || '' },
+    { key: 'pelabuhan_tujuan', label: 'Tujuan',             checked: true,  get: item => item.pelabuhan_tujuan || '' },
+    { key: 'eta',              label: 'Tanggal Tiba',       checked: false, get: item => item.eta || item.tgl_eta || '' },
+    { key: 'etd',              label: 'Tanggal Berangkat',  checked: true,  get: item => item.etd || item.tgl_etd || '' },
+    { key: 'lokasi_tolak',     label: 'Lokasi Tolak',       checked: true,  get: item => item.lokasi_tolak || '' },
+    { key: 'nakhoda',          label: 'Nakhoda',            checked: false, get: item => item.nakhoda || '' },
+    { key: 'jumlah_awak',      label: 'Jml Awak',           checked: false, get: item => item.jumlah_awak || '' },
+    { key: 'petugas_spb',      label: 'Petugas SPB',        checked: true,  get: item => item.spb_approve_fullname || '' },
+    { key: 'waktu_spb',        label: 'Waktu SPB',          checked: true,  get: item => item.waktu_spb || '' },
+    { key: 'manifest',         label: 'Manifest',           checked: true,  get: item => item.manifest || '' },
     // ── Komoditi — diproses khusus di _doDownload ──
-    { key: 'bongkar_ringkas',      label: 'Bongkar (Ringkas)',get: item => (item.detail_bongkar||[]).filter(b=>b&&b.komoditi&&b.komoditi.trim()&&b.komoditi.trim()!=='-').map(b=>`${b.komoditi}${b.ton&&b.ton!=='-'?' ('+b.ton+' ton)':''}`).join(' | ') },
-    { key: 'muat_ringkas',         label: 'Muat (Ringkas)',   get: item => (item.detail_muat||[]).filter(m=>m&&m.komoditi&&m.komoditi.trim()&&m.komoditi.trim()!=='-').map(m=>`${m.komoditi}${m.ton&&m.ton!=='-'?' ('+m.ton+' ton)':''}`).join(' | ') },
+    { key: 'bongkar_ringkas',  label: 'Bongkar + Penumpang Turun', checked: false,
+      get: item => {
+          const parts = [];
+          const paxT = getPaxTurun(item);
+          if (paxT > 0) parts.push(`Penumpang (${paxT} org)`);
+          (item.detail_bongkar||[]).filter(b=>b&&b.komoditi&&b.komoditi.trim()&&b.komoditi.trim()!=='-')
+              .forEach(b => parts.push(`${b.komoditi}${b.ton&&b.ton!=='-'?' ('+b.ton+' ton)':''}`));
+          return parts.join(' | ');
+      }
+    },
+    { key: 'muat_ringkas',     label: 'Muat + Penumpang Naik',    checked: false,
+      get: item => {
+          const parts = [];
+          const paxN = getPaxNaik(item);
+          if (paxN > 0) parts.push(`Penumpang (${paxN} org)`);
+          (item.detail_muat||[]).filter(m=>m&&m.komoditi&&m.komoditi.trim()&&m.komoditi.trim()!=='-')
+              .forEach(m => parts.push(`${m.komoditi}${m.ton&&m.ton!=='-'?' ('+m.ton+' ton)':''}`));
+          return parts.join(' | ');
+      }
+    },
 ];
 
-// Kolom komoditi detail — dipakai saat mode "per komoditi"
+// Kolom komoditi detail — header: Komoditi | Jenis | Ton | M3 | Unit | Orang
+// Pax naik masuk ke Muat, pax turun masuk ke Bongkar sebagai baris "Penumpang"
 const KOMODITI_COLS = [
     { key: 'komoditi_jenis',  label: 'Jenis (B/M)' },
     { key: 'komoditi_nama',   label: 'Komoditi' },
@@ -1553,9 +1567,8 @@ window._openDownloadModal = function() {
     const container = document.getElementById('downloadColList');
     if (!container) return;
 
-    // Kelompokkan kolom: Umum | Komoditi Ringkas
-    const colsUmum     = DOWNLOAD_COLS.filter(c => !c.key.includes('ringkas'));
-    const colsRingkas  = DOWNLOAD_COLS.filter(c =>  c.key.includes('ringkas'));
+    const colsUmum    = DOWNLOAD_COLS.filter(c => !c.key.includes('ringkas'));
+    const colsRingkas = DOWNLOAD_COLS.filter(c =>  c.key.includes('ringkas'));
 
     container.innerHTML = `
         <div class="col-span-2">
@@ -1563,15 +1576,15 @@ window._openDownloadModal = function() {
         </div>
         ${colsUmum.map(col => `
         <label class="flex items-center gap-1.5 text-xs cursor-pointer hover:text-blue-600">
-            <input type="checkbox" class="dl-col-check accent-blue-600" value="${col.key}" checked>
+            <input type="checkbox" class="dl-col-check accent-blue-600" value="${col.key}" ${col.checked ? 'checked' : ''}>
             ${col.label}
         </label>`).join('')}
         <div class="col-span-2 border-t border-slate-200 mt-1 pt-2">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Komoditi</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Komoditi & Penumpang</p>
         </div>
         ${colsRingkas.map(col => `
-        <label class="flex items-center gap-1.5 text-xs cursor-pointer hover:text-blue-600">
-            <input type="checkbox" class="dl-col-check accent-blue-600" value="${col.key}">
+        <label class="flex items-center gap-1.5 text-xs cursor-pointer hover:text-blue-600 col-span-2">
+            <input type="checkbox" class="dl-col-check accent-blue-600" value="${col.key}" ${col.checked ? 'checked' : ''}>
             ${col.label}
         </label>`).join('')}`;
 
@@ -1579,7 +1592,6 @@ window._openDownloadModal = function() {
     if (modal) {
         modal.classList.remove('hidden');
         lucide.createIcons({ nodes: [modal] });
-        // Show/hide opsi mode komoditi jika kolom ringkas dipilih
         const updateModeVisibility = () => {
             const anyRingkas = !!modal.querySelector('.dl-col-check[value="bongkar_ringkas"]:checked, .dl-col-check[value="muat_ringkas"]:checked');
             const wrapper = document.getElementById('modeKomoditiWrapper');
@@ -1597,63 +1609,79 @@ window._doDownload = function() {
         return;
     }
 
-    const format      = document.querySelector('input[name="dlFormat"]:checked')?.value || 'xlsx';
+    const format       = document.querySelector('input[name="dlFormat"]:checked')?.value || 'xlsx';
     const modaKomoditi = document.querySelector('input[name="dlModeKomoditi"]:checked')?.value || 'ringkas';
-    const cols        = DOWNLOAD_COLS.filter(c => checked.includes(c.key));
-    // Kolom non-ringkas = kolom dasar yang selalu per baris
-    const colsDasar   = cols.filter(c => !c.key.includes('ringkas'));
-    const now         = new Date();
-    const ts          = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    const cols         = DOWNLOAD_COLS.filter(c => checked.includes(c.key));
+    const colsDasar    = cols.filter(c => !c.key.includes('ringkas'));
+    const now          = new Date();
+    const ts           = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
 
-    // Fungsi bantu: nilai sel
     const cellVal = (v) => {
         if (v === null || v === undefined || v === '') return '';
         if (!isNaN(Number(v)) && String(v).trim() !== '') return Number(v);
         return String(v);
     };
 
-    // ── Bangun baris data ───────────────────────────────────────
+    const adaBongkar = checked.includes('bongkar_ringkas');
+    const adaMuat    = checked.includes('muat_ringkas');
+    const adaRingkas = adaBongkar || adaMuat;
+
     let wsData;
 
-    const adaBongkarRingkas = checked.includes('bongkar_ringkas');
-    const adaMuatRingkas    = checked.includes('muat_ringkas');
-    const adaRingkas        = adaBongkarRingkas || adaMuatRingkas;
-
     if (adaRingkas && modaKomoditi === 'detail') {
-        // Mode detail: satu baris per komoditi, kolom dasar diulang
-        // Header: kolom dasar + kolom komoditi
-        const hdrKomoditi = KOMODITI_COLS.map(k => k.label);
-        wsData = [ [...colsDasar.map(c => c.label), ...hdrKomoditi] ];
+        // ── Mode detail: 1 baris per komoditi/penumpang ──────────────
+        wsData = [ [...colsDasar.map(c => c.label), ...KOMODITI_COLS.map(k => k.label)] ];
 
         _filteredData.forEach((item, i) => {
             const baseCells = colsDasar.map(c => cellVal(c.get(item, i)));
+            const entries   = [];
 
-            // Kumpulkan semua entri komoditi (bongkar + muat)
-            const entries = [];
-            if (adaBongkarRingkas) {
+            if (adaBongkar) {
+                // Penumpang turun sebagai baris pertama di Bongkar (jika ada)
+                const paxT = getPaxTurun(item);
+                if (paxT > 0) entries.push(['Bongkar', 'Penumpang', '', '', '', '', paxT]);
+
                 (item.detail_bongkar || [])
                     .filter(b => b && b.komoditi && b.komoditi.trim() && b.komoditi.trim() !== '-')
-                    .forEach(b => entries.push(['Bongkar', b.komoditi, b.jenis||'', b.ton||'', b.m3||'', b.unit||'', b.orang||'']));
+                    .forEach(b => entries.push([
+                        'Bongkar', b.komoditi, b.jenis||'',
+                        b.ton&&b.ton!=='-'?b.ton:'',
+                        b.m3&&b.m3!=='-'?b.m3:'',
+                        b.unit&&b.unit!=='-'?b.unit:'',
+                        b.orang&&b.orang!=='-'?b.orang:''
+                    ]));
             }
-            if (adaMuatRingkas) {
+
+            if (adaMuat) {
+                // Penumpang naik sebagai baris pertama di Muat (jika ada)
+                const paxN = getPaxNaik(item);
+                if (paxN > 0) entries.push(['Muat', 'Penumpang', '', '', '', '', paxN]);
+
                 (item.detail_muat || [])
                     .filter(m => m && m.komoditi && m.komoditi.trim() && m.komoditi.trim() !== '-')
-                    .forEach(m => entries.push(['Muat', m.komoditi, m.jenis||'', m.ton||'', m.m3||'', m.unit||'', m.orang||'']));
+                    .forEach(m => entries.push([
+                        'Muat', m.komoditi, m.jenis||'',
+                        m.ton&&m.ton!=='-'?m.ton:'',
+                        m.m3&&m.m3!=='-'?m.m3:'',
+                        m.unit&&m.unit!=='-'?m.unit:'',
+                        m.orang&&m.orang!=='-'?m.orang:''
+                    ]));
             }
 
             if (entries.length === 0) {
-                // Tidak ada komoditi — satu baris kosong
                 wsData.push([...baseCells, '', '', '', '', '', '', '']);
             } else {
                 entries.forEach((entry, ei) => {
-                    // Baris pertama: isi kolom dasar; baris berikutnya: kosong (merge visual)
-                    wsData.push([...(ei === 0 ? baseCells : baseCells.map(() => '')), ...entry.map(cellVal)]);
+                    wsData.push([
+                        ...(ei === 0 ? baseCells : baseCells.map(() => '')),
+                        ...entry.map(cellVal)
+                    ]);
                 });
             }
         });
 
     } else {
-        // Mode ringkas: satu baris per kapal, komoditi digabung dalam satu sel
+        // ── Mode ringkas: 1 baris per kapal ──────────────────────────
         wsData = [ cols.map(c => c.label) ];
         _filteredData.forEach((item, i) => {
             wsData.push(cols.map(c => cellVal(c.get(item, i))));
@@ -1665,29 +1693,22 @@ window._doDownload = function() {
             Swal.fire({ icon: 'error', title: 'Library XLSX belum dimuat', text: 'Coba muat ulang halaman.' });
             return;
         }
-
         const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-        // Lebar kolom otomatis
         const nCols = wsData[0].length;
         ws['!cols'] = Array.from({ length: nCols }, (_, ci) => {
             const maxLen = Math.max(...wsData.map(row => String(row[ci] ?? '').length));
             return { wch: Math.min(Math.max(maxLen + 2, 10), 60) };
         });
-
-        // Header bold
         const range = XLSX.utils.decode_range(ws['!ref']);
         for (let C = range.s.c; C <= range.e.c; C++) {
             const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
             if (cell) cell.s = { font: { bold: true }, fill: { fgColor: { rgb: 'E2E8F0' } } };
         }
-
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Data Inaportnet');
         XLSX.writeFile(wb, `inaportnet_${ts}.xlsx`);
 
     } else {
-        // CSV
         const csvRows = wsData.map(row =>
             row.map(v => {
                 let s = String(v ?? '').replace(/\r?\n/g, ' ');
