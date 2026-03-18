@@ -383,7 +383,11 @@ function renderTable(data) {
 
     const dis = 'opacity-40 pointer-events-none';
 
+    const pageSize  = parseInt(document.getElementById('rowLimitSelect')?.value || '20');
+    const rowOffset = pageSize > 0 ? (_currentPage - 1) * pageSize : 0;
+
     tbody.innerHTML = data.map((item, idx) => {
+        const rowNum = rowOffset + idx + 1;
         const namaKapal  = escHTML(item.nama_kapal);
         const perusahaan = escHTML(item.perusahaan || item.keagenan);
         const callsign   = escHTML(item.callsign || '');
@@ -440,7 +444,7 @@ function renderTable(data) {
 
         return `<tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
 
-            <td class="px-3 py-3 text-center text-slate-400 text-xs align-top pt-4">${idx + 1}</td>
+            <td class="px-3 py-3 text-center text-slate-400 text-xs align-top pt-4">${rowNum}</td>
 
             <td class="px-4 py-3 align-top" style="min-width:200px;max-width:260px">
                 <div class="flex items-start gap-1.5">
