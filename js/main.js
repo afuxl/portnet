@@ -1522,19 +1522,61 @@ const DOWNLOAD_COLS = [
     { key: 'jumlah_awak',          label: 'Jml Awak',         get: item => item.jumlah_awak || '' },
     { key: 'petugas_spb',          label: 'Petugas SPB',      get: item => item.spb_approve_fullname || '' },
     { key: 'nominal_billing',      label: 'Billing (Rp)',     get: item => item.nominal_billing || '' },
+    // ── Komoditi — diproses khusus di _doDownload ──
+    { key: 'bongkar_ringkas',      label: 'Bongkar (Ringkas)',get: item => (item.detail_bongkar||[]).filter(b=>b&&b.komoditi&&b.komoditi.trim()&&b.komoditi.trim()!=='-').map(b=>`${b.komoditi}${b.ton&&b.ton!=='-'?' ('+b.ton+' ton)':''}`).join(' | ') },
+    { key: 'muat_ringkas',         label: 'Muat (Ringkas)',   get: item => (item.detail_muat||[]).filter(m=>m&&m.komoditi&&m.komoditi.trim()&&m.komoditi.trim()!=='-').map(m=>`${m.komoditi}${m.ton&&m.ton!=='-'?' ('+m.ton+' ton)':''}`).join(' | ') },
+];
+
+// Kolom komoditi detail — dipakai saat mode "per komoditi"
+const KOMODITI_COLS = [
+    { key: 'komoditi_jenis',  label: 'Jenis (B/M)' },
+    { key: 'komoditi_nama',   label: 'Komoditi' },
+    { key: 'komoditi_jenis2', label: 'Jenis Muatan' },
+    { key: 'komoditi_ton',    label: 'Ton' },
+    { key: 'komoditi_m3',     label: 'M3' },
+    { key: 'komoditi_unit',   label: 'Unit' },
+    { key: 'komoditi_orang',  label: 'Orang' },
 ];
 
 window._openDownloadModal = function() {
     const container = document.getElementById('downloadColList');
     if (!container) return;
-    container.innerHTML = DOWNLOAD_COLS.map(col =>
-        `<label class="flex items-center gap-1.5 text-xs cursor-pointer hover:text-blue-600">
+
+    // Kelompokkan kolom: Umum | Komoditi Ringkas
+    const colsUmum     = DOWNLOAD_COLS.filter(c => !c.key.includes('ringkas'));
+    const colsRingkas  = DOWNLOAD_COLS.filter(c =>  c.key.includes('ringkas'));
+
+    container.innerHTML = `
+        <div class="col-span-2">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Informasi Kapal</p>
+        </div>
+        ${colsUmum.map(col => `
+        <label class="flex items-center gap-1.5 text-xs cursor-pointer hover:text-blue-600">
             <input type="checkbox" class="dl-col-check accent-blue-600" value="${col.key}" checked>
             ${col.label}
-        </label>`
-    ).join('');
+        </label>`).join('')}
+        <div class="col-span-2 border-t border-slate-200 mt-1 pt-2">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Komoditi</p>
+        </div>
+        ${colsRingkas.map(col => `
+        <label class="flex items-center gap-1.5 text-xs cursor-pointer hover:text-blue-600">
+            <input type="checkbox" class="dl-col-check accent-blue-600" value="${col.key}">
+            ${col.label}
+        </label>`).join('')}`;
+
     const modal = document.getElementById('downloadModal');
-    if (modal) { modal.classList.remove('hidden'); lucide.createIcons({ nodes: [modal] }); }
+    if (modal) {
+        modal.classList.remove('hidden');
+        lucide.createIcons({ nodes: [modal] });
+        // Show/hide opsi mode komoditi jika kolom ringkas dipilih
+        const updateModeVisibility = () => {
+            const anyRingkas = !!modal.querySelector('.dl-col-check[value="bongkar_ringkas"]:checked, .dl-col-check[value="muat_ringkas"]:checked');
+            const wrapper = document.getElementById('modeKomoditiWrapper');
+            if (wrapper) wrapper.classList.toggle('hidden', !anyRingkas);
+        };
+        modal.querySelectorAll('.dl-col-check').forEach(cb => cb.addEventListener('change', updateModeVisibility));
+        updateModeVisibility();
+    }
 };
 
 window._doDownload = function() {
@@ -1544,51 +1586,89 @@ window._doDownload = function() {
         return;
     }
 
-    const format = document.querySelector('input[name="dlFormat"]:checked')?.value || 'xlsx';
-    const cols   = DOWNLOAD_COLS.filter(c => checked.includes(c.key));
-    const now    = new Date();
-    const ts     = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    const format      = document.querySelector('input[name="dlFormat"]:checked')?.value || 'xlsx';
+    const modaKomoditi = document.querySelector('input[name="dlModeKomoditi"]:checked')?.value || 'ringkas';
+    const cols        = DOWNLOAD_COLS.filter(c => checked.includes(c.key));
+    // Kolom non-ringkas = kolom dasar yang selalu per baris
+    const colsDasar   = cols.filter(c => !c.key.includes('ringkas'));
+    const now         = new Date();
+    const ts          = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+
+    // Fungsi bantu: nilai sel
+    const cellVal = (v) => {
+        if (v === null || v === undefined || v === '') return '';
+        if (!isNaN(Number(v)) && String(v).trim() !== '') return Number(v);
+        return String(v);
+    };
+
+    // ── Bangun baris data ───────────────────────────────────────
+    let wsData;
+
+    const adaBongkarRingkas = checked.includes('bongkar_ringkas');
+    const adaMuatRingkas    = checked.includes('muat_ringkas');
+    const adaRingkas        = adaBongkarRingkas || adaMuatRingkas;
+
+    if (adaRingkas && modaKomoditi === 'detail') {
+        // Mode detail: satu baris per komoditi, kolom dasar diulang
+        // Header: kolom dasar + kolom komoditi
+        const hdrKomoditi = KOMODITI_COLS.map(k => k.label);
+        wsData = [ [...colsDasar.map(c => c.label), ...hdrKomoditi] ];
+
+        _filteredData.forEach((item, i) => {
+            const baseCells = colsDasar.map(c => cellVal(c.get(item, i)));
+
+            // Kumpulkan semua entri komoditi (bongkar + muat)
+            const entries = [];
+            if (adaBongkarRingkas) {
+                (item.detail_bongkar || [])
+                    .filter(b => b && b.komoditi && b.komoditi.trim() && b.komoditi.trim() !== '-')
+                    .forEach(b => entries.push(['Bongkar', b.komoditi, b.jenis||'', b.ton||'', b.m3||'', b.unit||'', b.orang||'']));
+            }
+            if (adaMuatRingkas) {
+                (item.detail_muat || [])
+                    .filter(m => m && m.komoditi && m.komoditi.trim() && m.komoditi.trim() !== '-')
+                    .forEach(m => entries.push(['Muat', m.komoditi, m.jenis||'', m.ton||'', m.m3||'', m.unit||'', m.orang||'']));
+            }
+
+            if (entries.length === 0) {
+                // Tidak ada komoditi — satu baris kosong
+                wsData.push([...baseCells, '', '', '', '', '', '', '']);
+            } else {
+                entries.forEach((entry, ei) => {
+                    // Baris pertama: isi kolom dasar; baris berikutnya: kosong (merge visual)
+                    wsData.push([...(ei === 0 ? baseCells : baseCells.map(() => '')), ...entry.map(cellVal)]);
+                });
+            }
+        });
+
+    } else {
+        // Mode ringkas: satu baris per kapal, komoditi digabung dalam satu sel
+        wsData = [ cols.map(c => c.label) ];
+        _filteredData.forEach((item, i) => {
+            wsData.push(cols.map(c => cellVal(c.get(item, i))));
+        });
+    }
 
     if (format === 'xlsx') {
-        // ── XLSX via SheetJS ──────────────────────────────────────
         if (typeof XLSX === 'undefined') {
             Swal.fire({ icon: 'error', title: 'Library XLSX belum dimuat', text: 'Coba muat ulang halaman.' });
             return;
         }
 
-        // Baris header + data
-        const wsData = [
-            cols.map(c => c.label),
-            ..._filteredData.map((item, i) =>
-                cols.map(c => {
-                    const v = c.get(item, i);
-                    // Kembalikan angka sebagai angka agar Excel bisa proses
-                    if (v !== null && v !== undefined && v !== '' && !isNaN(Number(v)) && String(v).trim() !== '') {
-                        return Number(v);
-                    }
-                    return String(v ?? '');
-                })
-            )
-        ];
-
         const ws = XLSX.utils.aoa_to_sheet(wsData);
 
         // Lebar kolom otomatis
-        ws['!cols'] = cols.map((c, ci) => {
-            const maxLen = Math.max(
-                c.label.length,
-                ..._filteredData.slice(0, 50).map(item => String(c.get(item, ci) ?? '').length)
-            );
-            return { wch: Math.min(Math.max(maxLen + 2, 10), 50) };
+        const nCols = wsData[0].length;
+        ws['!cols'] = Array.from({ length: nCols }, (_, ci) => {
+            const maxLen = Math.max(...wsData.map(row => String(row[ci] ?? '').length));
+            return { wch: Math.min(Math.max(maxLen + 2, 10), 60) };
         });
 
-        // Style baris header (bold) — SheetJS Community mendukung lewat cell style terbatas
+        // Header bold
         const range = XLSX.utils.decode_range(ws['!ref']);
         for (let C = range.s.c; C <= range.e.c; C++) {
-            const cellAddr = XLSX.utils.encode_cell({ r: 0, c: C });
-            if (ws[cellAddr]) {
-                ws[cellAddr].s = { font: { bold: true }, fill: { fgColor: { rgb: 'E2E8F0' } } };
-            }
+            const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
+            if (cell) cell.s = { font: { bold: true }, fill: { fgColor: { rgb: 'E2E8F0' } } };
         }
 
         const wb = XLSX.utils.book_new();
@@ -1596,31 +1676,25 @@ window._doDownload = function() {
         XLSX.writeFile(wb, `inaportnet_${ts}.xlsx`);
 
     } else {
-        // ── CSV dengan encoding UTF-8 BOM ─────────────────────────
-        const header = cols.map(c => c.label).join(',');
-        const rows   = _filteredData.map((item, i) =>
-            cols.map(c => {
-                let v = String(c.get(item, i) ?? '').replace(/\r?\n/g, ' ');
-                if (v.includes(',') || v.includes('"') || v.includes('\n')) {
-                    v = '"' + v.replace(/"/g, '""') + '"';
-                }
-                return v;
+        // CSV
+        const csvRows = wsData.map(row =>
+            row.map(v => {
+                let s = String(v ?? '').replace(/\r?\n/g, ' ');
+                if (s.includes(',') || s.includes('"')) s = '"' + s.replace(/"/g, '""') + '"';
+                return s;
             }).join(',')
         );
-        const content = [header, ...rows].join('\n');
-        const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8' });
+        const blob = new Blob(['\uFEFF' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8' });
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement('a');
-        a.href     = url;
-        a.download = `inaportnet_${ts}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        a.href = url; a.download = `inaportnet_${ts}.csv`;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
+    const totalBaris = wsData.length - 1;
     document.getElementById('downloadModal').classList.add('hidden');
-    Swal.fire({ toast: true, icon: 'success', title: `${_filteredData.length} baris diunduh`, timer: 2000, showConfirmButton: false, position: 'top-end' });
+    Swal.fire({ toast: true, icon: 'success', title: `${totalBaris} baris diunduh`, timer: 2000, showConfirmButton: false, position: 'top-end' });
 };
 
 // ==========================================
