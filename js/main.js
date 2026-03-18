@@ -1059,7 +1059,7 @@ window.openDetailModal = function(uid) {
                 </div>
             </div>
 
-            <!-- ③ Dokumen + Penumpang + Status -->
+            <!-- ③ Dokumen + Status -->
             <div class="bg-slate-50 rounded-xl border border-slate-200 p-3">
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dokumen & Status</p>
                 <div class="space-y-1 text-[10px]">
@@ -1067,12 +1067,29 @@ window.openDetailModal = function(uid) {
                     ${item.no_lk3 ? `<div class="flex flex-col"><span class="text-slate-400 text-[9px]">LK3</span><span class="font-mono text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[9px] break-all leading-tight">${e(item.no_lk3)}</span></div>` : ''}
                     ${item.no_spb ? `<div class="flex flex-col"><span class="text-slate-400 text-[9px]">SPB</span><span class="font-mono text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[9px] break-all leading-tight">${e(item.no_spb)}</span></div>` : ''}
                 </div>
-                <!-- Penumpang sudah di panel Rute & Jadwal -->
                 <div class="mt-2 pt-2 border-t border-slate-200 space-y-1 text-[10px]">
                     <div class="flex justify-between"><span class="text-slate-500">Billing</span><span class="font-bold text-slate-800">${fUang(item.nominal_billing)}</span></div>
-                    <div class="flex justify-between items-center"><span class="text-slate-500">Penyeberangan</span>${sTag(item.is_penyebrangan,'YA','TIDAK')}</div>
-                    <div class="flex justify-between items-center"><span class="text-slate-500">Minerba</span>${sTag(item.is_minerba,'YA','TIDAK')}</div>
+                    <div class="flex justify-between items-center"><span class="text-slate-500">Penyeberangan</span>${sTag(item.is_penyebrangan,'YA',null)}</div>
+                    <div class="flex justify-between items-center"><span class="text-slate-500">Minerba</span>${sTag(item.is_minerba,'YA',null)}</div>
+                    <div class="flex justify-between items-center"><span class="text-slate-500">Docking</span>${sTag(item.is_docking,'YA',null)}</div>
+                    <div class="flex justify-between items-center"><span class="text-slate-500">Kegiatan Tetap</span>${sTag(item.is_kegiatan_tetap,'YA',null)}</div>
+                    <div class="flex justify-between items-center"><span class="text-slate-500">Kapal Perintis</span>${sTag(item.is_perintis,'YA',null)}</div>
+                    <div class="flex justify-between items-center"><span class="text-slate-500">Tol Laut</span>${sTag(item.is_tol_laut,'YA',null)}</div>
                 </div>
+                ${(item.is_penyebrangan == 1 && (item.roda_dua_muat||item.roda_dua_bongkar||item.roda_empat_muat||item.roda_empat_bongkar||item.truk_muat||item.truk_bongkar||item.bus_muat||item.bus_bongkar||item.alat_berat_muat||item.alat_berat_bongkar)) ? `
+                <div class="mt-2 pt-2 border-t border-slate-200">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Kendaraan</p>
+                    <table class="w-full text-[9px]">
+                        <thead><tr class="text-slate-400"><th class="text-left font-semibold pb-0.5">Jenis</th><th class="text-center font-semibold">Muat</th><th class="text-center font-semibold">Bongkar</th></tr></thead>
+                        <tbody class="divide-y divide-slate-100">
+                            ${(item.roda_dua_muat||item.roda_dua_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Roda Dua</td><td class="text-center font-bold text-emerald-700">${item.roda_dua_muat||0}</td><td class="text-center font-bold text-rose-600">${item.roda_dua_bongkar||0}</td></tr>` : ''}
+                            ${(item.roda_empat_muat||item.roda_empat_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Roda Empat</td><td class="text-center font-bold text-emerald-700">${item.roda_empat_muat||0}</td><td class="text-center font-bold text-rose-600">${item.roda_empat_bongkar||0}</td></tr>` : ''}
+                            ${(item.bus_muat||item.bus_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Bus</td><td class="text-center font-bold text-emerald-700">${item.bus_muat||0}</td><td class="text-center font-bold text-rose-600">${item.bus_bongkar||0}</td></tr>` : ''}
+                            ${(item.truk_muat||item.truk_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Truk</td><td class="text-center font-bold text-emerald-700">${item.truk_muat||0}</td><td class="text-center font-bold text-rose-600">${item.truk_bongkar||0}</td></tr>` : ''}
+                            ${(item.alat_berat_muat||item.alat_berat_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Alat Berat</td><td class="text-center font-bold text-emerald-700">${item.alat_berat_muat||0}</td><td class="text-center font-bold text-rose-600">${item.alat_berat_bongkar||0}</td></tr>` : ''}
+                        </tbody>
+                    </table>
+                </div>` : ''}
             </div>
 
             <!-- ④ Bongkar & Muat — full width, tinggi lebih panjang -->
