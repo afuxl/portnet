@@ -136,6 +136,7 @@ window.loadData = async function() {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    _initFilterTanggalBounds();
 
     // Update navbar info
     const portInfo = PORT_LIST.find(p => p.kode_pelabuhan === portCode);
@@ -207,6 +208,7 @@ window.loadData = async function() {
 
         // Render
         processDataAndRender(currentData);
+        _initFilterTanggalBounds();
 
         // ── Badge sumber data permanen ──
         const srcMap = {
@@ -848,6 +850,59 @@ window._goToPage = function(page) {
 
 // Terapkan filter → reset ke halaman 1 → paginate → render
 // Terapkan filter → reset ke halaman 1 → update chart+stats → paginate → render
+// ==========================================
+// FILTER TANGGAL — helper & reset
+// ==========================================
+
+// Parse berbagai format tanggal ke string 'YYYY-MM-DD' untuk perbandingan
+function _parseDateToYMD(raw) {
+    if (!raw || raw === '-') return null;
+    const s = String(raw).trim();
+    // Format "DD-MM-YYYY HH:mm:ss" atau "DD-MM-YYYY"
+    const dmy = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+    if (dmy) return `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
+    // Format "YYYY-MM-DD" (sudah benar)
+    const ymd = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (ymd) return `${ymd[1]}-${ymd[2]}-${ymd[3]}`;
+    // Coba Date
+    try {
+        const d = new Date(s);
+        if (!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+    } catch(e) {}
+    return null;
+}
+
+// Set batas min/max date picker sesuai bulan data yang dimuat
+function _initFilterTanggalBounds() {
+    const year  = document.getElementById('yearFilter')?.value;
+    const month = document.getElementById('monthFilter')?.value;
+    if (!year || !month) return;
+
+    const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+    const minDate = `${year}-${month}-01`;
+    const maxDate = `${year}-${month}-${String(lastDay).padStart(2,'0')}`;
+
+    const dari   = document.getElementById('filterTglDari');
+    const sampai = document.getElementById('filterTglSampai');
+    if (dari)   { dari.min   = minDate; dari.max   = maxDate; dari.value   = ''; }
+    if (sampai) { sampai.min = minDate; sampai.max = maxDate; sampai.value = ''; }
+
+    const btnReset = document.getElementById('btnResetTgl');
+    const info     = document.getElementById('filterTglInfo');
+    if (btnReset) btnReset.classList.add('hidden');
+    if (info)     info.classList.add('hidden');
+}
+
+window._resetFilterTanggal = function() {
+    const dari   = document.getElementById('filterTglDari');
+    const sampai = document.getElementById('filterTglSampai');
+    if (dari)   dari.value   = '';
+    if (sampai) sampai.value = '';
+    document.getElementById('btnResetTgl')?.classList.add('hidden');
+    document.getElementById('filterTglInfo')?.classList.add('hidden');
+    window._applyTableFilters();
+};
+
 window._applyTableFilters = function() {
     const kw = id => (document.getElementById(id)?.value || '').toLowerCase().trim();
     const kwKapal       = kw('filterKapal');
@@ -855,35 +910,63 @@ window._applyTableFilters = function() {
     const kwPerusahaan  = kw('filterPerusahaan');
     const kwPetugas     = kw('filterPetugas');
     const kwLokasi      = kw('filterLokasi');
+    const tglDari       = document.getElementById('filterTglDari')?.value   || '';
+    const tglSampai     = document.getElementById('filterTglSampai')?.value || '';
     const pageSize      = parseInt(document.getElementById('rowLimitSelect')?.value || '20');
 
     // Filter
     _filteredData = currentData.filter(item => {
-        if (kwKapal      && !(item.nama_kapal || '').toLowerCase().includes(kwKapal))                   return false;
+        if (kwKapal      && !(item.nama_kapal || '').toLowerCase().includes(kwKapal))                              return false;
         if (kwJenisKapal && !((item.jenis_kapal_xls || item.tipe_kapal || '')).toLowerCase().includes(kwJenisKapal)) return false;
-        if (kwPerusahaan && !(item.perusahaan || item.keagenan || '').toLowerCase().includes(kwPerusahaan)) return false;
-        if (kwPetugas    && !(item.spb_approve_fullname || '').toLowerCase().includes(kwPetugas))       return false;
+        if (kwPerusahaan && !(item.perusahaan || item.keagenan || '').toLowerCase().includes(kwPerusahaan))        return false;
+        if (kwPetugas    && !(item.spb_approve_fullname || '').toLowerCase().includes(kwPetugas))                  return false;
         if (kwLokasi) {
             const lok = ((item.lokasi_sandar||'') + ' ' + (item.lokasi_tolak||'')).toLowerCase();
             if (!lok.includes(kwLokasi)) return false;
         }
+        // Filter tanggal — kapal lolos jika ETA atau ETD jatuh dalam rentang
+        if (tglDari || tglSampai) {
+            const etaYMD = _parseDateToYMD(getETA(item));
+            const etdYMD = _parseDateToYMD(getETD(item));
+            const inRange = (ymd) => {
+                if (!ymd) return false;
+                if (tglDari   && ymd < tglDari)   return false;
+                if (tglSampai && ymd > tglSampai) return false;
+                return true;
+            };
+            if (!inRange(etaYMD) && !inRange(etdYMD)) return false;
+        }
         return true;
     });
 
-    // Reset ke halaman 1 setiap kali filter/row-limit berubah
+    // Reset ke halaman 1
     _currentPage = 1;
 
+    // Update info & tombol reset filter tanggal
+    const btnReset = document.getElementById('btnResetTgl');
+    const info     = document.getElementById('filterTglInfo');
+    if (tglDari || tglSampai) {
+        if (btnReset) btnReset.classList.remove('hidden');
+        if (info) {
+            const fmt = d => d ? d.split('-').reverse().join('/') : '?';
+            info.textContent = tglDari && tglSampai
+                ? `${fmt(tglDari)} – ${fmt(tglSampai)}`
+                : tglDari ? `≥ ${fmt(tglDari)}` : `≤ ${fmt(tglSampai)}`;
+            info.classList.remove('hidden');
+        }
+    } else {
+        if (btnReset) btnReset.classList.add('hidden');
+        if (info)     info.classList.add('hidden');
+    }
+
     // Update summary cards dan chart sesuai data yang difilter
-    const filterActive = kwKapal || kwJenisKapal || kwPerusahaan || kwPetugas || kwLokasi;
+    const filterActive = kwKapal || kwJenisKapal || kwPerusahaan || kwPetugas || kwLokasi || tglDari || tglSampai;
     updateSummaryCards(_filteredData);
     renderCharts(_filteredData);
-    // Pertahankan tab chart yang sedang aktif
     window._switchChart(_activeChart);
 
     // Potong sesuai halaman
-    const sliced = (pageSize > 0)
-        ? _filteredData.slice(0, pageSize)
-        : _filteredData;
+    const sliced = (pageSize > 0) ? _filteredData.slice(0, pageSize) : _filteredData;
 
     // Update badge
     const badge = document.getElementById('tableRecordCount');
