@@ -1134,6 +1134,20 @@ window.openDetailModal = function(uid) {
                         ${getPaxNaik(item) > 0 ? `<div class="mt-1.5 flex items-center gap-1 bg-emerald-50 border border-emerald-100 rounded-md px-2 py-1"><span class="text-[9px] text-emerald-400 font-semibold">Naik</span><span class="text-[11px] font-bold text-emerald-600 ml-auto">${getPaxNaik(item).toLocaleString('id-ID')}</span></div>` : ''}
                     </div>
                 </div>
+                ${(item.roda_dua_muat||item.roda_dua_bongkar||item.roda_empat_muat||item.roda_empat_bongkar||item.truk_muat||item.truk_bongkar||item.bus_muat||item.bus_bongkar||item.alat_berat_muat||item.alat_berat_bongkar) ? `
+                <div class="border-t border-slate-200 pt-2 mb-2">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Kendaraan</p>
+                    <table class="w-full text-[9px]">
+                        <thead><tr class="text-slate-400 border-b border-slate-100"><th class="text-left font-semibold pb-0.5">Jenis</th><th class="text-center font-semibold">Muat</th><th class="text-center font-semibold">Bongkar</th></tr></thead>
+                        <tbody class="divide-y divide-slate-100">
+                            ${(item.roda_dua_muat||item.roda_dua_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Roda Dua</td><td class="text-center font-bold text-emerald-700">${item.roda_dua_muat||0}</td><td class="text-center font-bold text-rose-600">${item.roda_dua_bongkar||0}</td></tr>` : ''}
+                            ${(item.roda_empat_muat||item.roda_empat_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Roda Empat</td><td class="text-center font-bold text-emerald-700">${item.roda_empat_muat||0}</td><td class="text-center font-bold text-rose-600">${item.roda_empat_bongkar||0}</td></tr>` : ''}
+                            ${(item.bus_muat||item.bus_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Bus</td><td class="text-center font-bold text-emerald-700">${item.bus_muat||0}</td><td class="text-center font-bold text-rose-600">${item.bus_bongkar||0}</td></tr>` : ''}
+                            ${(item.truk_muat||item.truk_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Truk</td><td class="text-center font-bold text-emerald-700">${item.truk_muat||0}</td><td class="text-center font-bold text-rose-600">${item.truk_bongkar||0}</td></tr>` : ''}
+                            ${(item.alat_berat_muat||item.alat_berat_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Alat Berat</td><td class="text-center font-bold text-emerald-700">${item.alat_berat_muat||0}</td><td class="text-center font-bold text-rose-600">${item.alat_berat_bongkar||0}</td></tr>` : ''}
+                        </tbody>
+                    </table>
+                </div>` : ''}
                 <div class="flex flex-wrap gap-x-4 gap-y-1 text-[10px] border-t border-slate-200 pt-2">
                     ${item.trayek_datang ? `<span class="text-slate-500">Trayek Masuk <b class="text-slate-700">${e(item.trayek_datang)}</b></span>` : ''}
                     ${item.trayek_berangkat ? `<span class="text-slate-500">Trayek Keluar <b class="text-slate-700">${e(item.trayek_berangkat)}</b></span>` : ''}
@@ -1159,20 +1173,6 @@ window.openDetailModal = function(uid) {
                     <div class="flex justify-between items-center"><span class="text-slate-500">Kapal Perintis</span>${sTag(item.is_perintis,'YA',null)}</div>
                     <div class="flex justify-between items-center"><span class="text-slate-500">Tol Laut</span>${sTag(item.is_tol_laut,'YA',null)}</div>
                 </div>
-                ${(item.is_penyebrangan == 1 && (item.roda_dua_muat||item.roda_dua_bongkar||item.roda_empat_muat||item.roda_empat_bongkar||item.truk_muat||item.truk_bongkar||item.bus_muat||item.bus_bongkar||item.alat_berat_muat||item.alat_berat_bongkar)) ? `
-                <div class="mt-2 pt-2 border-t border-slate-200">
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Kendaraan</p>
-                    <table class="w-full text-[9px]">
-                        <thead><tr class="text-slate-400"><th class="text-left font-semibold pb-0.5">Jenis</th><th class="text-center font-semibold">Muat</th><th class="text-center font-semibold">Bongkar</th></tr></thead>
-                        <tbody class="divide-y divide-slate-100">
-                            ${(item.roda_dua_muat||item.roda_dua_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Roda Dua</td><td class="text-center font-bold text-emerald-700">${item.roda_dua_muat||0}</td><td class="text-center font-bold text-rose-600">${item.roda_dua_bongkar||0}</td></tr>` : ''}
-                            ${(item.roda_empat_muat||item.roda_empat_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Roda Empat</td><td class="text-center font-bold text-emerald-700">${item.roda_empat_muat||0}</td><td class="text-center font-bold text-rose-600">${item.roda_empat_bongkar||0}</td></tr>` : ''}
-                            ${(item.bus_muat||item.bus_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Bus</td><td class="text-center font-bold text-emerald-700">${item.bus_muat||0}</td><td class="text-center font-bold text-rose-600">${item.bus_bongkar||0}</td></tr>` : ''}
-                            ${(item.truk_muat||item.truk_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Truk</td><td class="text-center font-bold text-emerald-700">${item.truk_muat||0}</td><td class="text-center font-bold text-rose-600">${item.truk_bongkar||0}</td></tr>` : ''}
-                            ${(item.alat_berat_muat||item.alat_berat_bongkar) ? `<tr><td class="py-0.5 text-slate-600">Alat Berat</td><td class="text-center font-bold text-emerald-700">${item.alat_berat_muat||0}</td><td class="text-center font-bold text-rose-600">${item.alat_berat_bongkar||0}</td></tr>` : ''}
-                        </tbody>
-                    </table>
-                </div>` : ''}
             </div>
 
             <!-- ④ Bongkar & Muat — full width, tinggi lebih panjang -->
