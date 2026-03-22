@@ -350,85 +350,52 @@ function logFieldKeys(data) {
 }
 
 // State kartu khusus — field aktif saat ini
-let _khususField = 'is_penyebrangan';
+// ==========================================
+// FILTER PANEL — minimize/maximize
+// ==========================================
+let _filterPanelOpen = true;
 
-// Peta warna untuk setiap jenis — dipakai updateSummaryCards
-const _khususColorMap = {
-    is_penyebrangan:  { bg: 'bg-amber-100',  text: 'text-amber-600',  ring: 'bg-amber-50'  },
-    is_minerba:       { bg: 'bg-orange-100', text: 'text-orange-600', ring: 'bg-orange-50' },
-    is_docking:       { bg: 'bg-slate-200',  text: 'text-slate-600',  ring: 'bg-slate-100' },
-    is_perintis:      { bg: 'bg-emerald-100',text: 'text-emerald-600',ring: 'bg-emerald-50'},
-    is_tol_laut:      { bg: 'bg-blue-100',   text: 'text-blue-600',   ring: 'bg-blue-50'   },
-    is_kegiatan_tetap:{ bg: 'bg-violet-100', text: 'text-violet-600', ring: 'bg-violet-50' },
-    is_fast_boat:     { bg: 'bg-cyan-100',   text: 'text-cyan-600',   ring: 'bg-cyan-50'   },
-    is_non_niaga:     { bg: 'bg-pink-100',   text: 'text-pink-600',   ring: 'bg-pink-50'   },
+window._toggleFilterPanel = function() {
+    _filterPanelOpen = !_filterPanelOpen;
+    const panel   = document.getElementById('filterPanel');
+    const chevron = document.getElementById('filterChevron');
+    if (panel)   panel.classList.toggle('hidden', !_filterPanelOpen);
+    if (chevron) chevron.setAttribute('data-lucide', _filterPanelOpen ? 'chevron-up' : 'chevron-down');
+    lucide.createIcons({ nodes: [document.getElementById('btnMinimizeFilter')] });
 };
 
-// Ganti jenis yang ditampilkan di kartu khusus
-window._setKhususFilter = function(field, label, icon, color) {
-    _khususField = field;
-    document.getElementById('khususLabel').textContent = label;
-    document.getElementById('khususDropdown').classList.add('hidden');
+// ==========================================
+// FILTER JENIS KHUSUS — tombol pill
+// ==========================================
+let _khususField = null; // null = semua
 
-    // Update warna ikon
-    const iconEl = document.getElementById('khususIcon');
+window._setKhususFilter = function(field, label) {
+    _khususField = field;
+
+    // Update tampilan tombol aktif
+    document.querySelectorAll('[id^="khususBtn-"]').forEach(btn => {
+        btn.className = 'text-[10px] font-semibold px-2 py-1 rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 transition-colors';
+    });
+    const activeId  = field ? `khususBtn-${field}` : 'khususBtn-semua';
+    const activeBtn = document.getElementById(activeId);
+    if (activeBtn) activeBtn.className = 'text-[10px] font-semibold px-2 py-1 rounded-md border border-blue-500 bg-blue-500 text-white transition-colors';
+
+    // Update kartu summary label & ikon
+    const labelEl = document.getElementById('khususLabel');
+    const iconEl  = document.getElementById('khususIcon');
+    if (labelEl) labelEl.textContent = label || 'Semua Jenis';
     if (iconEl) {
-        const c = _khususColorMap[field] || { bg: 'bg-amber-100', text: 'text-amber-600' };
-        iconEl.className = `p-2 rounded-lg ${c.bg} ${c.text} flex-shrink-0`;
-        iconEl.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i>`;
+        const iconMap = {
+            is_penyebrangan:'ferry', is_minerba:'hard-hat', is_docking:'anchor',
+            is_perintis:'flag', is_tol_laut:'navigation', is_kegiatan_tetap:'repeat',
+            is_fast_boat:'zap', is_non_niaga:'heart-handshake'
+        };
+        iconEl.innerHTML = `<i data-lucide="${field ? (iconMap[field]||'ship') : 'ferris-wheel'}" class="w-5 h-5"></i>`;
         lucide.createIcons({ nodes: [iconEl] });
     }
 
-    // Update latar belakang dekoratif
-    const ringEl = document.getElementById('khususRing');
-    if (ringEl) {
-        const c = _khususColorMap[field] || { ring: 'bg-amber-50' };
-        ringEl.className = `absolute -right-4 -top-4 w-24 h-24 ${c.ring} rounded-full flex items-center justify-center group-hover:scale-110 transition-transform pointer-events-none`;
-    }
-
-    // Re-render angka dari data yang sedang aktif
-    updateSummaryCards(window._lastSummaryData || []);
+    window._applyTableFilters();
 };
-
-// Toggle dropdown khusus — posisi fixed mengikuti kartu agar tidak terpotong overflow
-window._toggleKhususDropdown = function(event) {
-    event.stopPropagation();
-    const dropdown = document.getElementById('khususDropdown');
-    const card     = document.getElementById('khususCard');
-    if (!dropdown || !card) return;
-
-    if (!dropdown.classList.contains('hidden')) {
-        dropdown.classList.add('hidden');
-        return;
-    }
-
-    // position: fixed — koordinat relatif viewport, TANPA scrollY
-    const rect   = card.getBoundingClientRect();
-    const minW   = Math.max(rect.width, 200);
-    let   left   = rect.left;
-
-    // Jaga agar tidak keluar sisi kanan layar
-    if (left + minW > window.innerWidth - 8) {
-        left = window.innerWidth - minW - 8;
-    }
-
-    dropdown.style.top      = (rect.bottom + 4) + 'px';
-    dropdown.style.left     = left + 'px';
-    dropdown.style.minWidth = minW + 'px';
-    dropdown.classList.remove('hidden');
-    lucide.createIcons({ nodes: [dropdown] });
-};
-
-// Tutup dropdown khusus jika klik di luar
-document.addEventListener('click', function(e) {
-    const dropdown = document.getElementById('khususDropdown');
-    const card     = document.getElementById('khususCard');
-    if (dropdown && !dropdown.classList.contains('hidden')) {
-        if (!dropdown.contains(e.target) && !card?.contains(e.target)) {
-            dropdown.classList.add('hidden');
-        }
-    }
-});
 
 function updateSummaryCards(data) {
     window._lastSummaryData = data; // simpan untuk re-render saat ganti jenis
@@ -437,8 +404,10 @@ function updateSummaryCards(data) {
     const totalGT = data.reduce((sum, i) => sum + (parseInt(i.gt) || 0), 0);
     document.getElementById('totalGT').textContent = totalGT.toLocaleString('id-ID');
 
-    // Hitung sesuai field yang sedang dipilih
-    const totalKhusus = data.filter(i => i[_khususField] == 1 || i[_khususField] === true).length;
+    // Hitung sesuai field yang sedang dipilih (null = semua)
+    const totalKhusus = _khususField
+        ? data.filter(i => i[_khususField] == 1 || i[_khususField] === true).length
+        : data.length;
     document.getElementById('totalKhusus').textContent = totalKhusus.toLocaleString('id-ID');
 
     const totalNaik = data.reduce((sum, i) => sum + getPaxNaik(i), 0);
@@ -1028,6 +997,8 @@ window._applyTableFilters = function() {
             };
             if (!inRange(etdYMD)) return false;
         }
+        // Filter jenis khusus (is_penyebrangan, is_minerba, dll)
+        if (_khususField && !(item[_khususField] == 1 || item[_khususField] === true)) return false;
         return true;
     });
 
