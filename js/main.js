@@ -198,10 +198,27 @@ window.loadData = async function() {
         // Tambah _uid unik ke setiap item
         currentData = rawData.map((item, idx) => ({ ...item, _uid: `uid_${idx}_${Date.now()}` }));
 
-        // Update timestamp — gunakan waktu dari backend/cache, bukan waktu browser
-        const fetchedAt = result.fetched_at
-            ? window.formatTanggalIndo(result.fetched_at)
-            : new Date().toLocaleString('id-ID');
+        // Update timestamp — gunakan fetched_at dari backend/cache, bukan waktu browser
+        const _formatFetchedAt = (raw) => {
+            if (!raw || raw === '-') return '-';
+            const s = String(raw).trim();
+            // Cek apakah ada komponen waktu (HH:mm)
+            const hasTime = /\d{4}-\d{2}-\d{2}[\sT]\d{2}:\d{2}/.test(s);
+            if (hasTime) {
+                // Ada jam & menit — format lengkap: "17 Maret 2026 14:35"
+                return window.formatTanggalIndo(s);
+            } else {
+                // Hanya tanggal — format: "17 Maret 2026"
+                const parts = s.substring(0, 10).split('-');
+                if (parts.length === 3) {
+                    const months = ['','Januari','Februari','Maret','April','Mei','Juni',
+                                    'Juli','Agustus','September','Oktober','November','Desember'];
+                    return `${parseInt(parts[2])} ${months[parseInt(parts[1])]} ${parts[0]}`;
+                }
+                return s.substring(0, 10);
+            }
+        };
+        const fetchedAt = _formatFetchedAt(result.fetched_at);
         document.getElementById('lastUpdated').textContent = fetchedAt;
         const mobile = document.getElementById('lastUpdatedMobile');
         if (mobile) mobile.textContent = fetchedAt;
