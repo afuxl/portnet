@@ -191,22 +191,12 @@
                     </div>
                 </div>
 
-                <!-- Kartu Jenis Kapal Khusus — interaktif dengan dropdown -->
-                <div class="glass-card rounded-xl p-3 relative group cursor-pointer lg:col-span-1"
-                     id="khususCard"
-                     onclick="window._toggleKhususDropdown(event)">
-                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform pointer-events-none" id="khususRing"></div>
-                    <div class="flex items-center gap-3 z-10 relative pointer-events-none">
-                        <div class="p-2 rounded-lg bg-amber-100 text-amber-600 flex-shrink-0" id="khususIcon">
-                            <i data-lucide="ferry" class="w-5 h-5"></i>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-1">
-                                <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider truncate" id="khususLabel">Penyeberangan</p>
-                                <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400 flex-shrink-0"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-slate-800" id="totalKhusus">0</h3>
-                        </div>
+                <div class="glass-card rounded-xl p-3 flex items-center gap-3 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
+                    <div class="p-2 rounded-lg bg-amber-100 text-amber-600 z-10" id="khususIcon"><i data-lucide="ferry" class="w-5 h-5"></i></div>
+                    <div class="z-10 min-w-0">
+                        <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider truncate" id="khususLabel">Penyeberangan</p>
+                        <h3 class="text-xl font-bold text-slate-800" id="totalKhusus">0</h3>
                     </div>
                 </div>
 
@@ -280,124 +270,180 @@
 
             <!-- Data Table -->
             <div class="glass-card rounded-xl shadow-sm overflow-hidden flex flex-col">
+            <!-- Data Table -->
+            <div class="glass-card rounded-xl shadow-sm overflow-hidden flex flex-col">
 
-                <!-- Header baris 1: judul + badge -->
+                <!-- Header: judul + badge + tombol minimize -->
                 <div class="px-4 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-white">
-                    <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                        <i data-lucide="list" class="w-4 h-4 text-blue-600"></i>
-                        Daftar Kedatangan & Keberangkatan
-                    </h2>
-                    <span class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-blue-200 whitespace-nowrap" id="tableRecordCount">0 Kapal</span>
+                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                        <i data-lucide="list" class="w-4 h-4 text-blue-600 flex-shrink-0"></i>
+                        <h2 class="text-sm font-bold text-slate-800 truncate">Daftar Kedatangan &amp; Keberangkatan</h2>
+                        <span class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-blue-200 whitespace-nowrap flex-shrink-0" id="tableRecordCount">0 Kapal</span>
+                    </div>
+                    <button onclick="window._toggleFilterPanel()"
+                        id="btnMinimizeFilter"
+                        class="flex items-center gap-1 text-xs bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-lg px-2.5 py-1.5 transition-colors flex-shrink-0"
+                        title="Sembunyikan/tampilkan panel filter">
+                        <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+                        <span class="hidden sm:inline">Filter</span>
+                        <i data-lucide="chevron-up" class="w-3 h-3" id="filterChevron"></i>
+                    </button>
                 </div>
 
-                <!-- Header baris 2: filter + row limit + toggle kolom -->
-                <div class="px-3 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap gap-2 items-center">
+                <!-- Panel filter — bisa di-minimize -->
+                <div id="filterPanel" class="bg-slate-50 border-b border-slate-200">
 
-                    <!-- Filter tanggal — baris sendiri di atas agar menonjol -->
-                    <div class="w-full flex flex-wrap items-center gap-2 pb-2 border-b border-slate-200 mb-0.5">
-                        <div class="flex items-center gap-1.5">
-                            <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-blue-500 flex-shrink-0"></i>
-                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Filter Keberangkatan (ETD)</span>
-                        </div>
+                    <!-- Baris 1: Tanggal + Jenis Khusus -->
+                    <div class="px-3 pt-2.5 pb-2 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-slate-200">
+
+                        <!-- Filter tanggal keberangkatan -->
                         <div class="flex items-center gap-1.5 flex-wrap">
+                            <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-blue-500 flex-shrink-0"></i>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">ETD</span>
                             <div class="flex items-center gap-1">
                                 <span class="text-[10px] text-slate-400">Dari</span>
-                                <input type="date" id="filterTglDari"
-                                    oninput="window._debounceFilter()"
-                                    class="text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
+                                <input type="date" id="filterTglDari" oninput="window._debounceFilter()"
+                                    class="text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                             </div>
                             <div class="flex items-center gap-1">
-                                <span class="text-[10px] text-slate-400">Sampai</span>
-                                <input type="date" id="filterTglSampai"
-                                    oninput="window._debounceFilter()"
-                                    class="text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
+                                <span class="text-[10px] text-slate-400">–</span>
+                                <input type="date" id="filterTglSampai" oninput="window._debounceFilter()"
+                                    class="text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                             </div>
-                            <button onclick="window._resetFilterTanggal()"
-                                id="btnResetTgl"
-                                class="hidden text-[10px] font-semibold text-slate-500 hover:text-rose-600 bg-white border border-slate-300 hover:border-rose-300 px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1">
-                                <i data-lucide="x" class="w-3 h-3"></i> Reset
+                            <button onclick="window._resetFilterTanggal()" id="btnResetTgl"
+                                class="hidden text-[10px] font-semibold text-rose-500 hover:text-rose-700 bg-white border border-rose-200 hover:border-rose-400 px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+                                <i data-lucide="x" class="w-3 h-3"></i>Reset
                             </button>
-                        </div>
-                        <!-- Info rentang aktif -->
-                        <span id="filterTglInfo" class="hidden text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full"></span>
-                    </div>
-
-                    <!-- Filter inputs -->
-                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
-                        <i data-lucide="ship" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
-                        <input type="search" id="filterKapal" list="listKapal" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Nama Kapal...">
-                        <datalist id="listKapal"></datalist>
-                    </div>
-                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
-                        <i data-lucide="anchor" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
-                        <input type="search" id="filterJenisKapal" list="listJenisKapal" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Jenis Kapal...">
-                        <datalist id="listJenisKapal"></datalist>
-                    </div>
-                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
-                        <i data-lucide="building" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
-                        <input type="search" id="filterPerusahaan" list="listPerusahaan" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Perusahaan...">
-                        <datalist id="listPerusahaan"></datalist>
-                    </div>
-                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
-                        <i data-lucide="user-check" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
-                        <input type="search" id="filterPetugas" list="listPetugas" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Petugas SPB...">
-                        <datalist id="listPetugas"></datalist>
-                    </div>
-                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
-                        <i data-lucide="map-pin" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
-                        <input type="search" id="filterLokasi" list="listLokasi" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Lokasi...">
-                        <datalist id="listLokasi"></datalist>
-                    </div>
-
-                    <div class="flex items-center gap-1.5 ml-auto flex-shrink-0">
-                        <!-- Row limit -->
-                        <select id="rowLimitSelect" onchange="window._applyTableFilters()" class="text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                            <option value="20">20 baris</option>
-                            <option value="50">50 baris</option>
-                            <option value="100">100 baris</option>
-                            <option value="0">Semua</option>
-                        </select>
-
-                        <!-- Download button -->
-                        <div class="relative" id="downloadWrapper">
-                            <button onclick="window._openDownloadModal()" class="flex items-center gap-1 text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 hover:bg-slate-50 transition-colors" title="Download data sebagai Excel/CSV">
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                <span class="hidden sm:inline">Unduh</span>
-                            </button>
+                            <span id="filterTglInfo" class="hidden text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full"></span>
                         </div>
 
-                        <!-- Toggle kolom dropdown -->
-                        <div class="relative" id="colToggleWrapper">
-                            <button onclick="document.getElementById('colToggleMenu').classList.toggle('hidden')" class="flex items-center gap-1 text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 hover:bg-slate-50 transition-colors">
-                                <i data-lucide="columns" class="w-3.5 h-3.5"></i>
-                                <span class="hidden sm:inline">Kolom</span>
-                            </button>
-                            <div id="colToggleMenu" class="hidden absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 p-3 min-w-[160px]">
-                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tampilkan Kolom</p>
-                                <label class="flex items-center gap-2 text-xs text-slate-700 py-1 cursor-pointer hover:text-blue-600">
-                                    <input type="checkbox" id="col-rute" checked onchange="window._toggleCol('rute')" class="rounded border-slate-300 accent-blue-600">
-                                    Rute & Trayek
-                                </label>
-                                <label class="flex items-center gap-2 text-xs text-slate-700 py-1 cursor-pointer hover:text-blue-600">
-                                    <input type="checkbox" id="col-jadwal" checked onchange="window._toggleCol('jadwal')" class="rounded border-slate-300 accent-blue-600">
-                                    Jadwal ETA/ETD
-                                </label>
-                                <label class="flex items-center gap-2 text-xs text-slate-700 py-1 cursor-pointer hover:text-blue-600">
-                                    <input type="checkbox" id="col-pax" checked onchange="window._toggleCol('pax')" class="rounded border-slate-300 accent-blue-600">
-                                    Penumpang
-                                </label>
+                        <!-- Pemisah -->
+                        <div class="hidden sm:block w-px h-5 bg-slate-200 flex-shrink-0"></div>
+
+                        <!-- Filter jenis kapal khusus -->
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <i data-lucide="tag" class="w-3.5 h-3.5 text-amber-500 flex-shrink-0"></i>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Jenis Khusus</span>
+                            <div class="flex flex-wrap gap-1">
+                                <button onclick="window._setKhususFilter(null)"
+                                    id="khususBtn-semua"
+                                    class="text-[10px] font-semibold px-2 py-1 rounded-md border border-blue-500 bg-blue-500 text-white transition-colors">
+                                    Semua
+                                </button>
+                                <button onclick="window._setKhususFilter('is_penyebrangan','Penyeberangan')"
+                                    id="khususBtn-is_penyebrangan"
+                                    class="text-[10px] font-semibold px-2 py-1 rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-amber-50 hover:border-amber-400 hover:text-amber-700 transition-colors">
+                                    Penyeberangan
+                                </button>
+                                <button onclick="window._setKhususFilter('is_minerba','Minerba')"
+                                    id="khususBtn-is_minerba"
+                                    class="text-[10px] font-semibold px-2 py-1 rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-orange-50 hover:border-orange-400 hover:text-orange-700 transition-colors">
+                                    Minerba
+                                </button>
+                                <button onclick="window._setKhususFilter('is_docking','Docking')"
+                                    id="khususBtn-is_docking"
+                                    class="text-[10px] font-semibold px-2 py-1 rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 hover:border-slate-400 transition-colors">
+                                    Docking
+                                </button>
+                                <button onclick="window._setKhususFilter('is_perintis','Kapal Perintis')"
+                                    id="khususBtn-is_perintis"
+                                    class="text-[10px] font-semibold px-2 py-1 rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-700 transition-colors">
+                                    Perintis
+                                </button>
+                                <button onclick="window._setKhususFilter('is_tol_laut','Tol Laut')"
+                                    id="khususBtn-is_tol_laut"
+                                    class="text-[10px] font-semibold px-2 py-1 rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700 transition-colors">
+                                    Tol Laut
+                                </button>
+                                <button onclick="window._setKhususFilter('is_kegiatan_tetap','Kegiatan Tetap')"
+                                    id="khususBtn-is_kegiatan_tetap"
+                                    class="text-[10px] font-semibold px-2 py-1 rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-violet-50 hover:border-violet-400 hover:text-violet-700 transition-colors">
+                                    Keg. Tetap
+                                </button>
+                                <button onclick="window._setKhususFilter('is_fast_boat','Kapal Cepat')"
+                                    id="khususBtn-is_fast_boat"
+                                    class="text-[10px] font-semibold px-2 py-1 rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-cyan-50 hover:border-cyan-400 hover:text-cyan-700 transition-colors">
+                                    Kapal Cepat
+                                </button>
+                                <button onclick="window._setKhususFilter('is_non_niaga','Non Niaga')"
+                                    id="khususBtn-is_non_niaga"
+                                    class="text-[10px] font-semibold px-2 py-1 rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-pink-50 hover:border-pink-400 hover:text-pink-700 transition-colors">
+                                    Non Niaga
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
+
+                    <!-- Baris 2: Filter teks + kontrol -->
+                    <div class="px-3 py-2.5 flex flex-wrap gap-2 items-center">
+                        <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                            <i data-lucide="ship" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                            <input type="search" id="filterKapal" list="listKapal" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Nama Kapal...">
+                            <datalist id="listKapal"></datalist>
+                        </div>
+                        <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                            <i data-lucide="anchor" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                            <input type="search" id="filterJenisKapal" list="listJenisKapal" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Jenis Kapal...">
+                            <datalist id="listJenisKapal"></datalist>
+                        </div>
+                        <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                            <i data-lucide="building" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                            <input type="search" id="filterPerusahaan" list="listPerusahaan" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Perusahaan...">
+                            <datalist id="listPerusahaan"></datalist>
+                        </div>
+                        <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                            <i data-lucide="user-check" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                            <input type="search" id="filterPetugas" list="listPetugas" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Petugas SPB...">
+                            <datalist id="listPetugas"></datalist>
+                        </div>
+                        <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                            <i data-lucide="map-pin" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                            <input type="search" id="filterLokasi" list="listLokasi" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Lokasi Tolak...">
+                            <datalist id="listLokasi"></datalist>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 ml-auto flex-shrink-0">
+                            <select id="rowLimitSelect" onchange="window._applyTableFilters()" class="text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                                <option value="20">20 baris</option>
+                                <option value="50">50 baris</option>
+                                <option value="100">100 baris</option>
+                                <option value="0">Semua</option>
+                            </select>
+                            <div class="relative" id="downloadWrapper">
+                                <button onclick="window._openDownloadModal()" class="flex items-center gap-1 text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 hover:bg-slate-50 transition-colors" title="Unduh data">
+                                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                    <span class="hidden sm:inline">Unduh</span>
+                                </button>
+                            </div>
+                            <div class="relative" id="colToggleWrapper">
+                                <button onclick="document.getElementById('colToggleMenu').classList.toggle('hidden')" class="flex items-center gap-1 text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 hover:bg-slate-50 transition-colors">
+                                    <i data-lucide="columns" class="w-3.5 h-3.5"></i>
+                                    <span class="hidden sm:inline">Kolom</span>
+                                </button>
+                                <div id="colToggleMenu" class="hidden absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 p-3 min-w-[160px]">
+                                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tampilkan Kolom</p>
+                                    <label class="flex items-center gap-2 text-xs text-slate-700 py-1 cursor-pointer hover:text-blue-600">
+                                        <input type="checkbox" id="col-rute" checked onchange="window._toggleCol('rute')" class="rounded border-slate-300 accent-blue-600">Rute &amp; Trayek
+                                    </label>
+                                    <label class="flex items-center gap-2 text-xs text-slate-700 py-1 cursor-pointer hover:text-blue-600">
+                                        <input type="checkbox" id="col-jadwal" checked onchange="window._toggleCol('jadwal')" class="rounded border-slate-300 accent-blue-600">Jadwal ETA/ETD
+                                    </label>
+                                    <label class="flex items-center gap-2 text-xs text-slate-700 py-1 cursor-pointer hover:text-blue-600">
+                                        <input type="checkbox" id="col-pax" checked onchange="window._toggleCol('pax')" class="rounded border-slate-300 accent-blue-600">Penumpang
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /filterPanel -->
 
                 <div class="table-container">
                     <table class="w-full min-w-max text-sm text-left text-slate-600 whitespace-nowrap" id="mainTable">
                         <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                             <tr>
                                 <th scope="col" class="px-3 py-2.5 font-semibold tracking-wider text-center w-10">No</th>
-                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider">Kapal & Spesifikasi</th>
-                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider col-rute">Rute & Trayek</th>
+                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider">Kapal &amp; Spesifikasi</th>
+                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider col-rute">Rute &amp; Trayek</th>
                                 <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider col-jadwal">Jadwal</th>
                                 <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider text-center col-pax">Penumpang</th>
                                 <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider text-center">Aksi</th>
@@ -620,43 +666,6 @@
             </div>
         </div>
 
-    <!-- Dropdown khusus kartu jenis — dipasang di root agar tidak ter-clip -->
-    <!-- Dropdown khusus — di luar kartu agar tidak terpotong overflow -->
-<div id="khususDropdown"
-     class="hidden fixed bg-white border border-slate-200 rounded-xl shadow-xl z-[200] py-1 min-w-[200px]">
-    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-3 pt-2 pb-1">Pilih Jenis</p>
-    <button onclick="window._setKhususFilter('is_penyebrangan','Penyeberangan','ferry','amber')"
-        class="w-full text-left px-3 py-1.5 text-xs hover:bg-amber-50 flex items-center gap-2 transition-colors">
-        <span class="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"></span>Penyeberangan
-    </button>
-    <button onclick="window._setKhususFilter('is_minerba','Minerba','hard-hat','orange')"
-        class="w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 flex items-center gap-2 transition-colors">
-        <span class="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0"></span>Minerba
-    </button>
-    <button onclick="window._setKhususFilter('is_docking','Docking','anchor','slate')"
-        class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2 transition-colors">
-        <span class="w-2 h-2 rounded-full bg-slate-400 flex-shrink-0"></span>Docking
-    </button>
-    <button onclick="window._setKhususFilter('is_perintis','Kapal Perintis','flag','emerald')"
-        class="w-full text-left px-3 py-1.5 text-xs hover:bg-emerald-50 flex items-center gap-2 transition-colors">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>Kapal Perintis
-    </button>
-    <button onclick="window._setKhususFilter('is_tol_laut','Tol Laut','navigation','blue')"
-        class="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 flex items-center gap-2 transition-colors">
-        <span class="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"></span>Tol Laut
-    </button>
-    <button onclick="window._setKhususFilter('is_kegiatan_tetap','Kegiatan Tetap','repeat','violet')"
-        class="w-full text-left px-3 py-1.5 text-xs hover:bg-violet-50 flex items-center gap-2 transition-colors">
-        <span class="w-2 h-2 rounded-full bg-violet-400 flex-shrink-0"></span>Kegiatan Tetap
-    </button>
-    <button onclick="window._setKhususFilter('is_fast_boat','Kapal Cepat','zap','cyan')"
-        class="w-full text-left px-3 py-1.5 text-xs hover:bg-cyan-50 flex items-center gap-2 transition-colors">
-        <span class="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0"></span>Kapal Cepat
-    </button>
-    <button onclick="window._setKhususFilter('is_non_niaga','Non Niaga','heart-handshake','pink')"
-        class="w-full text-left px-3 py-1.5 text-xs hover:bg-pink-50 flex items-center gap-2 transition-colors">
-        <span class="w-2 h-2 rounded-full bg-pink-400 flex-shrink-0"></span>Non Niaga
-    </button>
 
         <footer class="bg-slate-800 text-slate-400 py-6 mt-auto text-xs sm:text-sm text-center z-10 px-4">
             <p>&copy; 2026 Inaportnet Dashboard Monitoring. Data Source: dephub.go.id</p>
