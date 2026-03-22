@@ -198,11 +198,13 @@ window.loadData = async function() {
         // Tambah _uid unik ke setiap item
         currentData = rawData.map((item, idx) => ({ ...item, _uid: `uid_${idx}_${Date.now()}` }));
 
-        // Update timestamp
-        const now = new Date().toLocaleString('id-ID');
-        document.getElementById('lastUpdated').textContent = now;
+        // Update timestamp — gunakan waktu dari backend/cache, bukan waktu browser
+        const fetchedAt = result.fetched_at
+            ? window.formatTanggalIndo(result.fetched_at)
+            : new Date().toLocaleString('id-ID');
+        document.getElementById('lastUpdated').textContent = fetchedAt;
         const mobile = document.getElementById('lastUpdatedMobile');
-        if (mobile) mobile.textContent = now;
+        if (mobile) mobile.textContent = fetchedAt;
 
         // Bangun datalist filter lokal dari data
         buildFilterDatalist(currentData);
