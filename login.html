@@ -3,164 +3,666 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Dashboard Inaportnet</title>
+    <title>Dashboard Monitoring Inaportnet</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <script>
+        const SESSION_KEY = 'inaportnet_session';
+        const sessionString = localStorage.getItem(SESSION_KEY);
+        let sessionDataObj = null;
+
+        if (sessionString) {
+            try {
+                const sessionData = JSON.parse(sessionString);
+                if (Date.now() < sessionData.expiry) {
+                    sessionDataObj = sessionData;
+                } else {
+                    localStorage.removeItem(SESSION_KEY);
+                }
+            } catch (e) {
+                localStorage.removeItem(SESSION_KEY);
+            }
+        }
+
+        if (!sessionDataObj) {
+            window.location.href = 'login.html';
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
         .glass-card {
             background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.2);
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
         }
+        .table-container { width:100%; overflow-x:auto; position:relative; }
+        .table-container::-webkit-scrollbar { width:6px; height:8px; }
+        .table-container::-webkit-scrollbar-track { background:#f1f1f1; border-radius:4px; }
+        .table-container::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
+        @keyframes fadeIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+        .modal-animate { animation: fadeIn 0.2s ease-out forwards; }
+        input[type="search"]::-webkit-search-cancel-button { -webkit-appearance:searchfield-cancel-button; cursor:pointer; opacity:0.6; }
+        input[type="search"]::-webkit-search-cancel-button:hover { opacity:1; }
+
+        /* Session warning banner */
+        #sessionWarning {
+            display: none;
+            position: fixed;
+            top: 68px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            white-space: nowrap;
+        }
     </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex items-center justify-center bg-[url('/jangkar.webp')] bg-cover bg-center bg-no-repeat relative">
+<body class="text-slate-800 antialiased min-h-screen bg-slate-50">
 
-    <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-0"></div>
+    <!-- Session expiry warning -->
+    <div id="sessionWarning">⚠️ Sesi Anda akan berakhir dalam 5 menit. Simpan pekerjaan Anda.</div>
 
-    <div class="glass-card w-full max-w-md p-8 sm:p-10 rounded-2xl z-10 mx-4 shadow-2xl relative overflow-hidden border border-white/20">
-        <div class="text-center mb-8">
-            <div class="w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                <img src="/kplp.svg" alt="Jangkar" class="w-20 h-20 object-contain drop-shadow-lg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                <div class="hidden bg-blue-600 w-16 h-16 rounded-full items-center justify-center shadow-lg shadow-blue-500/40">
-                    <i data-lucide="anchor" class="w-8 h-8 text-white"></i>
-                </div>
-            </div>
-            <h1 class="text-2xl font-bold text-slate-800">SYAHBANDAR LAPUKO</h1>
-            <p class="text-slate-500 text-sm mt-1">Monitoring Pelabuhan Real-time</p>
-        </div>
+    <div id="dashboardSection" class="flex flex-col min-h-screen w-full">
 
-        <form id="loginForm" onsubmit="handleLogin(event)">
-            <div class="space-y-5">
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Username</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+        <!-- Navbar -->
+        <nav class="bg-blue-900 text-white shadow-lg sticky top-0 z-40">
+            <div class="w-full mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16 items-center">
+                    <div class="flex items-center gap-3">
+                        <img src="/jangkar.webp" alt="Jangkar" class="w-9 h-9 object-contain drop-shadow-md flex-shrink-0" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+                        <i data-lucide="anchor" class="w-8 h-8 text-blue-300 hidden"></i>
+                        <div>
+                            <h1 class="font-bold text-xl leading-tight">Inaportnet Dashboard</h1>
+                            <p class="text-xs text-blue-200">Monitoring Pelabuhan Real-time</p>
                         </div>
-                        <input type="text" id="loginUser" required
-                            class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-800 font-medium placeholder-slate-400"
-                            placeholder="Masukkan username">
                     </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <i data-lucide="lock" class="w-4 h-4 text-slate-400"></i>
+                    <div class="hidden sm:flex items-center gap-2 text-sm font-medium">
+                        <div class="bg-blue-800 px-3 py-1.5 rounded-full border border-blue-700 flex items-center gap-2 mr-2">
+                            <i data-lucide="user" class="w-4 h-4 text-blue-300"></i>
+                            <span id="displayName" class="font-semibold">–</span><span class="text-blue-300 mx-1 text-xs hidden sm:inline">·</span><span id="displayUsername" class="text-blue-200 text-xs hidden sm:inline">–</span>
                         </div>
-                        <input type="password" id="loginPass" required
-                            class="w-full pl-10 pr-10 py-2.5 bg-slate-50/50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-800 font-medium placeholder-slate-400"
-                            placeholder="••••••••">
-                        <button type="button" onclick="togglePassword()"
-                            class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
-                            <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
+                        <div class="bg-blue-800 px-3 py-1.5 rounded-full border border-blue-700 flex items-center gap-2 mr-2">
+                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                            <span id="displayPort">Memuat...</span>
+                        </div>
+                        <div class="bg-blue-800 px-3 py-1.5 rounded-full border border-blue-700 flex items-center gap-2">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                            <span id="displayPeriod">Memuat...</span>
+                        </div>
+                        <button type="button" onclick="window.openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-full border border-slate-600 transition-colors shadow-sm ml-2 outline-none" title="Pengaturan Sistem">
+                            <i data-lucide="settings" class="w-4 h-4 text-slate-200"></i>
+                        </button>
+                        <button type="button" onclick="window.handleLogout()" class="bg-rose-700 hover:bg-rose-600 p-2 rounded-full border border-rose-600 transition-colors shadow-sm ml-1 outline-none" title="Keluar">
+                            <i data-lucide="log-out" class="w-4 h-4 text-white"></i>
                         </button>
                     </div>
                 </div>
-                <button type="submit" id="loginBtn"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg mt-2 transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
-                    Masuk Sistem <i data-lucide="log-in" class="w-4 h-4"></i>
-                </button>
             </div>
-        </form>
+        </nav>
 
-        <div class="mt-8 text-center text-xs text-slate-400">
-            <p>CREATED FOR IRFAN SYAMSUL</p>
+        <!-- Main Content -->
+        <main class="flex-grow w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 z-10">
+
+            <!-- Controls / Filters -->
+            <div class="glass-card rounded-xl p-3 sm:p-4 mb-4 flex flex-col gap-3">
+                <div class="flex flex-col md:flex-row md:flex-wrap gap-4 items-start md:items-end justify-between w-full">
+                    <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-4 items-end w-full md:w-auto">
+                        <div class="col-span-1 w-full sm:w-auto">
+                            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Pilih Pelabuhan</label>
+                            <input type="search" id="portNameInput" list="portDatalist" oninput="this.value = this.value.toUpperCase()" placeholder="Ketik Nama Pelabuhan..." class="w-full sm:w-56 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-bold uppercase">
+                            <datalist id="portDatalist"></datalist>
+                        </div>
+                        <div class="col-span-1 w-full sm:w-auto">
+                            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Tahun</label>
+                            <select id="yearFilter" class="w-full sm:w-32 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2 sm:col-span-1 w-full sm:w-auto">
+                            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Bulan</label>
+                            <select id="monthFilter" class="w-full sm:w-40 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
+                                <option value="01">01 - Januari</option>
+                                <option value="02">02 - Februari</option>
+                                <option value="03">03 - Maret</option>
+                                <option value="04">04 - April</option>
+                                <option value="05">05 - Mei</option>
+                                <option value="06">06 - Juni</option>
+                                <option value="07">07 - Juli</option>
+                                <option value="08">08 - Agustus</option>
+                                <option value="09">09 - September</option>
+                                <option value="10">10 - Oktober</option>
+                                <option value="11">11 - November</option>
+                                <option value="12">12 - Desember</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2 sm:col-span-1 w-full sm:w-auto mt-2 sm:mt-0">
+                            <button type="button" id="refreshBtn" onclick="window.loadData()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-6 py-2.5 transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-500/30">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                                Memuat Data
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-sm text-slate-500 font-medium w-full md:w-auto mt-2 md:mt-0 text-left md:text-right hidden md:flex items-center gap-2">
+                        <span id="dataSourceBadge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full border"></span>
+                        <span>Diperbarui: <span id="lastUpdated" class="text-slate-800 font-semibold">-</span></span>
+                    </div>
+                </div>
+
+                <div class="text-sm text-slate-500 font-medium w-full text-left md:hidden flex items-center gap-2 mt-2">
+                    <span id="dataSourceBadgeMobile" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full border"></span>
+                    <span>Diperbarui: <span id="lastUpdatedMobile" class="text-slate-800 font-semibold">-</span></span>
+                </div>
+            </div>
+
+            <!-- Summary Widgets -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 mb-4">
+                <div class="glass-card rounded-xl p-3 flex items-center gap-3 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
+                    <div class="p-2 rounded-lg bg-blue-100 text-blue-600 z-10"><i data-lucide="ship" class="w-5 h-5"></i></div>
+                    <div class="z-10">
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Kapal</p>
+                        <h3 class="text-xl font-bold text-slate-800" id="totalShips">0</h3>
+                    </div>
+                </div>
+                <div class="glass-card rounded-xl p-3 flex items-center gap-3 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
+                    <div class="p-2 rounded-lg bg-indigo-100 text-indigo-600 z-10"><i data-lucide="weight" class="w-5 h-5"></i></div>
+                    <div class="z-10">
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total GT</p>
+                        <h3 class="text-xl font-bold text-slate-800" id="totalGT">0</h3>
+                    </div>
+                </div>
+
+                <!-- Kartu Jenis Kapal Khusus — interaktif dengan dropdown -->
+                <div class="glass-card rounded-xl p-3 relative group cursor-pointer lg:col-span-1"
+                     id="khususCard"
+                     onclick="window._toggleKhususDropdown(event)">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform pointer-events-none" id="khususRing"></div>
+                    <div class="flex items-center gap-3 z-10 relative pointer-events-none">
+                        <div class="p-2 rounded-lg bg-amber-100 text-amber-600 flex-shrink-0" id="khususIcon">
+                            <i data-lucide="ferry" class="w-5 h-5"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1">
+                                <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider truncate" id="khususLabel">Penyeberangan</p>
+                                <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400 flex-shrink-0"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-800" id="totalKhusus">0</h3>
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-3 flex items-center gap-3 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
+                    <div class="p-2 rounded-lg bg-emerald-100 text-emerald-600 z-10"><i data-lucide="user-plus" class="w-5 h-5"></i></div>
+                    <div class="z-10">
+                        <p class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Penumpang Naik</p>
+                        <h3 class="text-xl font-bold text-slate-800" id="totalPaxNaik">0</h3>
+                    </div>
+                </div>
+                <div class="glass-card rounded-xl p-3 flex items-center gap-3 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
+                    <div class="p-2 rounded-lg bg-rose-100 text-rose-600 z-10"><i data-lucide="user-minus" class="w-5 h-5"></i></div>
+                    <div class="z-10">
+                        <p class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Penumpang Turun</p>
+                        <h3 class="text-xl font-bold text-slate-800" id="totalPaxTurun">0</h3>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Charts Section — satu card dengan tab pilihan -->
+            <div class="glass-card rounded-xl p-3 sm:p-4 mb-4 shadow-sm">
+                <!-- Tab menu -->
+                <div class="flex flex-wrap gap-1 mb-3 border-b border-slate-200 pb-2">
+                    <button id="chartTab-eta" onclick="window._switchChart('eta')"
+                        class="chart-tab-btn flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-blue-600 bg-blue-600 text-white transition-colors">
+                        <i data-lucide="bar-chart-2" class="w-3.5 h-3.5"></i>
+                        <span class="hidden sm:inline">Kedatangan &amp; Keberangkatan</span>
+                        <span class="sm:hidden">ETA/ETD</span>
+                    </button>
+                    <button id="chartTab-trayek" onclick="window._switchChart('trayek')"
+                        class="chart-tab-btn flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
+                        <i data-lucide="pie-chart" class="w-3.5 h-3.5"></i>
+                        <span class="hidden sm:inline">Distribusi Trayek</span>
+                        <span class="sm:hidden">Trayek</span>
+                    </button>
+                    <button id="chartTab-pax" onclick="window._switchChart('pax')"
+                        class="chart-tab-btn flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
+                        <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                        <span class="hidden sm:inline">Penumpang</span>
+                        <span class="sm:hidden">Pax</span>
+                    </button>
+                    <button id="chartTab-jenis" onclick="window._switchChart('jenis')"
+                        class="chart-tab-btn flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
+                        <i data-lucide="anchor" class="w-3.5 h-3.5"></i>
+                        <span class="hidden sm:inline">Jenis Kapal</span>
+                        <span class="sm:hidden">Jenis</span>
+                    </button>
+                </div>
+
+                <!-- Panel-panel chart -->
+                <div id="chartPanel-eta">
+                    <p class="text-xs font-semibold text-slate-500 mb-2">Kedatangan (ETA) &amp; Keberangkatan (ETD) per Hari</p>
+                    <div class="relative w-full" style="height:260px"><canvas id="etaChart"></canvas></div>
+                </div>
+                <div id="chartPanel-trayek" class="hidden">
+                    <p class="text-xs font-semibold text-slate-500 mb-2">Distribusi Trayek Kapal</p>
+                    <div class="relative w-full flex justify-center" style="height:260px"><canvas id="trayekChart"></canvas></div>
+                </div>
+                <div id="chartPanel-pax" class="hidden">
+                    <p class="text-xs font-semibold text-slate-500 mb-2">Penumpang Naik &amp; Turun per Hari</p>
+                    <div class="relative w-full" style="height:260px"><canvas id="paxChart"></canvas></div>
+                </div>
+                <div id="chartPanel-jenis" class="hidden">
+                    <p class="text-xs font-semibold text-slate-500 mb-2">Distribusi Jenis Kapal</p>
+                    <div class="relative w-full flex justify-center" style="height:260px"><canvas id="jenisChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="glass-card rounded-xl shadow-sm overflow-hidden flex flex-col">
+
+                <!-- Header baris 1: judul + badge -->
+                <div class="px-4 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-white">
+                    <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="list" class="w-4 h-4 text-blue-600"></i>
+                        Daftar Kedatangan & Keberangkatan
+                    </h2>
+                    <span class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-blue-200 whitespace-nowrap" id="tableRecordCount">0 Kapal</span>
+                </div>
+
+                <!-- Header baris 2: filter + row limit + toggle kolom -->
+                <div class="px-3 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap gap-2 items-center">
+
+                    <!-- Filter tanggal — baris sendiri di atas agar menonjol -->
+                    <div class="w-full flex flex-wrap items-center gap-2 pb-2 border-b border-slate-200 mb-0.5">
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-blue-500 flex-shrink-0"></i>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Filter Keberangkatan (ETD)</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <div class="flex items-center gap-1">
+                                <span class="text-[10px] text-slate-400">Dari</span>
+                                <input type="date" id="filterTglDari"
+                                    oninput="window._debounceFilter()"
+                                    class="text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span class="text-[10px] text-slate-400">Sampai</span>
+                                <input type="date" id="filterTglSampai"
+                                    oninput="window._debounceFilter()"
+                                    class="text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
+                            </div>
+                            <button onclick="window._resetFilterTanggal()"
+                                id="btnResetTgl"
+                                class="hidden text-[10px] font-semibold text-slate-500 hover:text-rose-600 bg-white border border-slate-300 hover:border-rose-300 px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+                                <i data-lucide="x" class="w-3 h-3"></i> Reset
+                            </button>
+                        </div>
+                        <!-- Info rentang aktif -->
+                        <span id="filterTglInfo" class="hidden text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full"></span>
+                    </div>
+
+                    <!-- Filter inputs -->
+                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                        <i data-lucide="ship" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                        <input type="search" id="filterKapal" list="listKapal" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Nama Kapal...">
+                        <datalist id="listKapal"></datalist>
+                    </div>
+                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                        <i data-lucide="anchor" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                        <input type="search" id="filterJenisKapal" list="listJenisKapal" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Jenis Kapal...">
+                        <datalist id="listJenisKapal"></datalist>
+                    </div>
+                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                        <i data-lucide="building" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                        <input type="search" id="filterPerusahaan" list="listPerusahaan" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Perusahaan...">
+                        <datalist id="listPerusahaan"></datalist>
+                    </div>
+                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                        <i data-lucide="user-check" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                        <input type="search" id="filterPetugas" list="listPetugas" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Petugas SPB...">
+                        <datalist id="listPetugas"></datalist>
+                    </div>
+                    <div class="relative flex-1 min-w-[120px] max-w-[180px]">
+                        <i data-lucide="map-pin" class="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"></i>
+                        <input type="search" id="filterLokasi" list="listLokasi" oninput="window._debounceFilter()" class="w-full pl-7 pr-2 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Lokasi...">
+                        <datalist id="listLokasi"></datalist>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 ml-auto flex-shrink-0">
+                        <!-- Row limit -->
+                        <select id="rowLimitSelect" onchange="window._applyTableFilters()" class="text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                            <option value="20">20 baris</option>
+                            <option value="50">50 baris</option>
+                            <option value="100">100 baris</option>
+                            <option value="0">Semua</option>
+                        </select>
+
+                        <!-- Download button -->
+                        <div class="relative" id="downloadWrapper">
+                            <button onclick="window._openDownloadModal()" class="flex items-center gap-1 text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 hover:bg-slate-50 transition-colors" title="Download data sebagai Excel/CSV">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span class="hidden sm:inline">Unduh</span>
+                            </button>
+                        </div>
+
+                        <!-- Toggle kolom dropdown -->
+                        <div class="relative" id="colToggleWrapper">
+                            <button onclick="document.getElementById('colToggleMenu').classList.toggle('hidden')" class="flex items-center gap-1 text-xs bg-white border border-slate-300 text-slate-700 rounded-lg px-2 py-1.5 hover:bg-slate-50 transition-colors">
+                                <i data-lucide="columns" class="w-3.5 h-3.5"></i>
+                                <span class="hidden sm:inline">Kolom</span>
+                            </button>
+                            <div id="colToggleMenu" class="hidden absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 p-3 min-w-[160px]">
+                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tampilkan Kolom</p>
+                                <label class="flex items-center gap-2 text-xs text-slate-700 py-1 cursor-pointer hover:text-blue-600">
+                                    <input type="checkbox" id="col-rute" checked onchange="window._toggleCol('rute')" class="rounded border-slate-300 accent-blue-600">
+                                    Rute & Trayek
+                                </label>
+                                <label class="flex items-center gap-2 text-xs text-slate-700 py-1 cursor-pointer hover:text-blue-600">
+                                    <input type="checkbox" id="col-jadwal" checked onchange="window._toggleCol('jadwal')" class="rounded border-slate-300 accent-blue-600">
+                                    Jadwal ETA/ETD
+                                </label>
+                                <label class="flex items-center gap-2 text-xs text-slate-700 py-1 cursor-pointer hover:text-blue-600">
+                                    <input type="checkbox" id="col-pax" checked onchange="window._toggleCol('pax')" class="rounded border-slate-300 accent-blue-600">
+                                    Penumpang
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="w-full min-w-max text-sm text-left text-slate-600 whitespace-nowrap" id="mainTable">
+                        <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th scope="col" class="px-3 py-2.5 font-semibold tracking-wider text-center w-10">No</th>
+                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider">Kapal & Spesifikasi</th>
+                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider col-rute">Rute & Trayek</th>
+                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider col-jadwal">Jadwal</th>
+                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider text-center col-pax">Penumpang</th>
+                                <th scope="col" class="px-4 py-2.5 font-semibold tracking-wider text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100 bg-white">
+                            <tr><td colspan="6" class="px-6 py-8 text-center text-slate-500 font-medium">Silakan klik Memuat Data.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <div id="paginationBar" class="hidden px-4 py-2.5 border-t border-slate-100 bg-white flex flex-wrap items-center justify-between gap-2">
+                    <p id="paginationInfo" class="text-xs text-slate-500"></p>
+                    <div id="paginationBtns" class="flex items-center gap-1 flex-wrap"></div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Modal Detail Kapal -->
+        <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex justify-center items-end sm:items-center p-0 sm:p-6 cursor-pointer">
+            <div class="bg-white sm:rounded-2xl shadow-2xl w-full max-w-6xl max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden modal-animate border border-slate-200 rounded-t-2xl cursor-default" onclick="event.stopPropagation()">
+                <div class="px-4 sm:px-6 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50 gap-3 flex-wrap">
+                    <h3 id="modalTitle" class="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2 min-w-0 flex-1">
+                        <div class="bg-blue-100 p-1.5 rounded-lg text-blue-600 flex-shrink-0"><i data-lucide="ship" class="w-4 h-4"></i></div>
+                        <span class="truncate">Informasi Kapal</span>
+                    </h3>
+                    <!-- Tombol aksi dokumen di header -->
+                    <div id="modalActions" class="flex items-center gap-1.5 flex-shrink-0 flex-wrap"></div>
+                    <button type="button" onclick="window.closeDetailModal()" class="text-slate-400 hover:text-rose-500 bg-white hover:bg-rose-50 p-1.5 rounded-full transition-colors outline-none border border-slate-200 flex-shrink-0">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="px-4 sm:px-6 py-4 sm:py-6 overflow-y-auto flex-grow bg-white" id="modalBody"></div>
+                <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 flex justify-end bg-slate-50">
+                    <button type="button" onclick="window.closeDetailModal()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-md">
+                        Tutup Panel
+                    </button>
+                </div>
+            </div>
         </div>
+
+        <!-- Modal Download -->
+        <div id="downloadModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex justify-center items-center p-4 cursor-pointer">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden modal-animate border border-slate-200 cursor-default" onclick="event.stopPropagation()">
+                <!-- Header -->
+                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <div class="bg-emerald-100 p-1.5 rounded-lg text-emerald-700"><i data-lucide="download" class="w-4 h-4"></i></div>
+                        Unduh Data
+                    </h3>
+                    <button onclick="document.getElementById('downloadModal').classList.add('hidden')" class="text-slate-400 hover:text-rose-500 bg-white p-1.5 rounded-full border border-slate-200 transition-colors">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <!-- Body -->
+                <div class="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+                    <p class="text-xs text-slate-500">Pilih kolom yang akan disertakan dalam file unduhan:</p>
+                    <div class="grid grid-cols-2 gap-2" id="downloadColList"></div>
+                    <div class="border-t border-slate-100 pt-3">
+                        <p class="text-xs font-semibold text-slate-600 mb-2">Format</p>
+                        <div class="flex flex-wrap gap-3">
+                            <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                                <input type="radio" name="dlFormat" value="xlsx" checked class="accent-blue-600">
+                                <span class="font-semibold text-emerald-700">Excel (.xlsx)</span>
+                                <span class="text-[10px] text-slate-400">— Langsung terbaca Excel</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                                <input type="radio" name="dlFormat" value="csv" class="accent-blue-600">
+                                <span>CSV (.csv)</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="modeKomoditiWrapper" class="border-t border-slate-100 pt-3 hidden">
+                        <p class="text-xs font-semibold text-slate-600 mb-2">Tampilan Komoditi</p>
+                        <div class="flex flex-wrap gap-3">
+                            <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                                <input type="radio" name="dlModeKomoditi" value="ringkas" checked class="accent-blue-600">
+                                <span>Ringkas</span>
+                                <span class="text-[10px] text-slate-400">— 1 baris/kapal, komoditi digabung</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                                <input type="radio" name="dlModeKomoditi" value="detail" class="accent-blue-600">
+                                <span>Detail</span>
+                                <span class="text-[10px] text-slate-400">— 1 baris/komoditi</span>
+                            </label>
+                        </div>
+                    </div>
+                    <!-- Tombol aksi dalam body, menyatu -->
+                    <div class="border-t border-slate-100 pt-4 flex justify-end gap-3">
+                        <button onclick="document.getElementById('downloadModal').classList.add('hidden')" class="bg-white border border-slate-300 text-slate-700 font-medium py-2 px-4 rounded-lg text-sm hover:bg-slate-50 transition-colors">Batal</button>
+                        <button onclick="window._doDownload()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-5 rounded-lg text-sm flex items-center gap-2 transition-colors">
+                            <i data-lucide="download" class="w-4 h-4"></i> Unduh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Pengaturan -->
+        <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex justify-center items-center p-4 cursor-pointer">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden modal-animate border border-slate-200 cursor-default" onclick="event.stopPropagation()">
+                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <div class="bg-slate-200 p-1.5 rounded-lg text-slate-700"><i data-lucide="settings" class="w-5 h-5"></i></div>
+                        Pengaturan Sistem
+                    </h3>
+                    <button type="button" onclick="window.closeSettingsModal()" class="text-slate-400 hover:text-rose-500 bg-white p-1.5 rounded-full transition-colors outline-none border border-slate-200">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Tab -->
+                <div class="flex border-b border-slate-200 bg-slate-50 px-6">
+                    <button id="tabSistem" onclick="window._switchTab('sistem')" class="text-xs font-bold py-2.5 px-3 border-b-2 border-blue-600 text-blue-600 transition-colors">Sistem</button>
+                    <button id="tabAkun" onclick="window._switchTab('akun')" class="text-xs font-bold py-2.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Akun Saya</button>
+                    <button id="tabUsers" onclick="window._switchTab('users')" class="text-xs font-bold py-2.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors hidden">Pengguna</button>
+                </div>
+
+                <!-- Tab: Sistem -->
+                <div id="panelSistem" class="p-5 bg-white space-y-3 overflow-y-auto max-h-[60vh]">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Pelabuhan Default</label>
+                        <select id="cfgPortCode" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Metode Cetak Dokumen</label>
+                        <select id="cfgScraping" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
+                            <option value="TRUE">Gunakan Scraping (Direct PDF - Eksperimental)</option>
+                            <option value="FALSE">Pencarian Standar Inaportnet (Aman)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tab: Akun Saya -->
+                <div id="panelAkun" class="p-5 bg-white space-y-3 overflow-y-auto max-h-[60vh] hidden">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap</label>
+                        <input type="text" id="cfgAuthName" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg p-2.5 outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Nama Pengguna">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Username</label>
+                        <input type="text" id="cfgAuthUsername" class="w-full bg-slate-100 border border-slate-200 text-slate-500 text-sm rounded-lg p-2.5 outline-none font-mono" placeholder="username" readonly>
+                        <p class="text-[10px] text-slate-400 mt-1">Username tidak dapat diubah dari sini.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Password Baru</label>
+                        <div class="relative">
+                            <input type="password" id="cfgAuthPassword" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg p-2.5 pr-10 outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Kosongkan jika tidak ingin mengubah" autocomplete="new-password">
+                            <button type="button" onclick="window._togglePwdVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                                <i data-lucide="eye" id="pwdEyeIcon" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Konfirmasi Password Baru</label>
+                        <input type="password" id="cfgAuthPasswordConfirm" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg p-2.5 outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Ulangi password baru" autocomplete="new-password">
+                    </div>
+                </div>
+
+                <!-- Tab: Pengguna (admin only) -->
+                <div id="panelUsers" class="p-5 bg-white overflow-y-auto max-h-[60vh] hidden">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Daftar Pengguna</p>
+                        <button onclick="window._openUserForm(null)" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors">
+                            <i data-lucide="user-plus" class="w-3 h-3"></i> Tambah
+                        </button>
+                    </div>
+                    <div id="userListContainer" class="space-y-2">
+                        <p class="text-xs text-slate-400 text-center py-4">Memuat...</p>
+                    </div>
+                    <!-- Form tambah/edit user -->
+                    <div id="userFormPanel" class="hidden mt-4 pt-4 border-t border-slate-200 space-y-2.5">
+                        <p id="userFormTitle" class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Tambah Pengguna</p>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Username <span class="text-rose-500">*</span></label>
+                            <input type="text" id="uUsername" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg p-2 outline-none font-mono focus:ring-blue-500 focus:border-blue-500" placeholder="username" autocomplete="off">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap</label>
+                            <input type="text" id="uNama" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg p-2 outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Nama lengkap">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Password <span id="uPwdRequired" class="text-rose-500">*</span></label>
+                                <input type="password" id="uPassword" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg p-2 outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="••••••••" autocomplete="new-password">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Role</label>
+                                <select id="uRole" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg p-2 outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="uAktif" checked class="accent-blue-600">
+                            <label for="uAktif" class="text-xs font-semibold text-slate-600">Akun Aktif</label>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Port Default</label>
+                            <select id="uDefaultPort" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg p-2 outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">— Gunakan port global —</option>
+                                <!-- Diisi JS dari PORT_LIST -->
+                            </select>
+                        </div>
+                        <div class="flex gap-2 pt-1">
+                            <button onclick="window._saveUser()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded-lg transition-colors">Simpan</button>
+                            <button onclick="window._closeUserForm()" class="flex-1 bg-white border border-slate-300 text-slate-600 text-xs font-bold py-2 rounded-lg hover:bg-slate-50 transition-colors">Batal</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
+                    <button type="button" onclick="window.closeSettingsModal()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors">Batal</button>
+                    <button id="btnSimpanSettings" type="button" onclick="window.saveSettingsConfig()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg transition-colors shadow-md flex items-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    <!-- Dropdown khusus kartu jenis — dipasang di root agar tidak ter-clip -->
+    <!-- Dropdown khusus — di luar kartu agar tidak terpotong overflow -->
+<div id="khususDropdown"
+     class="hidden fixed bg-white border border-slate-200 rounded-xl shadow-xl z-[200] py-1 min-w-[200px]">
+    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-3 pt-2 pb-1">Pilih Jenis</p>
+    <button onclick="window._setKhususFilter('is_penyebrangan','Penyeberangan','ferry','amber')"
+        class="w-full text-left px-3 py-1.5 text-xs hover:bg-amber-50 flex items-center gap-2 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"></span>Penyeberangan
+    </button>
+    <button onclick="window._setKhususFilter('is_minerba','Minerba','hard-hat','orange')"
+        class="w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 flex items-center gap-2 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0"></span>Minerba
+    </button>
+    <button onclick="window._setKhususFilter('is_docking','Docking','anchor','slate')"
+        class="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-2 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-slate-400 flex-shrink-0"></span>Docking
+    </button>
+    <button onclick="window._setKhususFilter('is_perintis','Kapal Perintis','flag','emerald')"
+        class="w-full text-left px-3 py-1.5 text-xs hover:bg-emerald-50 flex items-center gap-2 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>Kapal Perintis
+    </button>
+    <button onclick="window._setKhususFilter('is_tol_laut','Tol Laut','navigation','blue')"
+        class="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 flex items-center gap-2 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"></span>Tol Laut
+    </button>
+    <button onclick="window._setKhususFilter('is_kegiatan_tetap','Kegiatan Tetap','repeat','violet')"
+        class="w-full text-left px-3 py-1.5 text-xs hover:bg-violet-50 flex items-center gap-2 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-violet-400 flex-shrink-0"></span>Kegiatan Tetap
+    </button>
+    <button onclick="window._setKhususFilter('is_fast_boat','Kapal Cepat','zap','cyan')"
+        class="w-full text-left px-3 py-1.5 text-xs hover:bg-cyan-50 flex items-center gap-2 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0"></span>Kapal Cepat
+    </button>
+    <button onclick="window._setKhususFilter('is_non_niaga','Non Niaga','heart-handshake','pink')"
+        class="w-full text-left px-3 py-1.5 text-xs hover:bg-pink-50 flex items-center gap-2 transition-colors">
+        <span class="w-2 h-2 rounded-full bg-pink-400 flex-shrink-0"></span>Non Niaga
+    </button>
+
+        <footer class="bg-slate-800 text-slate-400 py-6 mt-auto text-xs sm:text-sm text-center z-10 px-4">
+            <p>&copy; 2026 Inaportnet Dashboard Monitoring. Data Source: dephub.go.id</p>
+        </footer>
     </div>
 
-<script>
-    lucide.createIcons();
-
-    // WAJIB DIISI: URL GAS WEB APP
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwAZV6iSElbw8XDTvR8IqalIwlhky-C1ozxK_NUIhWLGYf63U5fqOyhdGngl1KVey09rg/exec";
-
-    const SESSION_KEY    = 'inaportnet_session';
-    const SESSION_DURATION = 60 * 60 * 1000; // 1 jam
-
-    // Redirect jika sudah login
-    document.addEventListener('DOMContentLoaded', () => {
-        try {
-            const s = JSON.parse(localStorage.getItem(SESSION_KEY) || '{}');
-            if (s.expiry && Date.now() < s.expiry) {
-                window.location.href = 'index.html';
-            } else {
-                localStorage.removeItem(SESSION_KEY);
-            }
-        } catch(e) { localStorage.removeItem(SESSION_KEY); }
-    });
-
-    function togglePassword() {
-        const input   = document.getElementById('loginPass');
-        const icon    = document.getElementById('eyeIcon');
-        const isHidden = input.type === 'password';
-        input.type = isHidden ? 'text' : 'password';
-        icon.setAttribute('data-lucide', isHidden ? 'eye-off' : 'eye');
-        lucide.createIcons({ nodes: [icon.parentElement] });
-    }
-
-    async function handleLogin(event) {
-        event.preventDefault();
-        const user = document.getElementById('loginUser').value.trim();
-        const pass = document.getElementById('loginPass').value;
-        const btn  = document.getElementById('loginBtn');
-
-        const origHTML = btn.innerHTML;
-        btn.innerHTML  = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Memverifikasi...';
-        btn.disabled   = true;
-        lucide.createIcons();
-
-        try {
-            const response = await fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'login', username: user, password: pass })
-            });
-
-            if (!response.ok) throw new Error('Koneksi ke server gagal.');
-            const result = await response.json();
-
-            if (result.status === 'success') {
-                // Simpan config sistem ke localStorage
-                if (result.config) {
-                    localStorage.setItem('inaportnet_config', JSON.stringify(result.config));
-                }
-
-                // Simpan session — nama & role dari data user di USERS sheet
-                const nama = result.nama || result.username || user;
-                localStorage.setItem(SESSION_KEY, JSON.stringify({
-                    username:     result.username || user,
-                    name:         nama,
-                    role:         result.role || 'user',
-                    default_port: result.default_port || '',
-                    expiry:       Date.now() + SESSION_DURATION
-                }));
-
-                Swal.fire({
-                    toast: true, position: 'top-end', icon: 'success',
-                    title: `Selamat datang, ${nama}!`,
-                    showConfirmButton: false, timer: 1500
-                });
-
-                setTimeout(() => { window.location.href = 'index.html'; }, 1000);
-
-            } else {
-                throw new Error(result.message || 'Kredensial tidak valid.');
-            }
-        } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Gagal Masuk', text: error.message, confirmButtonColor: '#1e3a8a' });
-        } finally {
-            btn.innerHTML = origHTML;
-            btn.disabled  = false;
-            lucide.createIcons();
-        }
-    }
-</script>
-</body>
+<script src="js/main.js"></script>
 </html>
