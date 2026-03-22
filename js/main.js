@@ -349,13 +349,67 @@ function logFieldKeys(data) {
     console.groupEnd();
 }
 
+// State kartu khusus — field aktif saat ini
+let _khususField = 'is_penyebrangan';
+
+// Peta warna untuk setiap jenis — dipakai updateSummaryCards
+const _khususColorMap = {
+    is_penyebrangan:  { bg: 'bg-amber-100',  text: 'text-amber-600',  ring: 'bg-amber-50'  },
+    is_minerba:       { bg: 'bg-orange-100', text: 'text-orange-600', ring: 'bg-orange-50' },
+    is_docking:       { bg: 'bg-slate-200',  text: 'text-slate-600',  ring: 'bg-slate-100' },
+    is_perintis:      { bg: 'bg-emerald-100',text: 'text-emerald-600',ring: 'bg-emerald-50'},
+    is_tol_laut:      { bg: 'bg-blue-100',   text: 'text-blue-600',   ring: 'bg-blue-50'   },
+    is_kegiatan_tetap:{ bg: 'bg-violet-100', text: 'text-violet-600', ring: 'bg-violet-50' },
+    is_fast_boat:     { bg: 'bg-cyan-100',   text: 'text-cyan-600',   ring: 'bg-cyan-50'   },
+    is_non_niaga:     { bg: 'bg-pink-100',   text: 'text-pink-600',   ring: 'bg-pink-50'   },
+};
+
+// Ganti jenis yang ditampilkan di kartu khusus
+window._setKhususFilter = function(field, label, icon, color) {
+    _khususField = field;
+    document.getElementById('khususLabel').textContent = label;
+    document.getElementById('khususDropdown').classList.add('hidden');
+
+    // Update warna ikon
+    const iconEl = document.getElementById('khususIcon');
+    if (iconEl) {
+        const c = _khususColorMap[field] || { bg: 'bg-amber-100', text: 'text-amber-600' };
+        iconEl.className = `p-2 rounded-lg ${c.bg} ${c.text} flex-shrink-0`;
+        iconEl.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i>`;
+        lucide.createIcons({ nodes: [iconEl] });
+    }
+
+    // Update latar belakang dekoratif
+    const ringEl = document.querySelector('#totalKhusus')?.closest('.glass-card')?.querySelector('.absolute');
+    if (ringEl) {
+        const c = _khususColorMap[field] || { ring: 'bg-amber-50' };
+        ringEl.className = `absolute -right-4 -top-4 w-24 h-24 ${c.ring} rounded-full flex items-center justify-center group-hover:scale-110 transition-transform`;
+    }
+
+    // Re-render angka dari data yang sedang aktif
+    updateSummaryCards(window._lastSummaryData || []);
+};
+
+// Tutup dropdown khusus jika klik di luar
+document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('khususDropdown');
+    const card     = dropdown?.closest('.glass-card');
+    if (dropdown && card && !card.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+
 function updateSummaryCards(data) {
+    window._lastSummaryData = data; // simpan untuk re-render saat ganti jenis
     logFieldKeys(data);
     document.getElementById('totalShips').textContent = data.length.toLocaleString('id-ID');
     const totalGT = data.reduce((sum, i) => sum + (parseInt(i.gt) || 0), 0);
     document.getElementById('totalGT').textContent = totalGT.toLocaleString('id-ID');
-    const totalKhusus = data.filter(i => i.is_penyebrangan == 1 || i.is_penyebrangan === true || i.is_minerba == 1 || i.is_minerba === true).length;
+
+    // Hitung sesuai field yang sedang dipilih
+    const totalKhusus = data.filter(i => i[_khususField] == 1 || i[_khususField] === true).length;
     document.getElementById('totalKhusus').textContent = totalKhusus.toLocaleString('id-ID');
+
     const totalNaik = data.reduce((sum, i) => sum + getPaxNaik(i), 0);
     document.getElementById('totalPaxNaik').textContent = totalNaik.toLocaleString('id-ID');
     const totalTurun = data.reduce((sum, i) => sum + getPaxTurun(i), 0);
