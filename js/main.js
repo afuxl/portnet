@@ -387,8 +387,7 @@ window._setKhususFilter = function(field, label) {
     if (iconEl) {
         const iconMap = {
             is_penyebrangan:'ferry', is_minerba:'hard-hat', is_docking:'anchor',
-            is_perintis:'flag', is_tol_laut:'navigation', is_kegiatan_tetap:'repeat',
-            is_fast_boat:'zap', is_non_niaga:'heart-handshake'
+            is_perintis:'flag', lainnya:'more-horizontal'
         };
         iconEl.innerHTML = `<i data-lucide="${field ? (iconMap[field]||'ship') : 'ferris-wheel'}" class="w-5 h-5"></i>`;
         lucide.createIcons({ nodes: [iconEl] });
@@ -405,9 +404,14 @@ function updateSummaryCards(data) {
     document.getElementById('totalGT').textContent = totalGT.toLocaleString('id-ID');
 
     // Hitung sesuai field yang sedang dipilih (null = semua)
-    const totalKhusus = _khususField
-        ? data.filter(i => i[_khususField] == 1 || i[_khususField] === true).length
-        : data.length;
+    const _ALL_FLAGS = ['is_penyebrangan','is_minerba','is_docking','is_perintis',
+                        'is_tol_laut','is_kegiatan_tetap','is_fast_boat','is_non_niaga'];
+    const _LAINNYA   = ['is_tol_laut','is_kegiatan_tetap','is_fast_boat','is_non_niaga'];
+    const totalKhusus = _khususField === 'lainnya'
+        ? data.filter(i => _LAINNYA.some(f=>i[f]==1||i[f]===true) || !_ALL_FLAGS.some(f=>i[f]==1||i[f]===true)).length
+        : _khususField
+            ? data.filter(i => i[_khususField] == 1 || i[_khususField] === true).length
+            : data.length;
     document.getElementById('totalKhusus').textContent = totalKhusus.toLocaleString('id-ID');
 
     const totalNaik = data.reduce((sum, i) => sum + getPaxNaik(i), 0);
@@ -998,7 +1002,19 @@ window._applyTableFilters = function() {
             if (!inRange(etdYMD)) return false;
         }
         // Filter jenis khusus (is_penyebrangan, is_minerba, dll)
-        if (_khususField && !(item[_khususField] == 1 || item[_khususField] === true)) return false;
+        if (_khususField) {
+            const _ALL_FLAGS = ['is_penyebrangan','is_minerba','is_docking','is_perintis',
+                                'is_tol_laut','is_kegiatan_tetap','is_fast_boat','is_non_niaga'];
+            if (_khususField === 'lainnya') {
+                // Lolos jika: salah satu dari 4 flag lainnya ATAU tidak punya flag apapun
+                const _LAINNYA_FLAGS = ['is_tol_laut','is_kegiatan_tetap','is_fast_boat','is_non_niaga'];
+                const hasLainnya = _LAINNYA_FLAGS.some(f => item[f] == 1 || item[f] === true);
+                const hasNone    = !_ALL_FLAGS.some(f => item[f] == 1 || item[f] === true);
+                if (!hasLainnya && !hasNone) return false;
+            } else {
+                if (!(item[_khususField] == 1 || item[_khususField] === true)) return false;
+            }
+        }
         return true;
     });
 
