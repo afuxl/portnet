@@ -380,22 +380,53 @@ window._setKhususFilter = function(field, label, icon, color) {
     }
 
     // Update latar belakang dekoratif
-    const ringEl = document.querySelector('#totalKhusus')?.closest('.glass-card')?.querySelector('.absolute');
+    const ringEl = document.getElementById('khususRing');
     if (ringEl) {
         const c = _khususColorMap[field] || { ring: 'bg-amber-50' };
-        ringEl.className = `absolute -right-4 -top-4 w-24 h-24 ${c.ring} rounded-full flex items-center justify-center group-hover:scale-110 transition-transform`;
+        ringEl.className = `absolute -right-4 -top-4 w-24 h-24 ${c.ring} rounded-full flex items-center justify-center group-hover:scale-110 transition-transform pointer-events-none`;
     }
 
     // Re-render angka dari data yang sedang aktif
     updateSummaryCards(window._lastSummaryData || []);
 };
 
+// Toggle dropdown khusus — posisi fixed mengikuti kartu agar tidak terpotong overflow
+window._toggleKhususDropdown = function(event) {
+    event.stopPropagation();
+    const dropdown = document.getElementById('khususDropdown');
+    const card     = document.getElementById('khususCard');
+    if (!dropdown || !card) return;
+
+    if (!dropdown.classList.contains('hidden')) {
+        dropdown.classList.add('hidden');
+        return;
+    }
+
+    // position: fixed — koordinat relatif viewport, TANPA scrollY
+    const rect   = card.getBoundingClientRect();
+    const minW   = Math.max(rect.width, 200);
+    let   left   = rect.left;
+
+    // Jaga agar tidak keluar sisi kanan layar
+    if (left + minW > window.innerWidth - 8) {
+        left = window.innerWidth - minW - 8;
+    }
+
+    dropdown.style.top      = (rect.bottom + 4) + 'px';
+    dropdown.style.left     = left + 'px';
+    dropdown.style.minWidth = minW + 'px';
+    dropdown.classList.remove('hidden');
+    lucide.createIcons({ nodes: [dropdown] });
+};
+
 // Tutup dropdown khusus jika klik di luar
 document.addEventListener('click', function(e) {
     const dropdown = document.getElementById('khususDropdown');
-    const card     = dropdown?.closest('.glass-card');
-    if (dropdown && card && !card.contains(e.target)) {
-        dropdown.classList.add('hidden');
+    const card     = document.getElementById('khususCard');
+    if (dropdown && !dropdown.classList.contains('hidden')) {
+        if (!dropdown.contains(e.target) && !card?.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
     }
 });
 
