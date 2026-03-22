@@ -932,9 +932,8 @@ window._applyTableFilters = function() {
             const lok = ((item.lokasi_sandar||'') + ' ' + (item.lokasi_tolak||'')).toLowerCase();
             if (!lok.includes(kwLokasi)) return false;
         }
-        // Filter tanggal — kapal lolos jika ETA atau ETD jatuh dalam rentang
+        // Filter tanggal — hanya berdasarkan ETD (tanggal keberangkatan)
         if (tglDari || tglSampai) {
-            const etaYMD = _parseDateToYMD(getETA(item));
             const etdYMD = _parseDateToYMD(getETD(item));
             const inRange = (ymd) => {
                 if (!ymd) return false;
@@ -942,7 +941,7 @@ window._applyTableFilters = function() {
                 if (tglSampai && ymd > tglSampai) return false;
                 return true;
             };
-            if (!inRange(etaYMD) && !inRange(etdYMD)) return false;
+            if (!inRange(etdYMD)) return false;
         }
         return true;
     });
