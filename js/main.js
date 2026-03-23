@@ -1449,7 +1449,7 @@ window.saveSettingsConfig = async function() {
                 nama:         sessionDataObj?.name || '',
                 default_port: portInfo.kode_pelabuhan
             };
-            const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'saveUser', user: userData }) });
+            const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'saveUser', user: userData }) });
             const res = await r.json();
             if (res.status === 'success') {
                 // Update session lokal
@@ -1481,7 +1481,7 @@ window.saveSettingsConfig = async function() {
         };
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'saveUser', user: userData }) });
+            const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'saveUser', user: userData }) });
             const res = await r.json();
             if (res.status === 'success') {
                 try {
@@ -1506,7 +1506,7 @@ window._loadUserList = async function() {
     if (!container) return;
     container.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Memuat...</p>';
     try {
-        const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'getUsers' }) });
+        const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getUsers' }) });
         const res = await r.json();
         if (res.status !== 'success') throw new Error(res.message);
         const users = res.users || [];
@@ -1568,7 +1568,7 @@ window._saveUser = async function() {
     if (!_editingUsername && !password) { Swal.fire({ icon: 'warning', title: 'Password wajib untuk akun baru', timer: 2000, showConfirmButton: false }); return; }
     const default_port = document.getElementById('uDefaultPort')?.value || '';
     try {
-        const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'saveUser', user: { username, nama, password, role, aktif, default_port } }) });
+        const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'saveUser', user: { username, nama, password, role, aktif, default_port } }) });
         const res = await r.json();
         if (res.status !== 'success') throw new Error(res.message);
         window._closeUserForm();
@@ -1581,7 +1581,7 @@ window._deleteUser = async function(username) {
     const conf = await Swal.fire({ icon: 'warning', title: 'Hapus akun?', text: `@${username} akan dihapus permanen.`, showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Hapus', cancelButtonText: 'Batal' });
     if (!conf.isConfirmed) return;
     try {
-        const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'deleteUser', username }) });
+        const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'deleteUser', username }) });
         const res = await r.json();
         if (res.status !== 'success') throw new Error(res.message);
         window._loadUserList();
