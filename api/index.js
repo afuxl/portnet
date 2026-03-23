@@ -185,9 +185,9 @@ async function getAllUsers() {
     // Inject admin default jika kosong
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID, range: 'USERS!A:F', valueInputOption: 'USER_ENTERED',
-      requestBody: { values: [['admin', 'password123', 'Administrator', 'admin', 'TRUE', '']] }
+      requestBody: { values: [[' ', ' ', 'Administrator', 'admin', 'TRUE', '']] }
     });
-    values.push(['admin', 'password123', 'Administrator', 'admin', 'TRUE', '']);
+    values.push([' ', ' ', 'Administrator', 'admin', 'TRUE', '']);
   }
 
   for (let i = 1; i < values.length; i++) {
