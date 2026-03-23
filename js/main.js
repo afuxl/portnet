@@ -7,9 +7,9 @@ lucide.createIcons();
 const GAS_WEB_APP_URL = (function() {
     try {
         const cfg = JSON.parse(localStorage.getItem('inaportnet_config') || '{}');
-        return cfg.GAS_URL || "https://script.google.com/macros/s/AKfycbwAZV6iSElbw8XDTvR8IqalIwlhky-C1ozxK_NUIhWLGYf63U5fqOyhdGngl1KVey09rg/exec";
+        return cfg.GAS_URL || "/api";
     } catch(e) {
-        return "https://script.google.com/macros/s/AKfycbwAZV6iSElbw8XDTvR8IqalIwlhky-C1ozxK_NUIhWLGYf63U5fqOyhdGngl1KVey09rg/exec";
+        return "/api";
     }
 })();
 
