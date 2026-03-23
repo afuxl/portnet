@@ -117,11 +117,11 @@
         lucide.createIcons();
 
         try {
-            const response = await fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'login', username: user, password: pass })
-            });
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'login', username: user, password: pass })
+            });
 
             if (!response.ok) throw new Error('Koneksi ke server gagal.');
             const result = await response.json();
