@@ -1662,7 +1662,6 @@ const DOWNLOAD_COLS = [
     { key: 'eta',              label: 'Tanggal Tiba',       checked: false, get: item => item.eta || item.tgl_eta || '' },
     { key: 'etd',              label: 'Tanggal Berangkat',  checked: true,  get: item => item.etd || item.tgl_etd || '' },
     { key: 'lokasi_tolak',     label: 'Lokasi Tolak',       checked: true,  get: item => item.lokasi_tolak || '' },
-    // [DIHAPUS] nakhoda & jumlah_awak — tidak relevan untuk laporan unduhan
     { key: 'petugas_spb',      label: 'Petugas SPB',        checked: true,  get: item => item.spb_approve_fullname || '' },
     { key: 'waktu_spb',        label: 'Waktu SPB',          checked: true,  get: item => item.waktu_spb || '' },
     { key: 'manifest',         label: 'Manifest',           checked: true,  get: item => item.manifest || '' },
@@ -1672,8 +1671,17 @@ const DOWNLOAD_COLS = [
           const parts = [];
           const paxT = getPaxTurun(item);
           if (paxT > 0) parts.push(`Penumpang (${paxT} org)`);
-          (item.detail_bongkar||[]).filter(b=>b&&b.komoditi&&b.komoditi.trim()&&b.komoditi.trim()!=='-')
-              .forEach(b => parts.push(`${b.komoditi}${b.ton&&b.ton!=='-'?' ('+b.ton+' ton)':''}`));
+          
+          const detail = (item.detail_bongkar||[]).filter(b=>b&&b.komoditi&&String(b.komoditi).trim()&&String(b.komoditi).trim()!=='-');
+          if (detail.length > 0) {
+              detail.forEach(b => parts.push(`${b.komoditi}${b.ton&&b.ton!=='-'?' ('+b.ton+' ton)':''}`));
+          } else {
+              if (item.roda_dua_bongkar) parts.push(`Roda Dua (${item.roda_dua_bongkar} unit)`);
+              if (item.roda_empat_bongkar) parts.push(`Roda Empat (${item.roda_empat_bongkar} unit)`);
+              if (item.bus_bongkar) parts.push(`Bus (${item.bus_bongkar} unit)`);
+              if (item.truk_bongkar) parts.push(`Truk (${item.truk_bongkar} unit)`);
+              if (item.alat_berat_bongkar) parts.push(`Alat Berat (${item.alat_berat_bongkar} unit)`);
+          }
           return parts.join(' | ');
       }
     },
@@ -1682,23 +1690,20 @@ const DOWNLOAD_COLS = [
           const parts = [];
           const paxN = getPaxNaik(item);
           if (paxN > 0) parts.push(`Penumpang (${paxN} org)`);
-          (item.detail_muat||[]).filter(m=>m&&m.komoditi&&m.komoditi.trim()&&m.komoditi.trim()!=='-')
-              .forEach(m => parts.push(`${m.komoditi}${m.ton&&m.ton!=='-'?' ('+m.ton+' ton)':''}`));
+          
+          const detail = (item.detail_muat||[]).filter(m=>m&&m.komoditi&&String(m.komoditi).trim()&&String(m.komoditi).trim()!=='-');
+          if (detail.length > 0) {
+              detail.forEach(m => parts.push(`${m.komoditi}${m.ton&&m.ton!=='-'?' ('+m.ton+' ton)':''}`));
+          } else {
+              if (item.roda_dua_muat) parts.push(`Roda Dua (${item.roda_dua_muat} unit)`);
+              if (item.roda_empat_muat) parts.push(`Roda Empat (${item.roda_empat_muat} unit)`);
+              if (item.bus_muat) parts.push(`Bus (${item.bus_muat} unit)`);
+              if (item.truk_muat) parts.push(`Truk (${item.truk_muat} unit)`);
+              if (item.alat_berat_muat) parts.push(`Alat Berat (${item.alat_berat_muat} unit)`);
+          }
           return parts.join(' | ');
       }
     },
-];
-
-// Kolom komoditi detail — header: Komoditi | Jenis | Ton | M3 | Unit | Orang
-// Pax naik masuk ke Muat, pax turun masuk ke Bongkar sebagai baris "Penumpang"
-const KOMODITI_COLS = [
-    { key: 'komoditi_jenis',  label: 'Jenis (B/M)' },
-    { key: 'komoditi_nama',   label: 'Komoditi' },
-    { key: 'komoditi_jenis2', label: 'Jenis Muatan' },
-    { key: 'komoditi_ton',    label: 'Ton' },
-    { key: 'komoditi_m3',     label: 'M3' },
-    { key: 'komoditi_unit',   label: 'Unit' },
-    { key: 'komoditi_orang',  label: 'Orang' },
 ];
 
 window._openDownloadModal = function() {
@@ -1792,59 +1797,88 @@ window._doDownload = function() {
     let wsData;
 
     if (adaRingkas && modaKomoditi === 'detail') {
-        // ── Mode detail: 1 baris per komoditi/penumpang ──────────────
-        wsData = [ [...colsDasar.map(c => c.label), ...KOMODITI_COLS.map(k => k.label)] ];
+        // ── Mode detail: Kolom Bongkar dan Muat berdampingan ──────────────
+        const headerBongkar = ['Komoditi (Bongkar)', 'Jenis Muatan', 'Ton', 'M3', 'Unit', 'Orang (turun)'];
+        const headerMuat    = ['Komoditi (Muat)', 'Jenis Muatan ', 'Ton ', 'M3 ', 'Unit ', 'Orang (naik)']; // Spasi mencegah duplikasi string jika CSV membedakan unik
+
+        let detailHeaders = [];
+        if (adaBongkar) detailHeaders.push(...headerBongkar);
+        if (adaMuat)    detailHeaders.push(...headerMuat);
+
+        wsData = [ [...colsDasar.map(c => c.label), ...detailHeaders] ];
 
         dataToExport.forEach((item, i) => {
             const baseCells = colsDasar.map(c => cellVal(c.get(item, i)));
-            const entries   = [];
-
+            
+            // --- Kumpulkan Data Bongkar ---
+            const bList = [];
             if (adaBongkar) {
-                // Penumpang turun sebagai baris pertama di Bongkar (jika ada)
                 const paxT = getPaxTurun(item);
-                if (paxT > 0) entries.push(['Bongkar', 'Penumpang', '', '', '', '', paxT]);
+                if (paxT > 0) bList.push(['Penumpang', '', '', '', '', paxT]);
 
-                (item.detail_bongkar || [])
-                    .filter(b => b && b.komoditi && b.komoditi.trim() && b.komoditi.trim() !== '-')
-                    .forEach(b => entries.push([
-                        'Bongkar', b.komoditi, b.jenis||'',
-                        b.ton&&b.ton!=='-'?b.ton:'',
-                        b.m3&&b.m3!=='-'?b.m3:'',
-                        b.unit&&b.unit!=='-'?b.unit:'',
-                        b.orang&&b.orang!=='-'?b.orang:''
+                const dBongkar = (item.detail_bongkar || []).filter(b => b && b.komoditi && String(b.komoditi).trim() && String(b.komoditi).trim() !== '-');
+                if (dBongkar.length > 0) {
+                    dBongkar.forEach(b => bList.push([
+                        b.komoditi, b.jenis||'', b.ton&&b.ton!=='-'?b.ton:'', b.m3&&b.m3!=='-'?b.m3:'', b.unit&&b.unit!=='-'?b.unit:'', b.orang&&b.orang!=='-'?b.orang:''
                     ]));
+                } else {
+                    // Fallback kendaraan jika array bongkar kosong
+                    if (item.roda_dua_bongkar) bList.push(['Roda Dua', 'Kendaraan', '', '', item.roda_dua_bongkar, '']);
+                    if (item.roda_empat_bongkar) bList.push(['Roda Empat', 'Kendaraan', '', '', item.roda_empat_bongkar, '']);
+                    if (item.bus_bongkar) bList.push(['Bus', 'Kendaraan', '', '', item.bus_bongkar, '']);
+                    if (item.truk_bongkar) bList.push(['Truk', 'Kendaraan', '', '', item.truk_bongkar, '']);
+                    if (item.alat_berat_bongkar) bList.push(['Alat Berat', 'Kendaraan', '', '', item.alat_berat_bongkar, '']);
+                }
             }
 
+            // --- Kumpulkan Data Muat ---
+            const mList = [];
             if (adaMuat) {
-                // Penumpang naik sebagai baris pertama di Muat (jika ada)
                 const paxN = getPaxNaik(item);
-                if (paxN > 0) entries.push(['Muat', 'Penumpang', '', '', '', '', paxN]);
+                if (paxN > 0) mList.push(['Penumpang', '', '', '', '', paxN]);
 
-                (item.detail_muat || [])
-                    .filter(m => m && m.komoditi && m.komoditi.trim() && m.komoditi.trim() !== '-')
-                    .forEach(m => entries.push([
-                        'Muat', m.komoditi, m.jenis||'',
-                        m.ton&&m.ton!=='-'?m.ton:'',
-                        m.m3&&m.m3!=='-'?m.m3:'',
-                        m.unit&&m.unit!=='-'?m.unit:'',
-                        m.orang&&m.orang!=='-'?m.orang:''
+                const dMuat = (item.detail_muat || []).filter(m => m && m.komoditi && String(m.komoditi).trim() && String(m.komoditi).trim() !== '-');
+                if (dMuat.length > 0) {
+                    dMuat.forEach(m => mList.push([
+                        m.komoditi, m.jenis||'', m.ton&&m.ton!=='-'?m.ton:'', m.m3&&m.m3!=='-'?m.m3:'', m.unit&&m.unit!=='-'?m.unit:'', m.orang&&m.orang!=='-'?m.orang:''
                     ]));
+                } else {
+                    // Fallback kendaraan jika array muat kosong
+                    if (item.roda_dua_muat) mList.push(['Roda Dua', 'Kendaraan', '', '', item.roda_dua_muat, '']);
+                    if (item.roda_empat_muat) mList.push(['Roda Empat', 'Kendaraan', '', '', item.roda_empat_muat, '']);
+                    if (item.bus_muat) mList.push(['Bus', 'Kendaraan', '', '', item.bus_muat, '']);
+                    if (item.truk_muat) mList.push(['Truk', 'Kendaraan', '', '', item.truk_muat, '']);
+                    if (item.alat_berat_muat) mList.push(['Alat Berat', 'Kendaraan', '', '', item.alat_berat_muat, '']);
+                }
             }
 
-            if (entries.length === 0) {
-                wsData.push([...baseCells, '', '', '', '', '', '', '']);
-            } else {
-                entries.forEach((entry, ei) => {
-                    wsData.push([
-                        ...(ei === 0 ? baseCells : baseCells.map(() => '')),
-                        ...entry.map(cellVal)
-                    ]);
-                });
+            // --- Gabungkan Baris secara Berdampingan ---
+            // Cari jumlah baris terbanyak antara list bongkar dan muat
+            const maxRows = Math.max(bList.length, mList.length, 1);
+            
+            for (let r = 0; r < maxRows; r++) {
+                let rowCells = [];
+                
+                if (adaBongkar) {
+                    const bCells = r < bList.length ? bList[r] : ['', '', '', '', '', ''];
+                    rowCells.push(...bCells.map(cellVal));
+                }
+                
+                if (adaMuat) {
+                    const mCells = r < mList.length ? mList[r] : ['', '', '', '', '', ''];
+                    rowCells.push(...mCells.map(cellVal));
+                }
+
+                wsData.push([
+                    // Jika r===0 (baris pertama kapal), masukkan data kapal, jika tidak, isi dengan string kosong
+                    ...(r === 0 ? baseCells : baseCells.map(() => '')),
+                    ...rowCells
+                ]);
             }
         });
 
     } else {
-        // ── Mode ringkas: 1 baris per kapal ──────────────────────────
+        // ── Mode ringkas: 1 baris per kapal (data digabungkan dalam 1 sel) ──────────────────────────
         wsData = [ cols.map(c => c.label) ];
         dataToExport.forEach((item, i) => {
             wsData.push(cols.map(c => cellVal(c.get(item, i))));
