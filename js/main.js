@@ -1729,7 +1729,26 @@ window._openDownloadModal = function() {
         <label class="flex items-center gap-1.5 text-xs cursor-pointer hover:text-blue-600 col-span-2">
             <input type="checkbox" class="dl-col-check accent-blue-600" value="${col.key}" ${col.checked ? 'checked' : ''}>
             ${col.label}
-        </label>`).join('')}`;
+        </label>`).join('')}
+        
+        <!-- Tombol Radio Dinamis -->
+        <div id="dynamicModeKomoditi" class="col-span-2 mt-2 p-2 bg-slate-50 border border-slate-200 rounded hidden">
+            <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Format Ekspor Komoditi</p>
+            <div class="space-y-1.5">
+                <label class="flex items-center gap-2 text-xs cursor-pointer">
+                    <input type="radio" name="dlModeKomoditi" value="ringkas" checked class="accent-blue-600"> 
+                    Ringkas (Gabung dalam 1 Sel)
+                </label>
+                <label class="flex items-center gap-2 text-xs cursor-pointer">
+                    <input type="radio" name="dlModeKomoditi" value="detail" class="accent-blue-600"> 
+                    Detail (Bongkar & Muat Berdampingan)
+                </label>
+                <label class="flex items-center gap-2 text-xs cursor-pointer text-slate-700">
+                    <input type="radio" name="dlModeKomoditi" value="kendaraan" class="accent-blue-600"> 
+                    Detail + Kendaraan <span class="text-[9px] text-slate-400 italic">(Masuk jika komoditi kosong)</span>
+                </label>
+            </div>
+        </div>`;
 
     const modal = document.getElementById('downloadModal');
     if (modal) {
@@ -1737,7 +1756,9 @@ window._openDownloadModal = function() {
         lucide.createIcons({ nodes: [modal] });
         const updateModeVisibility = () => {
             const anyRingkas = !!modal.querySelector('.dl-col-check[value="bongkar_ringkas"]:checked, .dl-col-check[value="muat_ringkas"]:checked');
-            const wrapper = document.getElementById('modeKomoditiWrapper');
+            const wrapper = document.getElementById('dynamicModeKomoditi');
+            const oldWrapper = document.getElementById('modeKomoditiWrapper');
+            if (oldWrapper) oldWrapper.style.display = 'none'; // Paksa sembunyikan fallback dari HTML jika ada
             if (wrapper) wrapper.classList.toggle('hidden', !anyRingkas);
         };
         modal.querySelectorAll('.dl-col-check').forEach(cb => cb.addEventListener('change', updateModeVisibility));
@@ -1796,10 +1817,10 @@ window._doDownload = function() {
 
     let wsData;
 
-    if (adaRingkas && modaKomoditi === 'detail') {
+    if (adaRingkas && (modaKomoditi === 'detail' || modaKomoditi === 'kendaraan')) {
         // ── Mode detail: Kolom Bongkar dan Muat berdampingan ──────────────
         const headerBongkar = ['Komoditi (Bongkar)', 'Jenis Muatan', 'Ton', 'M3', 'Unit', 'Orang (turun)'];
-        const headerMuat    = ['Komoditi (Muat)', 'Jenis Muatan ', 'Ton ', 'M3 ', 'Unit ', 'Orang (naik)']; // Spasi mencegah duplikasi string jika CSV membedakan unik
+        const headerMuat    = ['Komoditi (muat)', 'Jenis Muatan ', 'Ton ', 'M3 ', 'Unit ', 'Orang (naik)']; // Spasi mencegah duplikasi string jika CSV membedakan unik
 
         let detailHeaders = [];
         if (adaBongkar) detailHeaders.push(...headerBongkar);
@@ -1814,14 +1835,14 @@ window._doDownload = function() {
             const bList = [];
             if (adaBongkar) {
                 const paxT = getPaxTurun(item);
-                if (paxT > 0) bList.push(['Penumpang', '', '', '', '', paxT]);
+                if (paxT > 0) bList.push(['Penumpang', 'Penumpang', '', '', '', paxT]);
 
                 const dBongkar = (item.detail_bongkar || []).filter(b => b && b.komoditi && String(b.komoditi).trim() && String(b.komoditi).trim() !== '-');
                 if (dBongkar.length > 0) {
                     dBongkar.forEach(b => bList.push([
                         b.komoditi, b.jenis||'', b.ton&&b.ton!=='-'?b.ton:'', b.m3&&b.m3!=='-'?b.m3:'', b.unit&&b.unit!=='-'?b.unit:'', b.orang&&b.orang!=='-'?b.orang:''
                     ]));
-                } else {
+                } else if (modaKomoditi === 'kendaraan') {
                     // Fallback kendaraan jika array bongkar kosong
                     if (item.roda_dua_bongkar) bList.push(['Roda Dua', 'Kendaraan', '', '', item.roda_dua_bongkar, '']);
                     if (item.roda_empat_bongkar) bList.push(['Roda Empat', 'Kendaraan', '', '', item.roda_empat_bongkar, '']);
@@ -1835,14 +1856,14 @@ window._doDownload = function() {
             const mList = [];
             if (adaMuat) {
                 const paxN = getPaxNaik(item);
-                if (paxN > 0) mList.push(['Penumpang', '', '', '', '', paxN]);
+                if (paxN > 0) mList.push(['Penumpang', 'Penumpang', '', '', '', paxN]);
 
                 const dMuat = (item.detail_muat || []).filter(m => m && m.komoditi && String(m.komoditi).trim() && String(m.komoditi).trim() !== '-');
                 if (dMuat.length > 0) {
                     dMuat.forEach(m => mList.push([
                         m.komoditi, m.jenis||'', m.ton&&m.ton!=='-'?m.ton:'', m.m3&&m.m3!=='-'?m.m3:'', m.unit&&m.unit!=='-'?m.unit:'', m.orang&&m.orang!=='-'?m.orang:''
                     ]));
-                } else {
+                } else if (modaKomoditi === 'kendaraan') {
                     // Fallback kendaraan jika array muat kosong
                     if (item.roda_dua_muat) mList.push(['Roda Dua', 'Kendaraan', '', '', item.roda_dua_muat, '']);
                     if (item.roda_empat_muat) mList.push(['Roda Empat', 'Kendaraan', '', '', item.roda_empat_muat, '']);
