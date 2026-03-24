@@ -1313,7 +1313,8 @@ window.openDetailModal = function(uid) {
                 <div class="space-y-1 text-[10px]">
                     ${item.nomor_pkk ? `<div class="flex flex-col"><span class="text-slate-400 text-[9px]">PKK</span><span class="font-mono text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[9px] break-all leading-tight">${e(item.nomor_pkk)}</span></div>` : ''}
                     ${item.no_lk3 ? `<div class="flex flex-col"><span class="text-slate-400 text-[9px]">LK3</span><span class="font-mono text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[9px] break-all leading-tight">${e(item.no_lk3)}</span></div>` : ''}
-                    ${item.no_spb ? `<div class="flex flex-col"><span class="text-slate-400 text-[9px]">SPB</span><span class="font-mono text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[9px] break-all leading-tight">${e(item.no_spb)}</span></div>` : ''}
+                    ${item.no_spb ? `<div class="flex flex-col"><span class="text-slate-400 text-[9px]">SPB</span><span class="font-mono text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[9px] break-all leading-tight">Nomor: ${e(item.no_spb)}<br>Waktu: ${e(item.waktu_spb)}</span></div>` : ''}
+                    
                 </div>
                 <div class="mt-2 pt-2 border-t border-slate-200 space-y-1 text-[10px]">
                     <div class="flex justify-between"><span class="text-slate-500">Billing</span><span class="font-bold text-slate-800">${fUang(item.nominal_billing)}</span></div>
