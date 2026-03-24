@@ -31,7 +31,7 @@ function sleep(ms) {
 
 function formatDate(date, format) {
   const options = {
-    timeZone: 'Asia/Jakarta',
+    timeZone: 'Asia/Makassar',
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', second: '2-digit',
     hour12: false
@@ -122,12 +122,12 @@ async function getConfig() {
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [
-          ['DEFAULT_PORT_CODE', 'IDLPO', 'Kode Pelabuhan default'],
+          ['DEFAULT_PORT_CODE', 'ID***', 'Kode Pelabuhan default'],
           ['USE_SCRAPING',      'FALSE', 'Gunakan Scraping (TRUE/FALSE)']
         ]
       }
     });
-    return { DEFAULT_PORT_CODE: 'IDLPO', USE_SCRAPING: 'FALSE' };
+    return { DEFAULT_PORT_CODE: 'ID***', USE_SCRAPING: 'FALSE' };
   }
   return configObj;
 }
@@ -629,7 +629,7 @@ export default async function handler(req, res) {
           username:     user.username,
           nama:         user.nama,
           role:         user.role,
-          default_port: user.default_port || config.DEFAULT_PORT_CODE || 'IDLPO'
+          default_port: user.default_port || config.DEFAULT_PORT_CODE || ''
         });
       }
 
@@ -672,7 +672,7 @@ export default async function handler(req, res) {
 
   // ── GET: Ambil data dashboard ─────────────────────────────────
   if (req.method === 'GET') {
-    const portCode = req.query.portCode || 'IDLPO';
+    const portCode = req.query.portCode || '';
     const year     = req.query.year  || formatDate(new Date(), 'yyyy');
     const month    = req.query.month || formatDate(new Date(), 'MM');
 
