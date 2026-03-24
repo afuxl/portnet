@@ -51,6 +51,32 @@
         input[type="search"]::-webkit-search-cancel-button { -webkit-appearance:searchfield-cancel-button; cursor:pointer; opacity:0.6; }
         input[type="search"]::-webkit-search-cancel-button:hover { opacity:1; }
 
+        /* Mobile menu bottom sheet */
+        #mobileMenu {
+            position: fixed; inset: 0; z-index: 300;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            pointer-events: none;
+        }
+        #mobileMenu.open { pointer-events: all; }
+        #mobileMenuOverlay {
+            position: absolute; inset: 0;
+            background: rgba(15,23,42,0.55);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        #mobileMenu.open #mobileMenuOverlay { opacity: 1; }
+        #mobileMenuSheet {
+            position: relative;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+            max-height: 82vh;
+            overflow-y: auto;
+        }
+        #mobileMenu.open #mobileMenuSheet { transform: translateY(0); }
+
         /* Session warning banner */
         #sessionWarning {
             display: none;
@@ -76,6 +102,88 @@
     <!-- Session expiry warning -->
     <div id="sessionWarning">⚠️ Sesi Anda akan berakhir dalam 5 menit. Simpan pekerjaan Anda.</div>
 
+    <!-- Mobile Menu Bottom Sheet -->
+    <div id="mobileMenu">
+        <div id="mobileMenuOverlay" onclick="window._closeMobileMenu()"></div>
+        <div id="mobileMenuSheet">
+            <!-- Handle bar -->
+            <div class="flex justify-center pt-3 pb-1">
+                <div class="w-10 h-1 bg-slate-200 rounded-full"></div>
+            </div>
+
+            <!-- Header user info -->
+            <div class="px-5 pt-3 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-900 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="user" class="w-5 h-5 text-blue-200"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-bold text-slate-900 text-sm truncate" id="mobileDisplayName">–</p>
+                        <p class="text-xs text-slate-400 font-mono truncate" id="mobileDisplayUsername">–</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info port & periode -->
+            <div class="px-5 py-3 border-b border-slate-100 space-y-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-500"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Pelabuhan</p>
+                        <p class="text-sm font-semibold text-slate-800" id="mobileDisplayPort">Memuat...</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-500"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Periode</p>
+                        <p class="text-sm font-semibold text-slate-800" id="mobileDisplayPeriod">Memuat...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu aksi -->
+            <div class="px-5 py-3 space-y-1">
+                <button type="button" onclick="window._closeMobileMenu(); setTimeout(()=>window.openSettingsModal(),200)"
+                    class="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-50 active:bg-slate-100 transition-colors text-left">
+                    <div class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="settings" class="w-4.5 h-4.5 text-slate-600" style="width:18px;height:18px"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-800">Pengaturan</p>
+                        <p class="text-xs text-slate-400">Port, strategi data, akun</p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 ml-auto flex-shrink-0"></i>
+                </button>
+
+                <button type="button" onclick="window._closeMobileMenu(); setTimeout(()=>window._switchTab('akun'),200); setTimeout(()=>window.openSettingsModal(),200)"
+                    class="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-50 active:bg-slate-100 transition-colors text-left">
+                    <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="user-cog" class="text-blue-600" style="width:18px;height:18px"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-800">Akun Saya</p>
+                        <p class="text-xs text-slate-400">Ubah nama & password</p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 ml-auto flex-shrink-0"></i>
+                </button>
+            </div>
+
+            <!-- Tombol keluar -->
+            <div class="px-5 pb-6 pt-2">
+                <button type="button" onclick="window.handleLogout()"
+                    class="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-semibold text-sm transition-colors shadow-md shadow-rose-500/25">
+                    <i data-lucide="log-out" style="width:18px;height:18px"></i>
+                    Keluar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="dashboardSection" class="flex flex-col min-h-screen w-full">
 
         <!-- Navbar -->
@@ -90,6 +198,12 @@
                             <p class="text-xs text-blue-200">Monitoring Pelabuhan Real-time</p>
                         </div>
                     </div>
+
+                    <!-- Tombol hamburger — hanya tampil di mobile -->
+                    <button type="button" id="btnMobileMenu" onclick="window._openMobileMenu()"
+                        class="sm:hidden p-2 rounded-xl bg-blue-800 border border-blue-700 text-white outline-none active:bg-blue-700 transition-colors">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
 
                     <div class="hidden sm:flex items-center gap-2 text-sm font-medium">
                         <div class="bg-blue-800 px-3 py-1.5 rounded-full border border-blue-700 flex items-center gap-2 mr-2">
