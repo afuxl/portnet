@@ -4,10 +4,10 @@ import { google } from 'googleapis';
  * ==============================================================
  * INISIALISASI GOOGLE SHEETS API
  * Environment Variables yang diperlukan di Vercel:
- *   GOOGLE_CLIENT_EMAIL  — email service account
- *   GOOGLE_PRIVATE_KEY   — private key (dengan \n literal)
- *   SPREADSHEET_ID       — ID spreadsheet Google Sheets
- *   MODE_TESTING         — opsional: 'true' / 'false'
+ * GOOGLE_CLIENT_EMAIL  — email service account
+ * GOOGLE_PRIVATE_KEY   — private key (dengan \n literal)
+ * SPREADSHEET_ID       — ID spreadsheet Google Sheets
+ * MODE_TESTING         — opsional: 'true' / 'false'
  * ==============================================================
  */
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -710,27 +710,6 @@ export default async function handler(req, res) {
       }
       // Tidak ada cache sama sekali → jatuh ke live fetch di bawah
       console.log(`GET cache_first MISS — cache kosong, mulai live fetch. [${cacheKey}]`);
-    }
-
-    // ── Strategi: live_first ──────────────────────────────────
-    // Selalu fetch ke server. Pengecualian: jika cache hari ini sudah ada,
-    // langsung pakai (tidak perlu fetch ulang untuk hari yang sama).
-    // Jika cache hari ini BELUM ada → fetch live sekarang.
-    if (strategy !== 'cache_first') {
-      const cachedTodayObj = await cekCacheValidData('CACHE_JSON', cacheKey, todayString);
-      if (cachedTodayObj) {
-        try {
-          const parsed = JSON.parse(cachedTodayObj.data);
-          let data     = Array.isArray(parsed) ? parsed : (parsed.data || []);
-          data         = await _mergeLK3(data, cacheKey, todayString);
-          console.log(`GET live_first — cache hari ini sudah ada, skip fetch. [${cacheKey}]`);
-          return res.status(200).json({ status: 'success', source: 'cache_hari_ini', data, fetched_at: cachedTodayObj.fetched_at || todayString });
-        } catch (parseErr) {
-          console.error('Parse cache gagal, lanjut fetch:', parseErr.message);
-        }
-      }
-      // Cache hari ini belum ada → lanjut live fetch di bawah
-      console.log(`GET live_first — belum ada cache hari ini, mulai fetch. [${cacheKey}]`);
     }
 
     // ── [2] Live fetch JSON + XLS ─────────────────────────────
