@@ -3,10 +3,15 @@ lucide.createIcons();
 // ==========================================
 // KONFIGURASI — URL GAS WEB APP
 // ==========================================
-// FIX: Baca dari localStorage (disimpan saat login) agar tidak duplikasi hard-code
+// FIX: Baca dari localStorage spesifik per akun agar tidak tumpang tindih
 const GAS_WEB_APP_URL = (function() {
     try {
-        const cfg = JSON.parse(localStorage.getItem('inaportnet_config') || '{}');
+        const sessStr = localStorage.getItem('inaportnet_session');
+        const sess = sessStr ? JSON.parse(sessStr) : null;
+        const configKey = `inaportnet_config_${sess?.username || 'default'}`;
+        
+        const cfgStr = localStorage.getItem(configKey) || localStorage.getItem('inaportnet_config') || '{}';
+        const cfg = JSON.parse(cfgStr);
         return cfg.GAS_URL || "/api";
     } catch(e) {
         return "/api";
@@ -1378,8 +1383,6 @@ window._switchChart = function(name) {
 // ==========================================
 // SETTINGS MODAL — MULTI TAB
 // ==========================================
-// SETTINGS MODAL — MULTI TAB
-// ==========================================
 let _currentTab = 'sistem';
 
 window._switchTab = function(tab) {
@@ -1462,14 +1465,15 @@ window.saveSettingsConfig = async function() {
         const strategiPilihan = document.getElementById('cfgFetchStrategy')?.value || 'live_first';
         const scrapingPilihan = document.getElementById('cfgScraping')?.value || 'FALSE';
 
-        // Simpan konfigurasi ke memori browser (APP_CONFIG dan localStorage)
+        // Simpan konfigurasi ke memori browser (APP_CONFIG dan localStorage) spesifik untuk akun
         APP_CONFIG.FETCH_STRATEGY = strategiPilihan;
         APP_CONFIG.USE_SCRAPING = scrapingPilihan;
         try {
-            const saved = JSON.parse(localStorage.getItem('inaportnet_config') || '{}');
+            const configKey = `inaportnet_config_${sessionDataObj?.username || 'default'}`;
+            const saved = JSON.parse(localStorage.getItem(configKey) || '{}');
             saved.FETCH_STRATEGY = strategiPilihan;
             saved.USE_SCRAPING = scrapingPilihan;
-            localStorage.setItem('inaportnet_config', JSON.stringify(saved));
+            localStorage.setItem(configKey, JSON.stringify(saved));
         } catch(e) {}
 
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -1997,8 +2001,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Set bulan & tahun ke waktu saat ini
     setCurrentPeriod();
 
-    // 2. Baca config dari localStorage SEBELUM load port & set default
-    const savedConfig = localStorage.getItem('inaportnet_config');
+    // 2. Baca config dari localStorage spesifik untuk akun yang sedang login
+    const configKey = `inaportnet_config_${sessionDataObj?.username || 'default'}`;
+    const savedConfig = localStorage.getItem(configKey) || localStorage.getItem('inaportnet_config');
     if (savedConfig) {
         try { APP_CONFIG = { ...APP_CONFIG, ...JSON.parse(savedConfig) }; } catch(e) {}
     }
