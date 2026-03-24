@@ -1646,6 +1646,34 @@ window.handleLogout = function() {
 };
 
 // ==========================================
+// MOBILE MENU — bottom sheet
+// ==========================================
+window._openMobileMenu = function() {
+    // Sync info user ke elemen mobile menu
+    const nm = document.getElementById('mobileDisplayName');
+    const un = document.getElementById('mobileDisplayUsername');
+    const pt = document.getElementById('mobileDisplayPort');
+    const pr = document.getElementById('mobileDisplayPeriod');
+    if (nm) nm.textContent = document.getElementById('displayName')?.textContent || '–';
+    if (un) un.textContent = document.getElementById('displayUsername')?.textContent || '–';
+    if (pt) pt.textContent = document.getElementById('displayPort')?.textContent || 'Memuat...';
+    if (pr) pr.textContent = document.getElementById('displayPeriod')?.textContent || 'Memuat...';
+
+    const menu = document.getElementById('mobileMenu');
+    if (!menu) return;
+    menu.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    lucide.createIcons({ nodes: [menu] });
+};
+
+window._closeMobileMenu = function() {
+    const menu = document.getElementById('mobileMenu');
+    if (!menu) return;
+    menu.classList.remove('open');
+    document.body.style.overflow = '';
+};
+
+// ==========================================
 // DOWNLOAD DATA — pilih kolom lalu ekspor CSV/TSV
 // ==========================================
 const DOWNLOAD_COLS = [
