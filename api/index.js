@@ -601,6 +601,12 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin',  '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // [FIX] Tambahkan header anti-cache agar Vercel CDN / Browser tidak menyimpan respons GET
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   // ── POST: Login & manajemen user/config ──────────────────────
@@ -680,7 +686,8 @@ export default async function handler(req, res) {
     const timestamp   = Date.now();
 
     // ── Mode Testing ──────────────────────────────────────────
-    if (process.env.MODE_TESTING === 'true') {
+    // [FIX] Jangan gunakan mode testing (yang memaksa membaca cache) jika pengguna secara eksplisit meminta live_first
+    if (process.env.MODE_TESTING === 'true' && strategy !== 'live_first') {
       const rawObj = await bacaCacheUsangData('CACHE_JSON', cacheKey);
       if (!rawObj) return res.status(200).json({ status: 'error', message: 'Tidak ada data cache untuk mode testing.' });
       const parsed = JSON.parse(rawObj.data);
