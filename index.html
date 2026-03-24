@@ -193,9 +193,9 @@
 
                 <div class="glass-card rounded-xl p-3 flex items-center gap-3 relative overflow-hidden group">
                     <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"></div>
-                    <div class="p-2 rounded-lg bg-amber-100 text-amber-600 z-10" id="khususIcon"><i data-lucide="ferry" class="w-5 h-5"></i></div>
+                    <div class="p-2 rounded-lg bg-amber-100 text-amber-600 z-10" id="khususIcon"><i data-lucide="ship" class="w-5 h-5"></i></div>
                     <div class="z-10 min-w-0">
-                        <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider truncate" id="khususLabel">Penyeberangan</p>
+                        <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider truncate" id="khususLabel">Semua Jenis</p>
                         <h3 class="text-xl font-bold text-slate-800" id="totalKhusus">0</h3>
                     </div>
                 </div>
@@ -517,6 +517,16 @@
                             </label>
                         </div>
                     </div>
+                    <!-- Urutan data -->
+                    <div class="border-t border-slate-100 pt-3">
+                        <p class="text-xs font-semibold text-slate-600 mb-2">Urutan Data</p>
+                        <select id="dlSortOrder" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
+                            <option value="etd_asc">📅 Tanggal Berangkat (ETD) — Terlama ke Terbaru</option>
+                            <option value="etd_desc">📅 Tanggal Berangkat (ETD) — Terbaru ke Terlama</option>
+                            <option value="spb_asc">🕐 Waktu SPB — Terlama ke Terbaru</option>
+                            <option value="spb_desc">🕐 Waktu SPB — Terbaru ke Terlama</option>
+                        </select>
+                    </div>
                     <!-- Tombol aksi dalam body, menyatu -->
                     <div class="border-t border-slate-100 pt-4 flex justify-end gap-3">
                         <button onclick="document.getElementById('downloadModal').classList.add('hidden')" class="bg-white border border-slate-300 text-slate-700 font-medium py-2 px-4 rounded-lg text-sm hover:bg-slate-50 transition-colors">Batal</button>
@@ -560,6 +570,17 @@
                             <option value="TRUE">Gunakan Scraping (Direct PDF - Eksperimental)</option>
                             <option value="FALSE">*VIA SPS & Simpadu </option>
                         </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Strategi Pengambilan Data</label>
+                        <select id="cfgFetchStrategy" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
+                            <option value="live_first">🌐 Live Fetch dulu → Cache sebagai cadangan</option>
+                            <option value="cache_first">📦 Pakai Cache jika tersedia → Live hanya jika cache kosong</option>
+                        </select>
+                        <p class="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                            <b>Live Fetch dulu</b>: Selalu ambil data terbaru dari server. Lebih lambat, data selalu mutakhir.<br>
+                            <b>Pakai Cache</b>: Gunakan data tersimpan jika ada. Lebih cepat, cocok jika koneksi lambat.
+                        </p>
                     </div>
                 </div>
 
