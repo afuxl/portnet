@@ -1458,33 +1458,37 @@ window.saveSettingsConfig = async function() {
         const portInfo = PORT_LIST.find(p => p.kode_pelabuhan === selectedCode);
         if (!portInfo) { Swal.fire({ icon: 'error', title: 'Kode tidak valid', timer: 2000, showConfirmButton: false }); return; }
 
-        const cfgStrategyVal = document.getElementById('cfgFetchStrategy')?.value || 'live_first';
-        const cfgScrapingVal = document.getElementById('cfgScraping')?.value || 'FALSE';
+        // Memastikan nilai strategi terbaca dengan benar dari pilihan pengguna
+        const strategiPilihan = document.getElementById('cfgFetchStrategy')?.value || 'live_first';
+        const scrapingPilihan = document.getElementById('cfgScraping')?.value || 'FALSE';
 
-        // Simpan konfigurasi ke APP_CONFIG dan localStorage
-        APP_CONFIG.FETCH_STRATEGY = cfgStrategyVal;
-        APP_CONFIG.USE_SCRAPING = cfgScrapingVal;
+        // Simpan konfigurasi ke memori browser (APP_CONFIG dan localStorage)
+        APP_CONFIG.FETCH_STRATEGY = strategiPilihan;
+        APP_CONFIG.USE_SCRAPING = scrapingPilihan;
         try {
             const saved = JSON.parse(localStorage.getItem('inaportnet_config') || '{}');
-            saved.FETCH_STRATEGY = cfgStrategyVal;
-            saved.USE_SCRAPING = cfgScrapingVal;
+            saved.FETCH_STRATEGY = strategiPilihan;
+            saved.USE_SCRAPING = scrapingPilihan;
             localStorage.setItem('inaportnet_config', JSON.stringify(saved));
         } catch(e) {}
 
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            // Data untuk disimpan ke preferensi pengguna
+            // Data untuk disimpan ke profil pengguna
             const userData = {
                 username:     sessionDataObj?.username,
                 nama:         sessionDataObj?.name || '',
                 default_port: portInfo.kode_pelabuhan
             };
 
-            // Data untuk disimpan ke global config di database (Google Sheets)
+            // Data untuk disimpan ke database (Google Sheets tab CONFIG)
             const configData = {
-                FETCH_STRATEGY: cfgStrategyVal,
-                USE_SCRAPING: cfgScrapingVal
+                FETCH_STRATEGY: strategiPilihan,
+                USE_SCRAPING: scrapingPilihan
             };
+            
+            // Tampilkan log di console browser untuk memastikan data benar-benar terkirim
+            console.log("Mengirim data ke database:", configData);
 
             // Jalankan kedua request penyimpanan secara bersamaan ke backend
             const rUser = fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'saveUser', user: userData }) });
@@ -1493,7 +1497,7 @@ window.saveSettingsConfig = async function() {
             const [resUser, resConfig] = await Promise.all([rUser.then(r => r.json()), rConfig.then(r => r.json())]);
 
             if (resUser.status === 'success' && resConfig.status === 'success') {
-                // Update session lokal
+                // Perbarui sesi lokal
                 if (sessionDataObj) {
                     sessionDataObj.default_port = portInfo.kode_pelabuhan;
                     const sess = JSON.parse(localStorage.getItem(SESSION_KEY) || '{}');
