@@ -574,12 +574,12 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Strategi Pengambilan Data</label>
                         <select id="cfgFetchStrategy" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none font-medium">
-                            <option value="live_first">🌐 Live Fetch dulu → Cache sebagai cadangan</option>
-                            <option value="cache_first">📦 Pakai Cache jika tersedia → Live hanya jika cache kosong</option>
+                            <option value="live_first">🌐 Selalu Ambil Data Terbaru (Lebih Lambat)</option>
+                            <option value="cache_first">📦 Gunakan Data Tersimpan (Lebih Cepat)</option>
                         </select>
                         <p class="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                            <b>Live Fetch dulu</b>: Selalu ambil data terbaru dari server. Lebih lambat, data selalu mutakhir.<br>
-                            <b>Pakai Cache</b>: Gunakan data tersimpan jika ada. Lebih cepat, cocok jika koneksi lambat.
+                            <b>Data Terbaru</b>: Sistem akan memuat data langsung dari pusat. Cocok untuk memastikan data 100% akurat.<br>
+                            <b>Data Tersimpan</b>: Sistem akan menampilkan data yang sudah diunduh sebelumnya. Cocok jika koneksi internet sedang lambat.
                         </p>
                     </div>
                 </div>
