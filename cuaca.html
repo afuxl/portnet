@@ -23,7 +23,7 @@
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     
-    .leaflet-control-zoom { margin-bottom: 250px !important; }
+    .leaflet-control-zoom { margin-bottom: 280px !important; }
     @media (min-width: 1024px) {
         .leaflet-control-zoom { margin-bottom: 20px !important; margin-top: 100px !important; }
     }
@@ -48,15 +48,20 @@
     .menu-closed #side-menu {
       transform: translateX(-100%);
     }
+
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .animate-pulse-slow { animation: pulse-slow 3s infinite; }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans h-screen w-screen overflow-hidden relative menu-closed">
+<body class="bg-slate-900 text-slate-100 font-sans h-screen w-screen overflow-hidden relative menu-closed text-sm">
 
   <!-- HUD Header -->
-  <header class="absolute top-4 left-4 lg:top-6 lg:left-6 z-[1000] bg-slate-900/80 backdrop-blur-xl p-3 lg:p-4 rounded-2xl border border-slate-700/50 shadow-2xl flex items-center gap-4 transition-all hover:bg-slate-900/90">
-    <!-- Tombol Hamburger -->
+  <header class="absolute top-4 left-4 lg:top-6 lg:left-6 z-[1000] bg-slate-950/80 backdrop-blur-xl p-3 lg:p-4 rounded-2xl border border-slate-700/50 shadow-2xl flex items-center gap-4 transition-all hover:bg-slate-950/90">
     <button id="menu-toggle" class="p-2 hover:bg-slate-800 rounded-lg transition-colors text-blue-400">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
       </svg>
     </button>
@@ -71,18 +76,18 @@
         </svg>
       </div>
       <div>
-        <h1 class="text-lg font-bold text-slate-100 tracking-tight leading-tight">Navigasi Maritim</h1>
-        <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-0.5">Operational HUD v2.0</p>
+        <h1 class="text-base lg:text-lg font-black text-slate-100 tracking-tight leading-tight uppercase">Sistem Navigasi Maritim</h1>
+        <p class="text-[9px] text-slate-500 uppercase font-black tracking-[0.2em] mt-0.5">Tactical Display v2.5</p>
       </div>
     </div>
   </header>
 
   <!-- Side Navigation Drawer -->
-  <div id="side-menu-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] hidden transition-opacity duration-300 opacity-0"></div>
+  <div id="side-menu-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[2000] hidden transition-opacity duration-300 opacity-0"></div>
   
-  <nav id="side-menu" class="fixed top-0 left-0 h-full w-[280px] lg:w-[320px] bg-slate-950/90 backdrop-blur-2xl z-[2001] border-r border-slate-800 shadow-2xl p-6 flex flex-col transform -translate-x-full transition-transform duration-400">
+  <nav id="side-menu" class="fixed top-0 left-0 h-full w-[280px] lg:w-[320px] bg-slate-950/95 backdrop-blur-2xl z-[2001] border-r border-slate-800 shadow-2xl p-6 flex flex-col transform -translate-x-full transition-transform duration-500">
     <div class="flex justify-between items-center mb-10">
-      <h2 class="text-xl font-black text-blue-400 tracking-tighter uppercase">Main Menu</h2>
+      <h2 class="text-xl font-black text-blue-400 tracking-tighter uppercase italic">Control Panel</h2>
       <button id="menu-close" class="text-slate-400 hover:text-white p-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -90,42 +95,42 @@
       </button>
     </div>
 
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-3">
       <a href="index.html" class="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-800/50 transition-all border border-transparent hover:border-slate-700 group">
-        <div class="p-2 bg-slate-800 rounded-lg text-slate-400 group-hover:text-blue-400 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-          </svg>
-        </div>
-        <span class="font-semibold text-slate-300 group-hover:text-white">Beranda Utama</span>
+        <span class="font-bold text-slate-400 group-hover:text-white uppercase text-xs tracking-widest">Beranda</span>
       </a>
+      <a href="cuaca.html" class="flex items-center gap-4 p-4 rounded-xl bg-blue-600/10 border border-blue-500/30 transition-all">
+        <span class="font-bold text-white uppercase text-xs tracking-widest">Navigasi Maritim</span>
+      </a>
+      <a href="login.html" class="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-800/50 transition-all border border-transparent hover:border-slate-700 group">
+        <span class="font-bold text-slate-400 group-hover:text-white uppercase text-xs tracking-widest">Login</span>
+      </a>
+    </div>
 
-      <a href="cuaca.html" class="flex items-center gap-4 p-4 rounded-xl bg-blue-600/10 border border-blue-500/30 transition-all group">
-        <div class="p-2 bg-blue-500/20 rounded-lg text-blue-400">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <span class="font-semibold text-white">Navigasi Maritim</span>
-      </a>
-      <div class="h-[1px] bg-slate-800 my-4"></div>
+    <div class="mt-auto pt-6 border-t border-slate-800">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">BMKG Data Stream: Active</p>
+      </div>
+    </div>
   </nav>
 
   <!-- Container Peta -->
   <section class="absolute inset-0 z-0" id="map-container"></section>
 
   <!-- HUD Bottom Console -->
-  <aside id="bottom-console" class="absolute bottom-0 left-0 right-0 lg:bottom-6 lg:left-6 lg:right-6 z-[1000] bg-slate-900/90 backdrop-blur-2xl lg:rounded-3xl border-t lg:border border-slate-700/50 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] transition-all duration-500 overflow-hidden">
-    <div id="ui-weather-content" class="p-5 lg:p-6">
-      <div class="flex flex-col lg:flex-row items-center justify-center h-[160px] lg:h-[150px] gap-4 text-center lg:text-left opacity-70">
-         <div class="p-4 rounded-full bg-slate-800/50 border border-slate-700">
-           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-             <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+  <aside id="bottom-console" class="absolute bottom-0 left-0 right-0 lg:bottom-6 lg:left-6 lg:right-6 z-[1000] bg-slate-950/90 backdrop-blur-2xl lg:rounded-3xl border-t lg:border border-slate-700/60 shadow-[0_-15px_50px_rgba(0,0,0,0.8)] transition-all duration-500 overflow-hidden min-h-[160px]">
+    <div id="ui-weather-content" class="p-4 lg:p-6 h-full">
+      <!-- Default State -->
+      <div class="flex flex-col lg:flex-row items-center justify-center h-full gap-6 text-center lg:text-left opacity-60">
+         <div class="p-5 rounded-full bg-slate-900 border border-slate-700 shadow-inner">
+           <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-blue-500 animate-pulse-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
            </svg>
          </div>
-         <div>
-           <p class="text-base font-semibold text-slate-200 uppercase tracking-wide">Pilih Lokasi Operasional</p>
-           <p class="text-xs text-slate-400">Klik marker Pelabuhan atau area Perairan untuk memindai data cuaca.</p>
+         <div class="max-w-md">
+           <p class="text-lg font-black text-slate-200 uppercase tracking-widest">Menunggu Input Sektor</p>
+           <p class="text-xs text-slate-500 font-medium leading-relaxed mt-1">Gunakan radar untuk memilih Pelabuhan (Marker) atau Wilayah Perairan (Area Poligon) untuk inisialisasi pemindaian cuaca maritim.</p>
          </div>
       </div>
     </div>
@@ -135,27 +140,19 @@
     // --- MENU LOGIC ---
     const menuToggle = document.getElementById('menu-toggle');
     const menuClose = document.getElementById('menu-close');
-    const sideMenu = document.getElementById('side-menu');
     const sideOverlay = document.getElementById('side-menu-overlay');
     const body = document.body;
-
     const toggleMenu = (open) => {
-      if (open) {
-        body.classList.replace('menu-closed', 'menu-open');
-        sideOverlay.classList.remove('hidden');
-        setTimeout(() => sideOverlay.classList.replace('opacity-0', 'opacity-100'), 10);
-      } else {
-        body.classList.replace('menu-open', 'menu-closed');
-        sideOverlay.classList.replace('opacity-100', 'opacity-0');
-        setTimeout(() => sideOverlay.classList.add('hidden'), 300);
-      }
+      body.classList.toggle('menu-open', open);
+      body.classList.toggle('menu-closed', !open);
+      sideOverlay.classList.toggle('hidden', !open);
+      setTimeout(() => sideOverlay.classList.toggle('opacity-100', open), 10);
     };
+    menuToggle.onclick = () => toggleMenu(true);
+    menuClose.onclick = () => toggleMenu(false);
+    sideOverlay.onclick = () => toggleMenu(false);
 
-    menuToggle.addEventListener('click', () => toggleMenu(true));
-    menuClose.addEventListener('click', () => toggleMenu(false));
-    sideOverlay.addEventListener('click', () => toggleMenu(false));
-
-    // --- DATA & LOGIC ---
+    // --- CONFIG & UTILS ---
     const POI_LOCATIONS = [
       { id: "loc_torobulu", name: "Pelabuhan Torobulu", lat: -4.446481, lng: 122.456775, adm4: "74.05.19.2011" },
       { id: "loc_lapuko", name: "Pelabuhan Lapuko", lat: -4.157639, lng:  122.701412, adm4: "74.05.10.1001" },
@@ -165,41 +162,133 @@
 
     const uiWeatherContent = document.getElementById('ui-weather-content');
 
-    const flattenWeatherData = (rawData) => rawData?.data?.[0]?.cuaca?.flat() || [];
-    const getCurrentWeather = (flatData) => {
-      if (!flatData.length) return null;
-      const now = new Date();
-      return flatData.find(item => new Date(item.local_datetime.replace(' ', 'T')) >= now) || flatData[flatData.length - 1];
-    };
-
     const renderLoading = () => {
-      uiWeatherContent.innerHTML = `<div class="flex flex-col lg:flex-row gap-6 items-center animate-pulse h-[150px]"><div class="h-8 w-64 bg-slate-800 rounded"></div><div class="flex-1 bg-slate-800/40 rounded-2xl h-full"></div></div>`;
+      uiWeatherContent.innerHTML = `<div class="flex items-center justify-center h-32 gap-3 text-blue-400 font-black uppercase tracking-[0.3em] animate-pulse">
+        <div class="w-4 h-4 bg-blue-500 rounded-full"></div> Memindai Sektor...
+      </div>`;
     };
 
+    const renderError = (msg) => {
+      uiWeatherContent.innerHTML = `<div class="p-4 bg-red-950/30 border border-red-900/50 rounded-xl text-center text-xs text-red-400 font-black tracking-widest uppercase">${msg}</div>`;
+    };
+
+    // --- MARITIME AREA RENDERER ---
+    const renderSeaWeatherData = (data) => {
+      const current = data.data[0];
+      
+      let forecastHTML = '';
+      data.data.forEach((item, idx) => {
+        if(idx === 0) return;
+        forecastHTML += `
+          <div class="flex-none w-36 bg-slate-900/60 border border-slate-800 p-3 rounded-2xl snap-center text-center group hover:border-blue-500/50 transition-all">
+            <p class="text-[9px] text-slate-500 uppercase font-black mb-2">${item.time_desc}</p>
+            <p class="text-sm font-black text-white mb-1">${item.weather}</p>
+            <div class="flex flex-col gap-1 mt-2 border-t border-slate-800 pt-2">
+               <p class="text-[9px] text-blue-400 font-bold uppercase">Gelombang: ${item.wave_desc}</p>
+               <p class="text-[9px] text-slate-500 font-bold uppercase">Angin Max: ${item.wind_speed_max} kt</p>
+            </div>
+          </div>
+        `;
+      });
+
+      uiWeatherContent.innerHTML = `
+        <div class="flex flex-col lg:flex-row gap-6 animate-in fade-in slide-in-from-bottom-6 duration-700 h-full overflow-hidden">
+          
+          <!-- SECTOR 1: AREA IDENTITY & ALERT -->
+          <div class="lg:w-[32%] flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-slate-800/80 pb-4 lg:pb-0 lg:pr-6">
+            <div class="flex items-center gap-2 mb-2">
+               <span class="bg-blue-600 text-white text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Nav Area</span>
+               <span class="text-[9px] text-slate-500 font-black uppercase">${current.time_desc}</span>
+            </div>
+            <h2 class="text-2xl font-black text-slate-100 mb-1 leading-tight tracking-tighter">${data.name}</h2>
+            <p class="text-xs text-blue-400 font-bold uppercase tracking-wide flex items-center gap-2">
+               <span class="w-2 h-2 rounded-full bg-blue-500"></span> ${current.weather}
+            </p>
+            
+            ${current.warning_desc ? `
+            <div class="mt-4 p-2 bg-orange-950/40 border border-orange-500/40 rounded-lg animate-pulse">
+               <p class="text-[9px] text-orange-400 font-black uppercase tracking-widest mb-0.5">Maritime Alert</p>
+               <p class="text-[10px] font-bold text-orange-200 leading-tight">${current.warning_desc}</p>
+            </div>` : ''}
+          </div>
+
+          <!-- SECTOR 2: TACTICAL INSTRUMENTS -->
+          <div class="lg:w-[32%] grid grid-cols-2 gap-4 border-b lg:border-b-0 lg:border-r border-slate-800/80 pb-4 lg:pb-0 lg:pr-6 items-center">
+            <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 shadow-inner group">
+              <p class="text-[9px] text-slate-500 uppercase tracking-widest mb-2 font-black group-hover:text-blue-400 transition-colors">Tinggi Gelombang</p>
+              <div class="flex items-baseline gap-1">
+                <p class="text-2xl font-black text-white">${current.wave_desc}</p>
+                <p class="text-[10px] font-black text-slate-500 uppercase">Meter</p>
+              </div>
+              <p class="text-[10px] text-blue-400 font-black mt-1 uppercase italic">${current.wave_cat}</p>
+            </div>
+            <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 shadow-inner group">
+              <p class="text-[9px] text-slate-500 uppercase tracking-widest mb-2 font-black group-hover:text-blue-400 transition-colors">Angin (DARI ${current.wind_from})</p>
+              <div class="flex items-baseline gap-1">
+                <p class="text-2xl font-black text-white">${current.wind_speed_min}-${current.wind_speed_max}</p>
+                <p class="text-[10px] font-black text-slate-500 uppercase">Knot</p>
+              </div>
+              <p class="text-[10px] text-blue-400 font-black mt-1 uppercase italic">KE ${current.wind_to}</p>
+            </div>
+          </div>
+
+          <!-- SECTOR 3: FORECAST PROJECTION & REMARKS -->
+          <div class="flex-1 flex flex-col justify-center overflow-hidden">
+            <div class="flex items-center justify-between mb-4 pr-2">
+               <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                 <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Projection
+               </h3>
+               <div class="text-right">
+                  <p class="text-[8px] text-slate-600 font-black uppercase">Data Issued (UTC)</p>
+                  <p class="text-[9px] text-slate-400 font-bold">${data.issued}</p>
+               </div>
+            </div>
+            <div class="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x">
+              ${forecastHTML}
+            </div>
+            <p class="text-[8px] text-slate-600 font-bold italic mt-auto">${data.info || data.station_remark || 'BMKG Maritime Digital Forecast'}</p>
+          </div>
+        </div>
+      `;
+    };
+
+    // --- PORT RENDERER ---
+    const renderPortWeatherData = (data, locName) => {
+      const flat = data.data[0].cuaca.flat();
+      const current = flat.find(i => new Date(i.local_datetime.replace(' ', 'T')) >= new Date()) || flat[flat.length-1];
+      uiWeatherContent.innerHTML = `
+        <div class="flex flex-col lg:flex-row gap-8 animate-in fade-in duration-700 h-full items-center">
+          <div class="lg:w-[35%] flex items-center gap-6 border-b lg:border-b-0 lg:border-r border-slate-800/80 pb-4 lg:pb-0 pr-8">
+            <div class="relative">
+               <div class="absolute inset-0 bg-blue-500 blur-2xl opacity-20"></div>
+               <img src="${current.image}" class="w-20 h-20 relative drop-shadow-2xl" />
+            </div>
+            <div>
+              <span class="bg-slate-800 text-blue-400 text-[9px] font-black px-2 py-0.5 rounded uppercase border border-slate-700 mb-2 inline-block tracking-widest">Port Hub</span>
+              <h2 class="text-2xl font-black text-white tracking-tighter leading-none">${locName}</h2>
+              <div class="flex items-center gap-2 mt-2">
+                <span class="text-4xl font-black text-white">${current.t}°C</span>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">${current.weather_desc}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex-1 grid grid-cols-4 gap-6 w-full">
+            <div class="text-center group"><p class="text-[9px] font-black text-slate-500 uppercase mb-2 group-hover:text-blue-400">Wind Speed</p><p class="text-lg font-black text-white">${current.ws}<span class="text-xs text-slate-500 ml-1">km/j</span></p></div>
+            <div class="text-center group"><p class="text-[9px] font-black text-slate-500 uppercase mb-2 group-hover:text-blue-400">Humidity</p><p class="text-lg font-black text-white">${current.hu}<span class="text-xs text-slate-500 ml-1">%</span></p></div>
+            <div class="text-center group"><p class="text-[9px] font-black text-slate-500 uppercase mb-2 group-hover:text-blue-400">Cloud Cover</p><p class="text-lg font-black text-white">${current.tcc}<span class="text-xs text-slate-500 ml-1">%</span></p></div>
+            <div class="text-center group"><p class="text-[9px] font-black text-slate-500 uppercase mb-2 group-hover:text-blue-400">Visibility</p><p class="text-lg font-black text-white">${current.vs_text}</p></div>
+          </div>
+        </div>`;
+    };
+
+    // --- LOGIC ---
     const fetchPortWeather = async (adm4, name) => {
       renderLoading();
       try {
         const response = await fetch(`https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=${adm4}`);
         const data = await response.json();
-        const flat = data.data[0].cuaca.flat();
-        const current = flat.find(i => new Date(i.local_datetime.replace(' ', 'T')) >= new Date()) || flat[flat.length-1];
-        uiWeatherContent.innerHTML = `
-          <div class="flex flex-col lg:flex-row gap-6 animate-in fade-in duration-500 h-full items-center">
-            <div class="lg:w-[35%] flex items-center gap-4">
-              <img src="${current.image}" class="w-16 h-16" />
-              <div>
-                <h2 class="text-xl font-black text-white">${name}</h2>
-                <p class="text-3xl font-black text-blue-400">${current.t}°C <span class="text-xs text-slate-400 font-bold">${current.weather_desc}</span></p>
-              </div>
-            </div>
-            <div class="flex-1 grid grid-cols-4 gap-4 text-center">
-              <div><p class="text-[9px] font-black text-slate-500 uppercase">Wind</p><p class="text-sm font-bold">${current.ws} km/j</p></div>
-              <div><p class="text-[9px] font-black text-slate-500 uppercase">Humid</p><p class="text-sm font-bold">${current.hu}%</p></div>
-              <div><p class="text-[9px] font-black text-slate-500 uppercase">Cloud</p><p class="text-sm font-bold">${current.tcc}%</p></div>
-              <div><p class="text-[9px] font-black text-slate-500 uppercase">Vis</p><p class="text-sm font-bold">${current.vs_text}</p></div>
-            </div>
-          </div>`;
-      } catch (err) { uiWeatherContent.innerHTML = `<p class="text-red-400">Error loading data.</p>`; }
+        renderPortWeatherData(data, name);
+      } catch (err) { renderError("Inisialisasi Gagal: Port Data Timeout"); }
     };
 
     const fetchSeaWeather = async (wpimm, name) => {
@@ -207,30 +296,9 @@
       try {
         const formattedCode = wpimm.replace(/\. /g, '_').replace(/[()]/g, '');
         const response = await fetch(`https://peta-maritim.bmkg.go.id/public_api/perairan/${encodeURIComponent(formattedCode)}.json`);
-        const data = await response.json();
-        const current = data.data[0];
-        uiWeatherContent.innerHTML = `
-          <div class="flex flex-col lg:flex-row gap-6 animate-in fade-in duration-500 h-full items-center">
-            <div class="lg:w-[35%]">
-              <span class="text-[10px] bg-blue-600 px-2 py-0.5 rounded font-black uppercase">Maritime</span>
-              <h2 class="text-xl font-black text-white truncate">${name}</h2>
-              <p class="text-sm text-blue-300 italic">${current.weather}</p>
-            </div>
-            <div class="lg:w-[30%] flex gap-4">
-              <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700 w-full">
-                <p class="text-[9px] font-black text-slate-500 uppercase">Gelombang</p>
-                <p class="text-lg font-black text-white">${current.wave_desc}</p>
-              </div>
-              <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700 w-full">
-                <p class="text-[9px] font-black text-slate-500 uppercase">Angin</p>
-                <p class="text-lg font-black text-white">${current.wind_speed_max} <span class="text-xs">kt</span></p>
-              </div>
-            </div>
-            <div class="flex-1 overflow-hidden">
-               <p class="text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-widest">${current.weather_desc.substring(0, 100)}...</p>
-            </div>
-          </div>`;
-      } catch (err) { uiWeatherContent.innerHTML = `<p class="text-red-400">Error loading sea data.</p>`; }
+        if(!response.ok) throw new Error();
+        renderSeaWeatherData(await response.json());
+      } catch (err) { renderError("Inisialisasi Gagal: Sea Data Ditolak Server"); }
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -242,24 +310,28 @@
 
       POI_LOCATIONS.forEach(loc => {
         const marker = L.marker([loc.lat, loc.lng], { icon: portIcon }).addTo(map);
-        marker.on('click', (e) => { L.DomEvent.stopPropagation(e); map.flyTo([loc.lat - 0.05, loc.lng], 12, { duration: 1.2 }); fetchPortWeather(loc.adm4, loc.name); });
+        marker.on('click', (e) => {
+          L.DomEvent.stopPropagation(e);
+          map.flyTo([loc.lat - 0.05, loc.lng], 12, { duration: 1.5 });
+          fetchPortWeather(loc.adm4, loc.name);
+        });
       });
 
       fetch('https://peta-maritim.bmkg.go.id/public_api/static/wilayah_perairan.json')
         .then(res => res.json())
         .then(geojsonData => {
           const seaLayer = L.geoJSON(geojsonData, {
-            style: { color: '#3b82f6', weight: 1, opacity: 0.4, fillColor: '#1e3a8a', fillOpacity: 0.05, dashArray: '4, 4' },
+            style: { color: '#3b82f6', weight: 1, opacity: 0.3, fillColor: '#1e3a8a', fillOpacity: 0.05, dashArray: '4, 4' },
             onEachFeature: (feature, layer) => {
-              const wpName = feature.properties.WP_IMM || "Perairan";
+              const wpName = feature.properties.WP_IMM || "Sektor Perairan";
               const wpVal = feature.properties.WPIMM;
-              layer.bindTooltip(wpName, { sticky: true, className: 'bg-slate-950 text-blue-400 border-none text-[10px] font-bold p-1' });
+              layer.bindTooltip(wpName, { sticky: true, className: 'bg-slate-950/90 text-blue-400 border border-slate-800 text-[10px] font-black px-2 py-1 uppercase tracking-wider' });
               layer.on({
                 mouseover: (e) => e.target.setStyle({ weight: 2, opacity: 0.8, fillOpacity: 0.15, dashArray: '' }),
                 mouseout: (e) => seaLayer.resetStyle(e.target),
                 click: (e) => {
                   L.DomEvent.stopPropagation(e);
-                  L.popup().setLatLng(e.latlng).setContent(`<div class="p-1 font-bold text-xs">Scanning: ${wpName}</div>`).openOn(map);
+                  L.popup().setLatLng(e.latlng).setContent(`<div class="p-1 font-black text-[10px] uppercase text-blue-400">Scanning Area: ${wpName}</div>`).openOn(map);
                   fetchSeaWeather(wpVal, wpName);
                 }
               });
