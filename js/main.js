@@ -116,7 +116,14 @@ window.getSelectedPortCode = function() {
 // ==========================================
 // APP STATE
 // ==========================================
-let APP_CONFIG = { DEFAULT_PORT_CODE: 'IDLPO', USE_SCRAPING: 'FALSE' };
+let APP_CONFIG = {
+    DEFAULT_PORT_CODE: 'IDLPO',
+    USE_SCRAPING: 'FALSE',
+    // Strategi pengambilan data — disimpan di localStorage
+    // 'live_first'  : fetch live dulu, cache hanya jika live gagal (default)
+    // 'cache_first' : pakai cache jika ada, live hanya jika cache kosong
+    FETCH_STRATEGY: 'live_first'
+};
 // default_port per-user diset di DOMContentLoaded setelah session dibaca
 let etaChartInst = null;
 let trayekChartInst = null;
@@ -163,7 +170,8 @@ window.loadData = async function() {
         </td></tr>`;
 
     try {
-        const url = `${GAS_WEB_APP_URL}?portCode=${encodeURIComponent(portCode)}&year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
+        const strategy = APP_CONFIG.FETCH_STRATEGY || 'live_first';
+        const url = `${GAS_WEB_APP_URL}?portCode=${encodeURIComponent(portCode)}&year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}&strategy=${encodeURIComponent(strategy)}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const result = await response.json();
@@ -402,13 +410,19 @@ window._setKhususFilter = function(field, label) {
     // Update kartu summary label & ikon
     const labelEl = document.getElementById('khususLabel');
     const iconEl  = document.getElementById('khususIcon');
+    // [FIX] Saat field null (Semua), label = 'Semua Jenis' dan ikon = 'ship'
+    // Sebelumnya ikon 'ferris-wheel' yang tidak sesuai konteks
     if (labelEl) labelEl.textContent = label || 'Semua Jenis';
     if (iconEl) {
         const iconMap = {
-            is_penyebrangan:'ferry', is_minerba:'hard-hat', is_docking:'anchor',
-            is_perintis:'flag', lainnya:'more-horizontal'
+            is_penyebrangan: 'ferry',
+            is_minerba:      'hard-hat',
+            is_docking:      'anchor',
+            is_perintis:     'flag',
+            lainnya:         'more-horizontal'
         };
-        iconEl.innerHTML = `<i data-lucide="${field ? (iconMap[field]||'ship') : 'ferris-wheel'}" class="w-5 h-5"></i>`;
+        const iconName = field ? (iconMap[field] || 'ship') : 'ship';
+        iconEl.innerHTML = `<i data-lucide="${iconName}" class="w-5 h-5"></i>`;
         lucide.createIcons({ nodes: [iconEl] });
     }
 
@@ -422,7 +436,7 @@ function updateSummaryCards(data) {
     const totalGT = data.reduce((sum, i) => sum + (parseInt(i.gt) || 0), 0);
     document.getElementById('totalGT').textContent = totalGT.toLocaleString('id-ID');
 
-    // Hitung sesuai field yang sedang dipilih (null = semua)
+    // Hitung sesuai field yang sedang dipilih (null = semua → tampilkan total)
     const _ALL_FLAGS = ['is_penyebrangan','is_minerba','is_docking','is_perintis',
                         'is_tol_laut','is_kegiatan_tetap','is_fast_boat','is_non_niaga'];
     const _LAINNYA   = ['is_tol_laut','is_kegiatan_tetap','is_fast_boat','is_non_niaga'];
@@ -430,7 +444,7 @@ function updateSummaryCards(data) {
         ? data.filter(i => _LAINNYA.some(f=>i[f]==1||i[f]===true) || !_ALL_FLAGS.some(f=>i[f]==1||i[f]===true)).length
         : _khususField
             ? data.filter(i => i[_khususField] == 1 || i[_khususField] === true).length
-            : data.length;
+            : data.length;  // [FIX] null = Semua → total semua kapal
     document.getElementById('totalKhusus').textContent = totalKhusus.toLocaleString('id-ID');
 
     const totalNaik = data.reduce((sum, i) => sum + getPaxNaik(i), 0);
@@ -1401,6 +1415,9 @@ window.openSettingsModal = function() {
     }
     sel.value = activeCode;
     document.getElementById('cfgScraping').value = APP_CONFIG.USE_SCRAPING === 'TRUE' ? 'TRUE' : 'FALSE';
+    // Sync dropdown strategi fetch dengan nilai APP_CONFIG yang sudah dimuat dari localStorage
+    const cfgStrategyEl = document.getElementById('cfgFetchStrategy');
+    if (cfgStrategyEl) cfgStrategyEl.value = APP_CONFIG.FETCH_STRATEGY || 'live_first';
     const nameEl = document.getElementById('cfgAuthName');
     const userEl = document.getElementById('cfgAuthUsername');
     if (nameEl) nameEl.value = sessionDataObj?.name || '';
@@ -1440,6 +1457,17 @@ window.saveSettingsConfig = async function() {
         if (!selectedCode) { Swal.fire({ icon: 'warning', title: 'Pilih pelabuhan terlebih dahulu', showConfirmButton: false, timer: 2000 }); return; }
         const portInfo = PORT_LIST.find(p => p.kode_pelabuhan === selectedCode);
         if (!portInfo) { Swal.fire({ icon: 'error', title: 'Kode tidak valid', timer: 2000, showConfirmButton: false }); return; }
+
+        // Simpan strategi fetch ke APP_CONFIG dan localStorage (tidak perlu ke backend)
+        const cfgStrategyEl = document.getElementById('cfgFetchStrategy');
+        if (cfgStrategyEl) {
+            APP_CONFIG.FETCH_STRATEGY = cfgStrategyEl.value;
+            try {
+                const saved = JSON.parse(localStorage.getItem('inaportnet_config') || '{}');
+                saved.FETCH_STRATEGY = cfgStrategyEl.value;
+                localStorage.setItem('inaportnet_config', JSON.stringify(saved));
+            } catch(e) {}
+        }
 
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
@@ -1613,8 +1641,7 @@ const DOWNLOAD_COLS = [
     { key: 'eta',              label: 'Tanggal Tiba',       checked: false, get: item => item.eta || item.tgl_eta || '' },
     { key: 'etd',              label: 'Tanggal Berangkat',  checked: true,  get: item => item.etd || item.tgl_etd || '' },
     { key: 'lokasi_tolak',     label: 'Lokasi Tolak',       checked: true,  get: item => item.lokasi_tolak || '' },
-    { key: 'nakhoda',          label: 'Nakhoda',            checked: false, get: item => item.nakhoda || '' },
-    { key: 'jumlah_awak',      label: 'Jml Awak',           checked: false, get: item => item.jumlah_awak || '' },
+    // [DIHAPUS] nakhoda & jumlah_awak — tidak relevan untuk laporan unduhan
     { key: 'petugas_spb',      label: 'Petugas SPB',        checked: true,  get: item => item.spb_approve_fullname || '' },
     { key: 'waktu_spb',        label: 'Waktu SPB',          checked: true,  get: item => item.waktu_spb || '' },
     { key: 'manifest',         label: 'Manifest',           checked: true,  get: item => item.manifest || '' },
@@ -1692,6 +1719,20 @@ window._openDownloadModal = function() {
     }
 };
 
+// Helper: konversi nilai tanggal/waktu ke milidetik untuk pengurutan unduhan
+function _toSortMs(raw) {
+    if (!raw || raw === '-') return 0;
+    const s = String(raw).trim();
+    // Format "DD-MM-YYYY HH:mm" atau "DD-MM-YYYY"
+    const dmy = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})(?:[T\s](\d{2}):(\d{2}))?/);
+    if (dmy) {
+        const iso = `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}${dmy[4] ? `T${dmy[4]}:${dmy[5]}:00` : ''}`;
+        const d = new Date(iso);
+        return isNaN(d.getTime()) ? 0 : d.getTime();
+    }
+    try { const d = new Date(s); return isNaN(d.getTime()) ? 0 : d.getTime(); } catch(e) { return 0; }
+}
+
 window._doDownload = function() {
     const checked = [...document.querySelectorAll('.dl-col-check:checked')].map(el => el.value);
     if (checked.length === 0) {
@@ -1701,10 +1742,21 @@ window._doDownload = function() {
 
     const format       = document.querySelector('input[name="dlFormat"]:checked')?.value || 'xlsx';
     const modaKomoditi = document.querySelector('input[name="dlModeKomoditi"]:checked')?.value || 'ringkas';
+    // Baca pilihan urutan dari dropdown dlSortOrder
+    const sortOrder    = document.getElementById('dlSortOrder')?.value || 'etd_asc';
     const cols         = DOWNLOAD_COLS.filter(c => checked.includes(c.key));
     const colsDasar    = cols.filter(c => !c.key.includes('ringkas'));
     const now          = new Date();
     const ts           = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+
+    // Urutkan data sebelum diekspor
+    const sortFns = {
+        etd_asc:  (a, b) => _toSortMs(getETD(a))   - _toSortMs(getETD(b)),
+        etd_desc: (a, b) => _toSortMs(getETD(b))   - _toSortMs(getETD(a)),
+        spb_asc:  (a, b) => _toSortMs(a.waktu_spb) - _toSortMs(b.waktu_spb),
+        spb_desc: (a, b) => _toSortMs(b.waktu_spb) - _toSortMs(a.waktu_spb),
+    };
+    const dataToExport = [..._filteredData].sort(sortFns[sortOrder] || sortFns.etd_asc);
 
     const cellVal = (v) => {
         if (v === null || v === undefined || v === '') return '';
@@ -1722,7 +1774,7 @@ window._doDownload = function() {
         // ── Mode detail: 1 baris per komoditi/penumpang ──────────────
         wsData = [ [...colsDasar.map(c => c.label), ...KOMODITI_COLS.map(k => k.label)] ];
 
-        _filteredData.forEach((item, i) => {
+        dataToExport.forEach((item, i) => {
             const baseCells = colsDasar.map(c => cellVal(c.get(item, i)));
             const entries   = [];
 
@@ -1773,7 +1825,7 @@ window._doDownload = function() {
     } else {
         // ── Mode ringkas: 1 baris per kapal ──────────────────────────
         wsData = [ cols.map(c => c.label) ];
-        _filteredData.forEach((item, i) => {
+        dataToExport.forEach((item, i) => {
             wsData.push(cols.map(c => cellVal(c.get(item, i))));
         });
     }
