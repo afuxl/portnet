@@ -1458,28 +1458,41 @@ window.saveSettingsConfig = async function() {
         const portInfo = PORT_LIST.find(p => p.kode_pelabuhan === selectedCode);
         if (!portInfo) { Swal.fire({ icon: 'error', title: 'Kode tidak valid', timer: 2000, showConfirmButton: false }); return; }
 
-        // Simpan strategi fetch ke APP_CONFIG dan localStorage (tidak perlu ke backend)
-        const cfgStrategyEl = document.getElementById('cfgFetchStrategy');
-        if (cfgStrategyEl) {
-            APP_CONFIG.FETCH_STRATEGY = cfgStrategyEl.value;
-            try {
-                const saved = JSON.parse(localStorage.getItem('inaportnet_config') || '{}');
-                saved.FETCH_STRATEGY = cfgStrategyEl.value;
-                localStorage.setItem('inaportnet_config', JSON.stringify(saved));
-            } catch(e) {}
-        }
+        const cfgStrategyVal = document.getElementById('cfgFetchStrategy')?.value || 'live_first';
+        const cfgScrapingVal = document.getElementById('cfgScraping')?.value || 'FALSE';
+
+        // Simpan konfigurasi ke APP_CONFIG dan localStorage
+        APP_CONFIG.FETCH_STRATEGY = cfgStrategyVal;
+        APP_CONFIG.USE_SCRAPING = cfgScrapingVal;
+        try {
+            const saved = JSON.parse(localStorage.getItem('inaportnet_config') || '{}');
+            saved.FETCH_STRATEGY = cfgStrategyVal;
+            saved.USE_SCRAPING = cfgScrapingVal;
+            localStorage.setItem('inaportnet_config', JSON.stringify(saved));
+        } catch(e) {}
 
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            // Sertakan nama dari session agar tidak tertimpa kosong
+            // Data untuk disimpan ke preferensi pengguna
             const userData = {
                 username:     sessionDataObj?.username,
                 nama:         sessionDataObj?.name || '',
                 default_port: portInfo.kode_pelabuhan
             };
-            const r   = await fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'saveUser', user: userData }) });
-            const res = await r.json();
-            if (res.status === 'success') {
+
+            // Data untuk disimpan ke global config di database (Google Sheets)
+            const configData = {
+                FETCH_STRATEGY: cfgStrategyVal,
+                USE_SCRAPING: cfgScrapingVal
+            };
+
+            // Jalankan kedua request penyimpanan secara bersamaan ke backend
+            const rUser = fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'saveUser', user: userData }) });
+            const rConfig = fetch(GAS_WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'updateConfig', config: configData }) });
+
+            const [resUser, resConfig] = await Promise.all([rUser.then(r => r.json()), rConfig.then(r => r.json())]);
+
+            if (resUser.status === 'success' && resConfig.status === 'success') {
                 // Update session lokal
                 if (sessionDataObj) {
                     sessionDataObj.default_port = portInfo.kode_pelabuhan;
@@ -1490,8 +1503,8 @@ window.saveSettingsConfig = async function() {
                 APP_CONFIG.DEFAULT_PORT_CODE = portInfo.kode_pelabuhan;
                 setDefaultPortInput();
                 window.closeSettingsModal();
-                Swal.fire({ icon: 'success', title: 'Port default diperbarui', text: portInfo.nama_pelabuhan, timer: 2000, showConfirmButton: false });
-            } else throw new Error(res.message);
+                Swal.fire({ icon: 'success', title: 'Pengaturan disimpan', text: portInfo.nama_pelabuhan, timer: 2000, showConfirmButton: false });
+            } else throw new Error(resUser.message || resConfig.message || 'Gagal menyimpan pengaturan');
         } catch(err) { Swal.fire({ icon: 'error', title: 'Gagal', text: err.message }); }
         return;
     }
