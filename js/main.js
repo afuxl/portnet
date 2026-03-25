@@ -1730,20 +1730,10 @@ window.openDetailModal = function(uid) {
 
     // ── Update header judul + tombol aksi ──
     const titleEl = document.getElementById('modalTitle');
-    if (titleEl) titleEl.querySelector('span').textContent = `Informasi ${item.nama_kapal || 'Kapal'}`;
+    if (titleEl) titleEl.querySelector('span').textContent = `${item.nama_kapal || 'Kapal'}`;
 
     const actionsEl = document.getElementById('modalActions');
-    if (actionsEl) actionsEl.innerHTML = `
-        <!-- Baris 1: Detail — full width -->
-        <div class="col-span-2">
-            ${btn(urlDetail, !!noPkkRaw, 'external-link', 'Lihat Detail di Monitoring Inaportnet', 'bg-blue-50 text-blue-700 border-blue-200', 'bg-blue-600')}
-        </div>
-        <!-- Baris 2: SPB | LK3 -->
-        ${btn(urlSPB,  !!noLayananRaw, 'file-text',  'SPB',  'bg-indigo-50 text-indigo-700 border-indigo-200', 'bg-indigo-600')}
-        ${btn(urlLK3,  !!noPkkRaw,     'anchor',      'LK3',  'bg-emerald-50 text-emerald-700 border-emerald-200', 'bg-emerald-600')}
-        <!-- Baris 3: Kru | Manifest -->
-        ${btn(urlKru,      !!noPkkRaw,     'users',       'Kru',      'bg-amber-50 text-amber-700 border-amber-200', 'bg-amber-600')}
-        ${btn(urlManifest, !!noLayananRaw, 'clipboard-list', 'Manifest', 'bg-rose-50 text-rose-700 border-rose-200', 'bg-rose-600')}`;
+
 
     // ── Render bongkar muat ──
     const renderBongkarMuat = (items, warna) => {
