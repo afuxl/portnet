@@ -554,6 +554,12 @@ window._loadRangeData = async function() {
     return;
   }
 
+    mergedData.sort((a, b) => {
+        const timeA = _toSortMs(getETA(a) || getETD(a) || a.waktu_spb);
+        const timeB = _toSortMs(getETA(b) || getETD(b) || b.waktu_spb);
+        return timeB - timeA; // Descending
+    });
+
   // Tambah _uid unik
   currentData = mergedData.map((item, idx) => ({ ...item, _uid: `uid_${idx}_${Date.now()}` }));
 
