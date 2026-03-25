@@ -1796,11 +1796,11 @@ window.openDetailModal = function(uid) {
                             ${item.loa ? `<span class="text-slate-500">LOA <b class="text-slate-800">${e(item.loa)}m</b></span>` : ''}
                             ${item.lebar ? `<span class="text-slate-500">Lebar <b class="text-slate-800">${e(item.lebar)}m</b></span>` : ''}
                         </div>
-                        <div class="grid grid-cols-4 gap-1 mt-2 text-center">
+
                             <div class="bg-white rounded border border-slate-200 py-1 px-0.5"><p class="text-[8px] text-slate-400">MAX</p><p class="text-[9px] font-bold text-slate-700">${e(item.dr_max_xls||item.dr_max||'-')}</p></div>
-                            <div class="bg-white rounded border border-slate-200 py-1 px-0.5"><p class="text-[8px] text-slate-400">DP</p><p class="text-[9px] font-bold text-slate-700">${e(item.dr_depan_xls||item.dr_depan||'-')}</p></div>
-                            <div class="bg-white rounded border border-slate-200 py-1 px-0.5"><p class="text-[8px] text-slate-400">TG</p><p class="text-[9px] font-bold text-slate-700">${e(item.dr_tengah_xls||item.dr_tengah||'-')}</p></div>
-                            <div class="bg-white rounded border border-slate-200 py-1 px-0.5"><p class="text-[8px] text-slate-400">BK</p><p class="text-[9px] font-bold text-slate-700">${e(item.dr_belakang_xls||item.dr_belakang||'-')}</p></div>
+                            <div class="bg-white rounded border border-slate-200 py-1 px-0.5"><p class="text-[8px] text-slate-400">Depan</p><p class="text-[9px] font-bold text-slate-700">${e(item.dr_depan_xls||item.dr_depan||'-')}</p></div>
+                            <div class="bg-white rounded border border-slate-200 py-1 px-0.5"><p class="text-[8px] text-slate-400">Tengah</p><p class="text-[9px] font-bold text-slate-700">${e(item.dr_tengah_xls||item.dr_tengah||'-')}</p></div>
+                            <div class="bg-white rounded border border-slate-200 py-1 px-0.5"><p class="text-[8px] text-slate-400">Belakang</p><p class="text-[9px] font-bold text-slate-700">${e(item.dr_belakang_xls||item.dr_belakang||'-')}</p></div>
                         </div>
                     </div>
 
