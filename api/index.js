@@ -334,7 +334,7 @@ async function simpanKeCacheData(sheetName, key, dataString, dateString) {
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
       range: `${sheetName}!A:D`,
-      valueInputOption: 'USER_ENTERED',
+      valueInputOption: 'RAW',
       requestBody: { values: newRows }
     });
   }
