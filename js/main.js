@@ -156,9 +156,11 @@ window._setDisplayMode = function(mode) {
   _displayMode = mode;
   const isRange = mode === 'range';
 
-  // Toggle UI blok
-  document.getElementById('modeMonthly')?.classList.toggle('hidden', isRange);
-  document.getElementById('modeRange')?.classList.toggle('hidden', !isRange);
+  // Toggle UI blok — gunakan style.display agar tidak konflik dengan flex
+  const elMonthly = document.getElementById('modeMonthly');
+  const elRange   = document.getElementById('modeRange');
+  if (elMonthly) elMonthly.style.display = isRange ? 'none' : '';
+  if (elRange)   elRange.style.display   = isRange ? ''     : 'none';
 
   // Styling tombol toggle
   const btnMonthly = document.getElementById('btnModeMonthly');
