@@ -4,10 +4,10 @@ import { google } from 'googleapis';
  * ==============================================================
  * INISIALISASI GOOGLE SHEETS API
  * Environment Variables yang diperlukan di Vercel:
- * GOOGLE_CLIENT_EMAIL  — email service account
- * GOOGLE_PRIVATE_KEY   — private key (dengan \n literal)
- * SPREADSHEET_ID       — ID spreadsheet Google Sheets
- * MODE_TESTING         — opsional: 'true' / 'false'
+ *   GOOGLE_CLIENT_EMAIL  — email service account
+ *   GOOGLE_PRIVATE_KEY   — private key (dengan \n literal)
+ *   SPREADSHEET_ID       — ID spreadsheet Google Sheets
+ *   MODE_TESTING         — opsional: 'true' / 'false'
  * ==============================================================
  */
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -31,7 +31,7 @@ function sleep(ms) {
 
 function formatDate(date, format) {
   const options = {
-    timeZone: 'Asia/Makassar',
+    timeZone: 'Asia/Jakarta',
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', second: '2-digit',
     hour12: false
@@ -122,12 +122,12 @@ async function getConfig() {
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [
-          ['DEFAULT_PORT_CODE', 'ID***', 'Kode Pelabuhan default'],
+          ['DEFAULT_PORT_CODE', 'IDLPO', 'Kode Pelabuhan default'],
           ['USE_SCRAPING',      'FALSE', 'Gunakan Scraping (TRUE/FALSE)']
         ]
       }
     });
-    return { DEFAULT_PORT_CODE: 'ID***', USE_SCRAPING: 'FALSE' };
+    return { DEFAULT_PORT_CODE: 'IDLPO', USE_SCRAPING: 'FALSE' };
   }
   return configObj;
 }
@@ -180,7 +180,7 @@ async function getAllUsers() {
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID, range: 'USERS!A:F',
       valueInputOption: 'USER_ENTERED',
-      requestBody: { values: [['admin', '*********', 'Administrator', 'admin', 'TRUE', '']] }
+      requestBody: { values: [['admin', 'password123', 'Administrator', 'admin', 'TRUE', '']] }
     });
     users.push({ username: 'admin', nama: 'Administrator', role: 'admin', aktif: true, default_port: '', _row: 2 });
     return users;
@@ -510,7 +510,7 @@ async function IMPORTHTMLXLS(url) {
         // [FIX] Tambah AbortController timeout 25 detik — native fetch tidak punya
         // timeout bawaan, bisa hang selamanya hingga Vercel function timeout.
         const controller = new AbortController();
-        const timer      = setTimeout(() => controller.abort(), 30000);
+        const timer      = setTimeout(() => controller.abort(), 25000);
         const response   = await fetch(targetUrl, {
           signal: controller.signal,
           headers: {
@@ -601,12 +601,6 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin',  '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  // [FIX] Tambahkan header anti-cache agar Vercel CDN / Browser tidak menyimpan respons GET
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   // ── POST: Login & manajemen user/config ──────────────────────
@@ -629,7 +623,7 @@ export default async function handler(req, res) {
           username:     user.username,
           nama:         user.nama,
           role:         user.role,
-          default_port: user.default_port || config.DEFAULT_PORT_CODE || ''
+          default_port: user.default_port || config.DEFAULT_PORT_CODE || 'IDLPO'
         });
       }
 
@@ -672,9 +666,101 @@ export default async function handler(req, res) {
 
   // ── GET: Ambil data dashboard ─────────────────────────────────
   if (req.method === 'GET') {
-    const portCode = req.query.portCode || '';
+    const portCode = req.query.portCode || 'IDLPO';
     const year     = req.query.year  || formatDate(new Date(), 'yyyy');
     const month    = req.query.month || formatDate(new Date(), 'MM');
+
+    // ── Mode check_only: cek status cache tanpa fetch data ────
+    // Dipakai oleh Mode Rentang Tanggal untuk audit cache tiap bulan
+    // Response: { status, cache_exists, last_date, total_records, is_complete }
+    // is_complete = true jika cache ada dan last_date >= end_date (atau bulan sudah lewat)
+    if (req.query.check_only === 'true') {
+      const cacheKey    = `${portCode}_${year}_${month}`;
+      const todayString = formatDate(new Date(), 'yyyy-MM-dd');
+      const endDate     = req.query.end_date || ''; // tanggal akhir rentang (YYYY-MM-DD)
+
+      try {
+        // Coba cache hari ini dulu, lalu usang
+        const cacheObj = await cekCacheValidData('CACHE_JSON', cacheKey, todayString)
+                      || await bacaCacheUsangData('CACHE_JSON', cacheKey);
+
+        if (!cacheObj) {
+          return res.status(200).json({
+            status: 'success',
+            cache_exists:   false,
+            last_date:      null,
+            total_records:  0,
+            is_complete:    false,
+            fetched_at:     null
+          });
+        }
+
+        // Parse untuk hitung jumlah record dan tanggal terakhir data
+        let totalRecords = 0;
+        let lastDataDate = null; // tanggal ETD/ETA terbaru dalam data cache
+
+        try {
+          const parsed = JSON.parse(cacheObj.data);
+          const dataArr = Array.isArray(parsed) ? parsed : (parsed.data || []);
+          totalRecords = dataArr.length;
+
+          // Cari tanggal ETD terbaru dari data
+          for (const item of dataArr) {
+            const etd = item.etd || item.tgl_etd || item.berangkat_tanggal_xls || null;
+            if (!etd || etd === '-') continue;
+            const s = String(etd).trim();
+            // Normalise ke YYYY-MM-DD
+            const dmy = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+            const dateStr = dmy
+              ? `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`
+              : s.substring(0, 10);
+            if (!lastDataDate || dateStr > lastDataDate) lastDataDate = dateStr;
+          }
+        } catch (e) {
+          // Tidak bisa parse — anggap cache ada tapi tidak bisa dibaca
+          console.error('check_only parse error:', e.message);
+        }
+
+        // Tentukan is_complete:
+        // 1. Jika bulan sudah lewat (tidak ada end_date atau end_date >= akhir bulan) → complete
+        // 2. Jika end_date disertakan → bandingkan lastDataDate >= end_date
+        let isComplete = false;
+        const lastDayOfMonth = new Date(parseInt(year), parseInt(month), 0);
+        const lastDayStr     = formatDate(lastDayOfMonth, 'yyyy-MM-dd');
+        const monthIsPast    = lastDayStr < todayString;
+
+        if (monthIsPast) {
+          // Bulan sudah selesai — cache apapun dianggap complete (tidak ada data baru)
+          isComplete = true;
+        } else if (endDate && lastDataDate) {
+          // Bulan berjalan — cek apakah data sudah mencakup end_date
+          isComplete = lastDataDate >= endDate;
+        } else if (!endDate && lastDataDate) {
+          // Tidak ada end_date → anggap complete jika cache ada
+          isComplete = true;
+        }
+
+        return res.status(200).json({
+          status:         'success',
+          cache_exists:   true,
+          last_date:      lastDataDate,
+          total_records:  totalRecords,
+          is_complete:    isComplete,
+          fetched_at:     cacheObj.fetched_at || null
+        });
+
+      } catch (err) {
+        return res.status(500).json({
+          status: 'error',
+          message: err.message,
+          cache_exists: false,
+          last_date: null,
+          total_records: 0,
+          is_complete: false
+        });
+      }
+    }
+    // ── END check_only ────────────────────────────────────────
 
     // [BARU] Strategi fetch — dikirim dari frontend (main.js)
     // 'live_first'  : fetch live dulu, cache hanya jika live gagal (default lama)
@@ -686,8 +772,7 @@ export default async function handler(req, res) {
     const timestamp   = Date.now();
 
     // ── Mode Testing ──────────────────────────────────────────
-    // [FIX] Jangan gunakan mode testing (yang memaksa membaca cache) jika pengguna secara eksplisit meminta live_first
-    if (process.env.MODE_TESTING === 'true' && strategy !== 'live_first') {
+    if (process.env.MODE_TESTING === 'true') {
       const rawObj = await bacaCacheUsangData('CACHE_JSON', cacheKey);
       if (!rawObj) return res.status(200).json({ status: 'error', message: 'Tidak ada data cache untuk mode testing.' });
       const parsed = JSON.parse(rawObj.data);
@@ -717,6 +802,27 @@ export default async function handler(req, res) {
       }
       // Tidak ada cache sama sekali → jatuh ke live fetch di bawah
       console.log(`GET cache_first MISS — cache kosong, mulai live fetch. [${cacheKey}]`);
+    }
+
+    // ── Strategi: live_first ──────────────────────────────────
+    // Selalu fetch ke server. Pengecualian: jika cache hari ini sudah ada,
+    // langsung pakai (tidak perlu fetch ulang untuk hari yang sama).
+    // Jika cache hari ini BELUM ada → fetch live sekarang.
+    if (strategy !== 'cache_first') {
+      const cachedTodayObj = await cekCacheValidData('CACHE_JSON', cacheKey, todayString);
+      if (cachedTodayObj) {
+        try {
+          const parsed = JSON.parse(cachedTodayObj.data);
+          let data     = Array.isArray(parsed) ? parsed : (parsed.data || []);
+          data         = await _mergeLK3(data, cacheKey, todayString);
+          console.log(`GET live_first — cache hari ini sudah ada, skip fetch. [${cacheKey}]`);
+          return res.status(200).json({ status: 'success', source: 'cache_hari_ini', data, fetched_at: cachedTodayObj.fetched_at || todayString });
+        } catch (parseErr) {
+          console.error('Parse cache gagal, lanjut fetch:', parseErr.message);
+        }
+      }
+      // Cache hari ini belum ada → lanjut live fetch di bawah
+      console.log(`GET live_first — belum ada cache hari ini, mulai fetch. [${cacheKey}]`);
     }
 
     // ── [2] Live fetch JSON + XLS ─────────────────────────────
