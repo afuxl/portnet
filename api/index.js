@@ -762,9 +762,12 @@ export default async function handler(req, res) {
     }
     // ── END check_only ────────────────────────────────────────
 
-    // [BARU] Strategi fetch — dikirim dari frontend (main.js)
-    // 'live_first'  : fetch live dulu, cache hanya jika live gagal (default lama)
-    // 'cache_first' : pakai cache jika ada (hari ini atau usang), live hanya jika cache kosong
+    // ── Strategi fetch — dikirim dari frontend (main.js)
+    // 'live_first'  : SELALU fetch live ke server, simpan ke cache, kembalikan data fresh.
+    //                 Tidak ada "shortcut" ke cache hari ini — user memilih live berarti minta data terbaru.
+    //                 Fallback ke cache usang HANYA jika server tidak dapat dijangkau / error.
+    // 'cache_first' : Pakai cache APA SAJA yang ada (hari ini ATAU usang/kemarin).
+    //                 Live fetch HANYA dijalankan jika tidak ada cache sama sekali.
     const strategy    = req.query.strategy || 'live_first';
 
     const cacheKey    = `${portCode}_${year}_${month}`;
@@ -780,9 +783,9 @@ export default async function handler(req, res) {
       return res.status(200).json({ status: 'success', source: 'cache_testing', data, fetched_at: rawObj.fetched_at || todayString });
     }
 
-    // ── Strategi: cache_first ────────────────────────────────
-    // Terima cache APA SAJA yang ada (hari ini ATAU usang/kemarin).
-    // Live fetch hanya dijalankan jika tidak ada cache sama sekali.
+    // ── Strategi: cache_first ─────────────────────────────────
+    // Cek cache (hari ini ATAU usang). Jika ada → langsung kembalikan, TIDAK live fetch.
+    // Live fetch hanya jika cache benar-benar kosong.
     if (strategy === 'cache_first') {
       const cacheObj = await cekCacheValidData('CACHE_JSON', cacheKey, todayString)
                     || await bacaCacheUsangData('CACHE_JSON', cacheKey);
@@ -791,42 +794,24 @@ export default async function handler(req, res) {
           const parsed = JSON.parse(cacheObj.data);
           let data     = Array.isArray(parsed) ? parsed : (parsed.data || []);
           data         = await _mergeLK3(data, cacheKey, todayString);
-          // Bedakan badge: cache hari ini vs cache usang
           const isToday = cacheObj.fetched_at && cacheObj.fetched_at.substring(0,10) === todayString;
           const src     = isToday ? 'cache_hari_ini' : 'stale_cache';
           console.log(`GET cache_first HIT (${src}). [${cacheKey}]`);
           return res.status(200).json({ status: 'success', source: src, data, fetched_at: cacheObj.fetched_at || todayString });
         } catch (e) {
-          console.error('cache_first parse gagal, lanjut live fetch:', e.message);
+          // Parse gagal → cache rusak, jatuh ke live fetch
+          console.error('cache_first: parse cache gagal, lanjut live fetch:', e.message);
         }
+      } else {
+        // Cache benar-benar kosong → live fetch
+        console.log(`GET cache_first MISS — tidak ada cache, mulai live fetch. [${cacheKey}]`);
       }
-      // Tidak ada cache sama sekali → jatuh ke live fetch di bawah
-      console.log(`GET cache_first MISS — cache kosong, mulai live fetch. [${cacheKey}]`);
+      // Jika sampai sini: cache kosong atau rusak → lanjut ke live fetch di bawah
     }
 
-    // ── Strategi: live_first ──────────────────────────────────
-    // Selalu fetch ke server. Pengecualian: jika cache hari ini sudah ada,
-    // langsung pakai (tidak perlu fetch ulang untuk hari yang sama).
-    // Jika cache hari ini BELUM ada → fetch live sekarang.
-    if (strategy !== 'cache_first') {
-      const cachedTodayObj = await cekCacheValidData('CACHE_JSON', cacheKey, todayString);
-      if (cachedTodayObj) {
-        try {
-          const parsed = JSON.parse(cachedTodayObj.data);
-          let data     = Array.isArray(parsed) ? parsed : (parsed.data || []);
-          data         = await _mergeLK3(data, cacheKey, todayString);
-          console.log(`GET live_first — cache hari ini sudah ada, skip fetch. [${cacheKey}]`);
-          return res.status(200).json({ status: 'success', source: 'cache_hari_ini', data, fetched_at: cachedTodayObj.fetched_at || todayString });
-        } catch (parseErr) {
-          console.error('Parse cache gagal, lanjut fetch:', parseErr.message);
-        }
-      }
-      // Cache hari ini belum ada → lanjut live fetch di bawah
-      console.log(`GET live_first — belum ada cache hari ini, mulai fetch. [${cacheKey}]`);
-    }
-
-    // ── [2] Live fetch JSON + XLS ─────────────────────────────
-    console.log(`GET MISS/live — mulai fetch. [${cacheKey}]`);
+    // ── Live fetch JSON + XLS ─────────────────────────────────
+    // Dicapai oleh: live_first (selalu), atau cache_first saat cache kosong/rusak
+    console.log(`GET live fetch mulai. strategy=${strategy} [${cacheKey}]`);
     let jsonData     = [];
     let xlsDataArray = [];
 
