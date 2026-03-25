@@ -510,7 +510,7 @@ async function IMPORTHTMLXLS(url) {
         // [FIX] Tambah AbortController timeout 25 detik — native fetch tidak punya
         // timeout bawaan, bisa hang selamanya hingga Vercel function timeout.
         const controller = new AbortController();
-        const timer      = setTimeout(() => controller.abort(), 25000);
+        const timer      = setTimeout(() => controller.abort(), 30000);
         const response   = await fetch(targetUrl, {
           signal: controller.signal,
           headers: {
