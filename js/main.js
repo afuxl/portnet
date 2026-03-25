@@ -555,8 +555,8 @@ window._loadRangeData = async function() {
   }
 
     mergedData.sort((a, b) => {
-        const timeA = _toSortMs(getETA(a) || getETD(a) || a.waktu_spb);
-        const timeB = _toSortMs(getETA(b) || getETD(b) || b.waktu_spb);
+        const timeA = _toSortMs(getETD(a) || getETA(a) || a.waktu_spb);
+        const timeB = _toSortMs(getETD(b) || getETA(b) || b.waktu_spb);
         return timeB - timeA; // Descending
     });
 
