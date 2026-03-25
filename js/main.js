@@ -140,9 +140,491 @@ let jenisChartInst = null;
 let currentData = [];
 
 // ==========================================
+// MODE TAMPILAN — Per Bulan vs Rentang Tanggal
+// ==========================================
+let _displayMode = 'monthly'; // 'monthly' | 'range'
+
+// Metadata sumber data gabungan (diisi saat mode range berhasil)
+let _rangeMeta = {
+  dari:   '',   // YYYY-MM-DD
+  sampai: '',   // YYYY-MM-DD
+  months: [],   // [{ year, month, status, records }]
+  sources: [],  // 'cache' | 'live' per bulan
+};
+
+window._setDisplayMode = function(mode) {
+  _displayMode = mode;
+  const isRange = mode === 'range';
+
+  // Toggle UI blok
+  document.getElementById('modeMonthly')?.classList.toggle('hidden', isRange);
+  document.getElementById('modeRange')?.classList.toggle('hidden', !isRange);
+
+  // Styling tombol toggle
+  const btnMonthly = document.getElementById('btnModeMonthly');
+  const btnRange   = document.getElementById('btnModeRange');
+  if (btnMonthly) {
+    btnMonthly.className = isRange
+      ? 'flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition-all'
+      : 'flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white text-blue-700 shadow-sm border border-blue-200 transition-all';
+  }
+  if (btnRange) {
+    btnRange.className = isRange
+      ? 'flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white text-blue-700 shadow-sm border border-blue-200 transition-all'
+      : 'flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition-all';
+  }
+
+  // Lock/unlock port input
+  const portInput = document.getElementById('portNameInput');
+  const portLockBadge = document.getElementById('portLockBadge');
+  if (portInput) {
+    if (isRange) {
+      const idlpoInfo = PORT_LIST.find(p => p.kode_pelabuhan.toUpperCase() === 'IDLPO');
+      portInput.value    = idlpoInfo ? idlpoInfo.nama_pelabuhan.toUpperCase() : 'IDLPO';
+      portInput.readOnly = true;
+      portInput.disabled = true;
+      portInput.classList.add('opacity-60','cursor-not-allowed','bg-slate-100');
+    } else {
+      // Kembalikan ke role-aware state
+      setDefaultPortInput();
+    }
+  }
+  if (portLockBadge) portLockBadge.classList.toggle('hidden', !isRange);
+
+  // Reset _rangeMeta saat ganti mode
+  if (!isRange) {
+    _rangeMeta = { dari: '', sampai: '', months: [], sources: [], skipped: [] };
+  }
+
+  // Re-init tanggal bounds filter tabel
+  _initFilterTanggalBounds();
+};
+
+// ==========================================
+// HELPER RENTANG TANGGAL
+// ==========================================
+
+// Hitung semua bulan (year+month) antara dua tanggal YYYY-MM-DD
+function _getMonthsCovered(dari, sampai) {
+  const months = [];
+  const d = new Date(dari + 'T00:00:00');
+  const s = new Date(sampai + 'T00:00:00');
+  // Set ke hari 1 bulan masing-masing
+  let cur = new Date(d.getFullYear(), d.getMonth(), 1);
+  const end = new Date(s.getFullYear(), s.getMonth(), 1);
+  while (cur <= end) {
+    months.push({
+      year:  String(cur.getFullYear()),
+      month: String(cur.getMonth() + 1).padStart(2, '0'),
+    });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  return months;
+}
+
+// Format "Januari 2026" dari { year, month }
+function _formatMonthLabel(m) {
+  const names = ['','Januari','Februari','Maret','April','Mei','Juni',
+                  'Juli','Agustus','September','Oktober','November','Desember'];
+  return `${names[parseInt(m.month)]} ${m.year}`;
+}
+
+// Cek status cache satu bulan via backend check_only
+async function _checkCacheStatus(portCode, year, month, endDate) {
+  try {
+    const url = `${GAS_WEB_APP_URL}?portCode=${encodeURIComponent(portCode)}&year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}&check_only=true&end_date=${encodeURIComponent(endDate || '')}`;
+    const r   = await fetch(url);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } catch (e) {
+    return { cache_exists: false, last_date: null, total_records: 0, is_complete: false, error: e.message };
+  }
+}
+
+// Fetch satu bulan dan simpan ke cache (live fetch)
+async function _fetchMonthLive(portCode, year, month) {
+  const strategy = 'live_first';
+  const url = `${GAS_WEB_APP_URL}?portCode=${encodeURIComponent(portCode)}&year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}&strategy=${encodeURIComponent(strategy)}`;
+  const r   = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const result = await r.json();
+  if (result.status === 'error') throw new Error(result.message || 'Gagal fetch data');
+  return result;
+}
+
+// Baca data cache satu bulan (cache_first — tidak perlu live)
+async function _readMonthCache(portCode, year, month) {
+  const url = `${GAS_WEB_APP_URL}?portCode=${encodeURIComponent(portCode)}&year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}&strategy=cache_first`;
+  const r   = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const result = await r.json();
+  if (result.status === 'error') throw new Error(result.message || 'Tidak ada data cache');
+  return result;
+}
+
+// Filter data satu bulan sesuai rentang tanggal ETD
+function _filterByDateRange(data, dari, sampai) {
+  return data.filter(item => {
+    const etdRaw = item.etd || item.tgl_etd || item.berangkat_tanggal_xls || null;
+    if (!etdRaw || etdRaw === '-') return true; // data tanpa ETD tetap masuk
+    const etdYMD = _parseDateToYMD(etdRaw);
+    if (!etdYMD) return true;
+    if (dari   && etdYMD < dari)   return false;
+    if (sampai && etdYMD > sampai) return false;
+    return true;
+  });
+}
+
+// ==========================================
+// DIALOG KONFIRMASI CACHE — SweetAlert2
+// ==========================================
+
+// Tampilkan dialog konfirmasi status cache per bulan
+// statuses: array { month: {year,month}, info: checkOnly result }
+// Kembalikan: 'proceed' | 'skip' | 'cancel'
+async function _showCacheConfirmDialog(statuses, sampai) {
+  const needFetch  = statuses.filter(s => !s.info.cache_exists);
+  const needUpdate = statuses.filter(s => s.info.cache_exists && !s.info.is_complete);
+  const ok         = statuses.filter(s => s.info.cache_exists && s.info.is_complete);
+
+  // Bangun HTML ringkasan
+  const rowHtml = (icon, color, label, sub) =>
+    `<div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-${color}-50 border border-${color}-100 text-left">
+       <span class="text-base flex-shrink-0">${icon}</span>
+       <div class="min-w-0">
+         <p class="text-xs font-bold text-${color}-800 leading-tight">${label}</p>
+         ${sub ? `<p class="text-[10px] text-${color}-500 leading-tight">${sub}</p>` : ''}
+       </div>
+     </div>`;
+
+  let rows = '';
+  ok.forEach(s => {
+    rows += rowHtml('✅','emerald', _formatMonthLabel(s.month),
+      `${s.info.total_records} kapal · Cache tersedia`);
+  });
+  needUpdate.forEach(s => {
+    const last = s.info.last_date
+      ? s.info.last_date.split('-').reverse().join('/')
+      : '?';
+    rows += rowHtml('⚠️','amber', _formatMonthLabel(s.month),
+      `Cache s.d. ${last} · ${s.info.total_records} kapal · Perlu diperbarui`);
+  });
+  needFetch.forEach(s => {
+    rows += rowHtml('❌','rose', _formatMonthLabel(s.month), 'Belum ada data — perlu diambil');
+  });
+
+  // Tentukan pesan & tombol
+  const hasAnyMissing = needFetch.length > 0 || needUpdate.length > 0;
+  const allMissing    = ok.length === 0 && needUpdate.length === 0;
+
+  let confirmText, denyText, title, text;
+
+  if (!hasAnyMissing) {
+    // Semua tersedia
+    title       = 'Data Siap Ditampilkan';
+    text        = 'Semua data tersedia di cache.';
+    confirmText = 'Tampilkan Data';
+    denyText    = null;
+  } else if (allMissing) {
+    title       = 'Tidak Ada Data Cache';
+    text        = 'Semua bulan memerlukan pengambilan data dari server.';
+    confirmText = 'Ambil & Tampilkan';
+    denyText    = 'Lewati & Lanjutkan';
+  } else {
+    title       = 'Periksa Ketersediaan Data';
+    text        = `${needFetch.length + needUpdate.length} bulan perlu diperbarui.`;
+    confirmText = 'Perbarui & Tampilkan';
+    denyText    = 'Lanjutkan Tanpa Memperbarui';
+  }
+
+  const result = await Swal.fire({
+    title,
+    html: `<p class="text-xs text-slate-500 mb-3">${text}</p>
+           <div class="space-y-1.5">${rows}</div>`,
+    confirmButtonText: confirmText,
+    confirmButtonColor: '#2563eb',
+    ...(denyText ? {
+      showDenyButton:  true,
+      denyButtonText:  denyText,
+      denyButtonColor: '#64748b',
+    } : {}),
+    showCancelButton:  true,
+    cancelButtonText:  'Batal',
+    cancelButtonColor: '#dc2626',
+    width: '28rem',
+    customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-lg text-sm', denyButton: 'rounded-lg text-sm', cancelButton: 'rounded-lg text-sm' }
+  });
+
+  if (result.isConfirmed) return 'proceed';
+  if (result.isDenied)    return 'skip';
+  return 'cancel';
+}
+
+// Dialog konfirmasi bulan yang dilewati (saat ada ❌ dan user pilih Lewati)
+async function _showSkipConfirmDialog(skippedMonths) {
+  if (skippedMonths.length === 0) return true;
+  const list = skippedMonths.map(m => `• ${_formatMonthLabel(m)}`).join('<br>');
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: 'Konfirmasi Bulan Dilewati',
+    html: `<p class="text-sm text-slate-600 mb-3">Data bulan berikut <b>tidak akan disertakan</b> dalam hasil tampilan:</p>
+           <div class="text-left text-xs bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 font-semibold text-slate-700">${list}</div>
+           <p class="text-xs text-slate-400 mt-3">Lanjutkan dengan data bulan lain yang tersedia?</p>`,
+    confirmButtonText:  'Ya, Lanjutkan',
+    confirmButtonColor: '#2563eb',
+    showCancelButton:   true,
+    cancelButtonText:   'Batal',
+    cancelButtonColor:  '#dc2626',
+    customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-lg text-sm', cancelButton: 'rounded-lg text-sm' }
+  });
+  return result.isConfirmed;
+}
+
+// ==========================================
+// PROGRESS PANEL — tampil di dalam page saat fetch berjalan
+// ==========================================
+function _showProgressPanel(msg) {
+  let panel = document.getElementById('rangeProgressPanel');
+  if (!panel) return;
+  panel.innerHTML = `
+    <div class="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800 font-medium">
+      <svg class="animate-spin w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      <span>${escHTML(msg)}</span>
+    </div>`;
+  panel.classList.remove('hidden');
+}
+
+function _hideProgressPanel() {
+  const panel = document.getElementById('rangeProgressPanel');
+  if (panel) panel.classList.add('hidden');
+}
+
+// ==========================================
+// LOAD DATA — MODE RENTANG TANGGAL (Langkah 1–5)
+// ==========================================
+window._loadRangeData = async function() {
+  const dari   = document.getElementById('rangeFromDate')?.value || '';
+  const sampai = document.getElementById('rangeToDate')?.value   || '';
+
+  if (!dari || !sampai) {
+    Swal.fire({ icon: 'warning', title: 'Isi tanggal dari dan sampai', timer: 2500, showConfirmButton: false });
+    return;
+  }
+  if (dari > sampai) {
+    Swal.fire({ icon: 'warning', title: 'Tanggal Dari harus ≤ Tanggal Sampai', timer: 2500, showConfirmButton: false });
+    return;
+  }
+
+  const portCode = 'IDLPO';
+
+  // Langkah 1 — Hitung bulan yang dicakup
+  const months = _getMonthsCovered(dari, sampai);
+
+  // Langkah 2 — Cek status cache tiap bulan
+  _showProgressPanel(`Memeriksa ketersediaan cache untuk ${months.length} bulan...`);
+
+  const statuses = [];
+  for (const m of months) {
+    // end_date = tanggal akhir rentang jika bulan terakhir, akhir bulan jika bulan tengah
+    const lastDay = new Date(parseInt(m.year), parseInt(m.month), 0).getDate();
+    const monthEnd = `${m.year}-${m.month}-${String(lastDay).padStart(2,'0')}`;
+    const endDateForCheck = sampai < monthEnd ? sampai : monthEnd;
+    const info = await _checkCacheStatus(portCode, m.year, m.month, endDateForCheck);
+    statuses.push({ month: m, info });
+  }
+
+  _hideProgressPanel();
+
+  // Langkah 3 — Tampilkan dialog konfirmasi
+  let choice = await _showCacheConfirmDialog(statuses, sampai);
+  if (choice === 'cancel') return;
+
+  // Tentukan bulan mana yang perlu di-fetch
+  const needFetch  = statuses.filter(s => !s.info.cache_exists);
+  const needUpdate = statuses.filter(s => s.info.cache_exists && !s.info.is_complete);
+  // needUpdate: bulan berjalan dengan cache usang — TIDAK di-update untuk bulan lampau
+
+  let skippedMonths = [];
+  let mergedData    = [];
+  let sourceTypes   = new Set();
+
+  if (choice === 'proceed') {
+    // Langkah 4 — Fetch bulan yang diperlukan, dengan retry jika gagal
+    const toFetch = [...needFetch]; // bulan yang belum ada sama sekali
+    // Bulan berjalan dengan cache usang — coba update juga
+    needUpdate.forEach(s => {
+      const today = new Date();
+      const isCurrentMonth =
+        parseInt(s.month.year)  === today.getFullYear() &&
+        parseInt(s.month.month) === today.getMonth() + 1;
+      if (isCurrentMonth) toFetch.push(s); // hanya update bulan ini jika memang berjalan
+    });
+
+    for (const s of toFetch) {
+      let fetchSuccess = false;
+      while (!fetchSuccess) {
+        _showProgressPanel(`Mengambil data ${_formatMonthLabel(s.month)} dari server...`);
+        try {
+          await _fetchMonthLive(portCode, s.month.year, s.month.month);
+          fetchSuccess = true;
+          sourceTypes.add('live');
+        } catch (err) {
+          _hideProgressPanel();
+          // Gagal — tanya user: coba lagi atau lewati
+          const retry = await Swal.fire({
+            icon: 'error',
+            title: `Gagal mengambil ${_formatMonthLabel(s.month)}`,
+            html: `<p class="text-sm text-slate-600">${escHTML(err.message)}</p>
+                   <p class="text-xs text-slate-400 mt-2">Coba lagi atau lewati bulan ini?</p>`,
+            confirmButtonText:  'Coba Lagi',
+            confirmButtonColor: '#2563eb',
+            showDenyButton:     true,
+            denyButtonText:     'Lewati Bulan Ini',
+            denyButtonColor:    '#64748b',
+            showCancelButton:   true,
+            cancelButtonText:   'Batal Semua',
+            cancelButtonColor:  '#dc2626',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-lg text-sm', denyButton: 'rounded-lg text-sm', cancelButton: 'rounded-lg text-sm' }
+          });
+          if (retry.isConfirmed) {
+            // Loop kembali
+            continue;
+          } else if (retry.isDenied) {
+            skippedMonths.push(s.month);
+            fetchSuccess = true; // keluar dari while, bulan ini dilewati
+          } else {
+            // Batal semua
+            _hideProgressPanel();
+            return;
+          }
+        }
+      }
+    }
+    _hideProgressPanel();
+  } else {
+    // choice === 'skip' — tidak fetch, tapi perlu konfirmasi bulan yang tidak ada
+    skippedMonths = needFetch.map(s => s.month);
+    if (skippedMonths.length > 0) {
+      const confirmed = await _showSkipConfirmDialog(skippedMonths);
+      if (!confirmed) return;
+    }
+  }
+
+  // Langkah 5 — Gabung & tampilkan
+  _showProgressPanel('Menggabungkan data dan memuat dashboard...');
+
+  // Baca data dari cache semua bulan yang tidak dilewati
+  const skippedKeys = new Set(skippedMonths.map(m => `${m.year}_${m.month}`));
+
+  for (const m of months) {
+    if (skippedKeys.has(`${m.year}_${m.month}`)) continue;
+    try {
+      const result = await _readMonthCache(portCode, m.year, m.month);
+      let rawData = result.data;
+      if (rawData && !Array.isArray(rawData) && Array.isArray(rawData.data)) rawData = rawData.data;
+      if (!Array.isArray(rawData) || rawData.length === 0) continue;
+
+      // Filter sesuai rentang tanggal
+      const filtered = _filterByDateRange(rawData, dari, sampai);
+      mergedData = mergedData.concat(filtered);
+
+      // Track sumber
+      const src = result.source || 'cache_first';
+      if (src === 'live_fetch') sourceTypes.add('live');
+      else sourceTypes.add('cache');
+    } catch (e) {
+      console.warn(`Gagal baca cache ${_formatMonthLabel(m)}:`, e.message);
+    }
+  }
+
+  _hideProgressPanel();
+
+  if (mergedData.length === 0) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Tidak Ada Data',
+      text: 'Tidak ada data yang ditemukan untuk rentang tanggal yang dipilih.',
+      confirmButtonText: 'Mengerti'
+    });
+    return;
+  }
+
+  // Tambah _uid unik
+  currentData = mergedData.map((item, idx) => ({ ...item, _uid: `uid_${idx}_${Date.now()}` }));
+
+  // Update metadata range
+  _rangeMeta = {
+    dari, sampai, months,
+    sources: [...sourceTypes],
+    skipped: skippedMonths,
+  };
+
+  // Reset filter lokal
+  ['filterKapal','filterJenisKapal','filterPerusahaan','filterPetugas','filterLokasi'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  // Reset filter tanggal tabel ke bounds rentang
+  const dari2   = document.getElementById('filterTglDari');
+  const sampai2 = document.getElementById('filterTglSampai');
+  if (dari2)   { dari2.min = dari;   dari2.max = sampai; dari2.value = ''; }
+  if (sampai2) { sampai2.min = dari; sampai2.max = sampai; sampai2.value = ''; }
+
+  // Update navbar periode
+  const monthNames = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const fmtDate = d => {
+    const [y,m,dd] = d.split('-');
+    return `${parseInt(dd)} ${monthNames[parseInt(m)]} ${y}`;
+  };
+  document.getElementById('displayPort').textContent   = 'Lapuko (IDLPO)';
+  document.getElementById('displayPeriod').textContent = `${fmtDate(dari)} – ${fmtDate(sampai)}`;
+
+  // Update timestamp
+  document.getElementById('lastUpdated').textContent = new Date().toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const mbl = document.getElementById('lastUpdatedMobile');
+  if (mbl) mbl.textContent = document.getElementById('lastUpdated').textContent;
+
+  // Badge sumber
+  const hasLive  = sourceTypes.has('live');
+  const hasCache = sourceTypes.has('cache');
+  let badgeLabel = hasLive && hasCache ? 'Cache/Live' : hasLive ? '🌐 Live' : '📦 Cache';
+  let badgeCls   = hasLive && hasCache
+    ? 'bg-blue-50 text-blue-700 border-blue-300'
+    : hasLive
+      ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+      : 'bg-slate-100 text-slate-600 border-slate-300';
+
+  ['dataSourceBadge','dataSourceBadgeMobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = badgeLabel;
+      el.className   = `text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeCls}`;
+      el.classList.remove('hidden');
+    }
+  });
+
+  // Bangun datalist & render
+  buildFilterDatalist(currentData);
+  processDataAndRender(currentData);
+
+  Swal.fire({
+    toast: true, position: 'top-end', icon: 'success',
+    title: `${currentData.length} kapal dari ${months.length - skippedMonths.length} bulan`,
+    showConfirmButton: false, timer: 3000
+  });
+};
+
+// ==========================================
 // FIX: FUNGSI loadData — SEBELUMNYA TIDAK ADA
 // ==========================================
 window.loadData = async function() {
+    // Jika mode rentang, delegasikan ke _loadRangeData
+    if (_displayMode === 'range') {
+        return window._loadRangeData();
+    }
     const portCode = window.getSelectedPortCode();
     const year = document.getElementById('yearFilter').value;
     const month = document.getElementById('monthFilter').value;
@@ -640,7 +1122,104 @@ function renderTable(data) {
 
 
 function renderCharts(data) {
-    // ---- Bar chart: ETA per hari ----
+    // ── Mode range: chart ETA/ETD per BULAN (bukan per hari) ──
+    const isRange = _displayMode === 'range';
+
+    if (isRange) {
+        // Hitung ETA & ETD per bulan
+        const etaByMonth = {}, etdByMonth = {};
+        data.forEach(item => {
+            const parseMonth = (raw) => {
+                if (!raw || raw === '-') return null;
+                let s = String(raw).trim();
+                const dmy = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+                if (dmy) s = `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
+                else if (s.includes(' ') && !s.includes('T')) s = s.replace(' ','T');
+                const d = new Date(s);
+                if (isNaN(d.getTime())) return null;
+                const mon = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+                return `${mon[d.getMonth()]} ${d.getFullYear()}`;
+            };
+            const etaKey = parseMonth(getETA(item));
+            if (etaKey) etaByMonth[etaKey] = (etaByMonth[etaKey] || 0) + 1;
+            const etdKey = parseMonth(getETD(item));
+            if (etdKey) etdByMonth[etdKey] = (etdByMonth[etdKey] || 0) + 1;
+        });
+
+        // Urut bulan (gunakan _rangeMeta.months jika tersedia)
+        let allMonthLabels;
+        if (_rangeMeta.months && _rangeMeta.months.length > 0) {
+            const mon = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+            allMonthLabels = _rangeMeta.months.map(m =>
+                `${mon[parseInt(m.month)-1]} ${m.year}`
+            );
+        } else {
+            const allKeys = new Set([...Object.keys(etaByMonth), ...Object.keys(etdByMonth)]);
+            allMonthLabels = [...allKeys]; // tidak diurutkan jika tidak ada meta
+        }
+
+        const etaCtx = document.getElementById('etaChart').getContext('2d');
+        if (etaChartInst) etaChartInst.destroy();
+        etaChartInst = new Chart(etaCtx, {
+            type: 'bar',
+            data: {
+                labels: allMonthLabels,
+                datasets: [
+                    { label: 'Kedatangan (ETA)', data: allMonthLabels.map(k => etaByMonth[k] || 0), backgroundColor: 'rgba(59,130,246,0.7)', borderColor: 'rgba(37,99,235,0.9)', borderWidth: 1.5, borderRadius: 4 },
+                    { label: 'Keberangkatan (ETD)', data: allMonthLabels.map(k => etdByMonth[k] || 0), backgroundColor: 'rgba(245,158,11,0.65)', borderColor: 'rgba(217,119,6,0.9)', borderWidth: 1.5, borderRadius: 4 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12, padding: 8 } } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } } },
+                    x: { ticks: { font: { size: 11 }, maxRotation: 0 } }
+                }
+            }
+        });
+
+        // Chart penumpang per bulan
+        const paxByMonth = {};
+        data.forEach(item => {
+            const raw = getETA(item) || getETD(item);
+            if (!raw || raw === '-') return;
+            let s = String(raw).trim();
+            const dmy = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+            if (dmy) s = `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
+            else if (s.includes(' ') && !s.includes('T')) s = s.replace(' ','T');
+            const d = new Date(s);
+            if (isNaN(d.getTime())) return;
+            const mon = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+            const key = `${mon[d.getMonth()]} ${d.getFullYear()}`;
+            if (!paxByMonth[key]) paxByMonth[key] = { naik: 0, turun: 0 };
+            paxByMonth[key].naik  += getPaxNaik(item);
+            paxByMonth[key].turun += getPaxTurun(item);
+        });
+        const paxCtx = document.getElementById('paxChart').getContext('2d');
+        if (paxChartInst) paxChartInst.destroy();
+        paxChartInst = new Chart(paxCtx, {
+            type: 'bar',
+            data: {
+                labels: allMonthLabels,
+                datasets: [
+                    { label: 'Naik',  data: allMonthLabels.map(k => (paxByMonth[k]||{}).naik||0),  backgroundColor: 'rgba(16,185,129,0.7)', borderColor: 'rgba(5,150,105,0.9)',  borderWidth: 1.5, borderRadius: 3 },
+                    { label: 'Turun', data: allMonthLabels.map(k => (paxByMonth[k]||{}).turun||0), backgroundColor: 'rgba(239,68,68,0.65)', borderColor: 'rgba(220,38,38,0.9)',  borderWidth: 1.5, borderRadius: 3 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12, padding: 8 } } },
+                scales: { y: { beginAtZero: true, ticks: { font: { size: 10 } } }, x: { ticks: { font: { size: 11 }, maxRotation: 0 } } }
+            }
+        });
+
+        // Trayek & jenis tetap sama (doughnut tidak terpengaruh mode)
+        _renderDoughnutCharts(data);
+        return;
+    }
+
+    // ── Mode per bulan: logika chart harian (kode lama) ──
     const etaCount = {};
     let parsedCount = 0;
     data.forEach(item => {
@@ -746,33 +1325,6 @@ function renderCharts(data) {
         }
     });
 
-    // ---- Doughnut chart: distribusi trayek ----
-    const trayekCount = {};
-    data.forEach(item => {
-        const t = item.trayek_datang || item.trayek_berangkat || 'Tidak Diketahui';
-        trayekCount[t] = (trayekCount[t] || 0) + 1;
-    });
-
-    const trayekEntries = Object.entries(trayekCount).sort((a,b) => b[1]-a[1]).slice(0, 8);
-    const trayekColors = ['#3b82f6','#6366f1','#8b5cf6','#a78bfa','#06b6d4','#14b8a6','#f59e0b','#f97316'];
-
-    const trayekCtx = document.getElementById('trayekChart').getContext('2d');
-    if (trayekChartInst) trayekChartInst.destroy();
-    trayekChartInst = new Chart(trayekCtx, {
-        type: 'doughnut',
-        data: {
-            labels: trayekEntries.map(e => e[0]),
-            datasets: [{ data: trayekEntries.map(e => e[1]), backgroundColor: trayekColors, borderWidth: 2 }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12, padding: 8 } }
-            }
-        }
-    });
-
     // ---- Bar chart: penumpang naik & turun per hari ----
     const paxByDay = {};
     data.forEach(item => {
@@ -816,6 +1368,32 @@ function renderCharts(data) {
         }
     });
 
+    // Trayek + Jenis doughnut (shared helper)
+    _renderDoughnutCharts(data);
+}
+
+// Helper doughnut charts — dipakai oleh mode range juga
+function _renderDoughnutCharts(data) {
+    // ---- Doughnut chart: distribusi trayek ----
+    const trayekCount = {};
+    data.forEach(item => {
+        const t = item.trayek_datang || item.trayek_berangkat || 'Tidak Diketahui';
+        trayekCount[t] = (trayekCount[t] || 0) + 1;
+    });
+    const trayekEntries = Object.entries(trayekCount).sort((a,b) => b[1]-a[1]).slice(0, 8);
+    const trayekColors = ['#3b82f6','#6366f1','#8b5cf6','#a78bfa','#06b6d4','#14b8a6','#f59e0b','#f97316'];
+    const trayekCtx = document.getElementById('trayekChart').getContext('2d');
+    if (trayekChartInst) trayekChartInst.destroy();
+    trayekChartInst = new Chart(trayekCtx, {
+        type: 'doughnut',
+        data: {
+            labels: trayekEntries.map(e => e[0]),
+            datasets: [{ data: trayekEntries.map(e => e[1]), backgroundColor: trayekColors, borderWidth: 2 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12, padding: 8 } } } }
+    });
+
     // ---- Doughnut: top jenis kapal ----
     const jenisCount = {};
     data.forEach(item => {
@@ -832,10 +1410,8 @@ function renderCharts(data) {
             labels: jenisEntries.map(e => e[0]),
             datasets: [{ data: jenisEntries.map(e => e[1]), backgroundColor: jenisColors, borderWidth: 2 }]
         },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 6 } } }
-        }
+        options: { responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 6 } } } }
     });
 }
 
@@ -981,6 +1557,16 @@ function _parseDateToYMD(raw) {
 
 // Set batas min/max date picker sesuai bulan data yang dimuat
 function _initFilterTanggalBounds() {
+    // Mode range: gunakan batas dari rentang yang dipilih
+    if (_displayMode === 'range' && _rangeMeta.dari && _rangeMeta.sampai) {
+        const dari   = document.getElementById('filterTglDari');
+        const sampai = document.getElementById('filterTglSampai');
+        if (dari)   { dari.min   = _rangeMeta.dari;   dari.max   = _rangeMeta.sampai; dari.value   = ''; }
+        if (sampai) { sampai.min = _rangeMeta.dari;   sampai.max = _rangeMeta.sampai; sampai.value = ''; }
+        document.getElementById('btnResetTgl')?.classList.add('hidden');
+        document.getElementById('filterTglInfo')?.classList.add('hidden');
+        return;
+    }
     const year  = document.getElementById('yearFilter')?.value;
     const month = document.getElementById('monthFilter')?.value;
     if (!year || !month) return;
