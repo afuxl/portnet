@@ -95,6 +95,9 @@ function initPortDatalist() {
 }
 
 window.getSelectedPortCode = function() {
+    // [LOCK] Role 'user' selalu menggunakan IDLPO, tidak bisa diubah
+    if (sessionDataObj?.role === 'user') return 'IDLPO';
+
     const raw = document.getElementById('portNameInput').value.trim().toUpperCase();
     if (!raw) return APP_CONFIG.DEFAULT_PORT_CODE;
 
@@ -114,7 +117,7 @@ window.getSelectedPortCode = function() {
     const byIncludes = PORT_LIST.find(p => p.nama_pelabuhan.toUpperCase().includes(raw));
     if (byIncludes) return byIncludes.kode_pelabuhan;
 
-    // 5. Kembalikan raw sebagai kode jika tidak ditemukan (jangan fallback ke default)
+    // 5. Kembalikan raw sebagai kode jika tidak ditemukan
     return raw;
 };
 
@@ -1418,6 +1421,17 @@ window.openSettingsModal = function() {
         if (byName) activeCode = byName.kode_pelabuhan;
     }
     sel.value = activeCode;
+
+    // [LOCK] Role 'user': paksa IDLPO dan kunci dropdown port di Settings
+    const isUserRole = sessionDataObj?.role === 'user';
+    sel.disabled = isUserRole;
+    sel.title    = isUserRole ? 'Port dikunci untuk akun user' : '';
+    if (isUserRole) {
+        sel.value = 'IDLPO';
+        sel.classList.add('opacity-60', 'cursor-not-allowed');
+    } else {
+        sel.classList.remove('opacity-60', 'cursor-not-allowed');
+    }
     document.getElementById('cfgScraping').value = APP_CONFIG.USE_SCRAPING === 'TRUE' ? 'TRUE' : 'FALSE';
     // Sync dropdown strategi fetch dengan nilai APP_CONFIG yang sudah dimuat dari localStorage
     const cfgStrategyEl = document.getElementById('cfgFetchStrategy');
@@ -1688,12 +1702,12 @@ const DOWNLOAD_COLS = [
     { key: 'no_lk3',           label: 'No LK3',             checked: false, get: item => item.no_lk3 || '' },
     { key: 'pelabuhan_asal',   label: 'Asal',               checked: true,  get: item => item.pelabuhan_asal || '' },
     { key: 'pelabuhan_tujuan', label: 'Tujuan',             checked: true,  get: item => item.pelabuhan_tujuan || '' },
-    { key: 'eta',              label: 'Tanggal Tiba',       checked: false, get: item => item.eta || item.tgl_eta || '' },
+    { key: 'eta',              label: 'Tanggal Tiba',       checked: true,  get: item => item.eta || item.tgl_eta || '' },  // [FIX] default centang
     { key: 'etd',              label: 'Tanggal Berangkat',  checked: true,  get: item => item.etd || item.tgl_etd || '' },
     { key: 'lokasi_tolak',     label: 'Lokasi Tolak',       checked: true,  get: item => item.lokasi_tolak || '' },
     { key: 'petugas_spb',      label: 'Petugas SPB',        checked: true,  get: item => item.spb_approve_fullname || '' },
     { key: 'waktu_spb',        label: 'Waktu SPB',          checked: true,  get: item => item.waktu_spb || '' },
-    { key: 'manifest',         label: 'Manifest',           checked: true,  get: item => item.manifest || '' },
+    { key: 'manifest',         label: 'Manifest',           checked: false, get: item => item.manifest || '' },  // [FIX] default tidak dicentang
     // ── Komoditi — diproses khusus di _doDownload ──
     { key: 'bongkar_ringkas',  label: 'Bongkar + Penumpang Turun', checked: false,
       get: item => {
@@ -1818,21 +1832,17 @@ window._doDownload = function() {
 
     const format       = document.querySelector('input[name="dlFormat"]:checked')?.value || 'xlsx';
     const modaKomoditi = document.querySelector('input[name="dlModeKomoditi"]:checked')?.value || 'ringkas';
-    // Baca pilihan urutan dari dropdown dlSortOrder
-    const sortOrder    = document.getElementById('dlSortOrder')?.value || 'etd_asc';
+    // [FIX] Urutan selalu: Waktu SPB terlama ke terbaru (hardcode, tidak ada pilihan)
+    const sortOrder    = 'spb_asc';
     const cols         = DOWNLOAD_COLS.filter(c => checked.includes(c.key));
     const colsDasar    = cols.filter(c => !c.key.includes('ringkas'));
     const now          = new Date();
     const ts           = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
 
-    // Urutkan data sebelum diekspor
-    const sortFns = {
-        etd_asc:  (a, b) => _toSortMs(getETD(a))   - _toSortMs(getETD(b)),
-        etd_desc: (a, b) => _toSortMs(getETD(b))   - _toSortMs(getETD(a)),
-        spb_asc:  (a, b) => _toSortMs(a.waktu_spb) - _toSortMs(b.waktu_spb),
-        spb_desc: (a, b) => _toSortMs(b.waktu_spb) - _toSortMs(a.waktu_spb),
-    };
-    const dataToExport = [..._filteredData].sort(sortFns[sortOrder] || sortFns.etd_asc);
+    // Urutkan: Waktu SPB terlama ke terbaru
+    const dataToExport = [..._filteredData].sort(
+        (a, b) => _toSortMs(a.waktu_spb) - _toSortMs(b.waktu_spb)
+    );
 
     const cellVal = (v) => {
         if (v === null || v === undefined || v === '') return '';
@@ -2061,7 +2071,6 @@ function setCurrentPeriod() {
 // SET PORT DEFAULT KE INPUT (nama) & PASTIKAN KODE DIPAKAI KE BACKEND
 // ==========================================
 function setDefaultPortInput() {
-    // Cari entri port berdasarkan kode yang ada di APP_CONFIG
     const portInfo = PORT_LIST.find(p =>
         p.kode_pelabuhan.toUpperCase() === (APP_CONFIG.DEFAULT_PORT_CODE || '').toUpperCase()
     );
@@ -2070,11 +2079,27 @@ function setDefaultPortInput() {
     if (!input) return;
 
     if (portInfo) {
-        // Selalu isi dengan NAMA pelabuhan supaya datalist match
         input.value = portInfo.nama_pelabuhan.toUpperCase();
     } else if (APP_CONFIG.DEFAULT_PORT_CODE) {
-        // Fallback: kode tidak ditemukan di port.json, isi kode apa adanya
         input.value = APP_CONFIG.DEFAULT_PORT_CODE;
+    }
+
+    // [LOCK] Role 'user': paksa IDLPO, kunci input agar tidak bisa diubah
+    const isUser = sessionDataObj?.role === 'user';
+    if (isUser) {
+        // Pastikan nilainya selalu IDLPO
+        const idlpoInfo = PORT_LIST.find(p => p.kode_pelabuhan.toUpperCase() === 'IDLPO');
+        if (idlpoInfo) input.value = idlpoInfo.nama_pelabuhan.toUpperCase();
+        else input.value = 'IDLPO';
+        input.readOnly = true;
+        input.disabled = true;
+        input.title    = 'Port dikunci untuk akun user';
+        input.classList.add('opacity-60', 'cursor-not-allowed', 'bg-slate-100');
+    } else {
+        input.readOnly = false;
+        input.disabled = false;
+        input.title    = '';
+        input.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-slate-100');
     }
 }
 
