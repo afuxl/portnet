@@ -398,10 +398,13 @@ async function _mergeLK3(data, cacheKey, todayString) {
   // yang tidak benar karena lk3RawObj tidak pernah string.
   const lk3RawObj = await cekCacheValidData('CACHE_LK3', cacheKey, todayString)
                  || await bacaCacheUsangData('CACHE_LK3', cacheKey);
-  if (!lk3RawObj) return data;
+  if (!lk3RawObj || !lk3RawObj.data) return data;
 
   try {
     const lk3Arr = JSON.parse(lk3RawObj.data); // .data adalah string JSON
+    if (typeof lk3Arr === 'string') {
+      lk3Arr = JSON.parse(lk3Arr);
+    }
     const xlsMap = {};
     if (lk3Arr && lk3Arr.length > 2) {
       for (let li = 2; li < lk3Arr.length; li++) {
