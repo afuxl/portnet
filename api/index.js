@@ -606,29 +606,42 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // ── POST: Login & manajemen user/config ──────────────────────
-  if (req.method === 'POST') {
-    try {
-      const postData = req.body;
+// ── POST: Login & manajemen user/config ──────────────────────
+  if (req.method === 'POST') {
+    try {
+      const postData = req.body;
 
-      if (postData.action === 'login') {
-        const user = await findUser(postData.username || '');
-        if (!user)       return res.status(200).json({ status: 'error', message: 'Username tidak ditemukan.' });
-        if (!user.aktif) return res.status(200).json({ status: 'error', message: 'Akun tidak aktif.' });
-        if (user.password !== postData.password)
-          return res.status(200).json({ status: 'error', message: 'Password salah!' });
+      if (postData.action === 'login') {
+        const username = postData.username || '';
+        await simpanLog('LOGIN_ATTEMPT', `Memulai percobaan login`, username);
 
-        const config = await getConfig();
-        return res.status(200).json({
-          status:       'success',
-          message:      'Login berhasil',
-          config,
-          username:     user.username,
-          nama:         user.nama,
-          role:         user.role,
-          default_port: user.default_port || config.DEFAULT_PORT_CODE || 'IDLPO'
-        });
-      }
+        const user = await findUser(username);
+        if (!user) {
+          await simpanLog('LOGIN_FAILED', 'Username tidak ditemukan', username);
+          return res.status(200).json({ status: 'error', message: 'Username tidak ditemukan.' });
+        }
+        if (!user.aktif) {
+          await simpanLog('LOGIN_FAILED', 'Akun tidak aktif', username);
+          return res.status(200).json({ status: 'error', message: 'Akun tidak aktif.' });
+        }
+        if (user.password !== postData.password) {
+          await simpanLog('LOGIN_FAILED', 'Password salah', username);
+          return res.status(200).json({ status: 'error', message: 'Password salah!' });
+        }
+
+        const config = await getConfig();
+        await simpanLog('LOGIN_SUCCESS', `Login berhasil dengan role: ${user.role}`, username);
+
+        return res.status(200).json({
+          status:       'success',
+          message:      'Login berhasil',
+          config,
+          username:     user.username,
+          nama:         user.nama,
+          role:         user.role,
+          default_port: user.default_port || config.DEFAULT_PORT_CODE || 'IDLPO'
+        });
+      }
 
       if (postData.action === 'updateConfig') {
         const incoming = postData.config || {};
@@ -893,4 +906,27 @@ export default async function handler(req, res) {
   }
 
   return res.status(405).json({ status: 'error', message: 'Method tidak diizinkan' });
+}
+
+// ================================================================
+// MANAJEMEN LOGGING
+// ================================================================
+
+async function simpanLog(aktivitas, keterangan, username = '-') {
+  const sheetName = 'LOGS';
+  await createSheetIfNotExists(sheetName, ['Waktu', 'Aktivitas', 'Keterangan', 'Username']);
+  
+  const waktu = formatDate(new Date(), 'yyyy-MM-dd HH:mm:ss');
+  
+  try {
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${sheetName}!A:D`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [[waktu, aktivitas, keterangan, username]] }
+    });
+    console.log(`[LOG TERSIMPAN] ${aktivitas} - ${keterangan}`);
+  } catch (e) {
+    console.error('Gagal menyimpan log ke spreadsheet:', e.message);
+  }
 }
